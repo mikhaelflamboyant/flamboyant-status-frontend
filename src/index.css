@@ -1,0 +1,54 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+@theme {
+  --color-primary-50: #EEEDFE;
+  --color-primary-100: #CECBF6;
+  --color-primary-200: #AFA9EC;
+  --color-primary-400: #7F77DD;
+  --color-primary-600: #534AB7;
+  --color-primary-800: #3C3489;
+  --color-primary-900: #26215C;
+
+  --color-teal-50: #E1F5EE;
+  --color-teal-100: #9FE1CB;
+  --color-teal-400: #1D9E75;
+  --color-teal-600: #0F6E56;
+  --color-teal-800: #085041;
+
+  --color-amber-50: #FAEEDA;
+  --color-amber-100: #FAC775;
+  --color-amber-400: #BA7517;
+  --color-amber-600: #854F0B;
+  --color-amber-800: #633806;
+
+  --color-danger-50: #FCEBEB;
+  --color-danger-100: #F7C1C1;
+  --color-danger-400: #E24B4A;
+  --color-danger-600: #A32D2D;
+  --color-danger-800: #791F1F;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    background-color: #F7F7F5;
+    color: #111827;
+  }
+
+  input, textarea, select, button {
+    font-family: inherit;
+  }
+}
