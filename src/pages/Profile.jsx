@@ -3,6 +3,7 @@ import { Navbar } from '../components/layout/Navbar'
 import { useAuth } from '../hooks/useAuth'
 
 const ROLE_LABELS = {
+  SUPERINTENDENTE: 'Superintendente',
   GERENTE: 'Gerente',
   COORDENADOR: 'Coordenador',
   ANALISTA_MASTER: 'Analista Master',

@@ -56,7 +56,13 @@ export function Navbar() {
           <div className="text-right">
             <p className="text-xs font-medium text-gray-700 leading-none">{user?.name}</p>
             <p className="text-xs text-gray-400 mt-0.5 leading-none">
-              {user?.role?.replace(/_/g, ' ')}
+              {{
+                SUPERINTENDENTE: 'Superintendente',
+                GERENTE: 'Gerente',
+                COORDENADOR: 'Coordenador',
+                ANALISTA_MASTER: 'Analista Master',
+                ANALISTA: 'Analista',
+              }[user?.role] || user?.role}
             </p>
           </div>
           <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-xs font-medium text-primary-800 flex-shrink-0">

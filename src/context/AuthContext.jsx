@@ -34,11 +34,11 @@ export function AuthProvider({ children }) {
   }
 
   const isPrivileged = () => {
-    return ['GERENTE', 'COORDENADOR', 'ANALISTA_MASTER'].includes(user?.role)
+    return ['SUPERINTENDENTE', 'GERENTE', 'COORDENADOR', 'ANALISTA_MASTER'].includes(user?.role)
   }
 
   const isManager = () => {
-    return ['GERENTE', 'COORDENADOR'].includes(user?.role)
+    return ['SUPERINTENDENTE', 'GERENTE', 'COORDENADOR'].includes(user?.role)
   }
 
   return (

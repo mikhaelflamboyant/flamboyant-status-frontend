@@ -4,6 +4,23 @@ import { authService } from '../services/auth.service'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 
+const AuthShell = ({ children }) => (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-4 h-4 rounded-md bg-primary-50 opacity-80" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-900 leading-none">Status report</p>
+            <p className="text-xs text-gray-400 mt-0.5 leading-none">Grupo Flamboyant · Tecnologia</p>
+          </div>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
@@ -23,23 +40,6 @@ export default function ForgotPassword() {
       setLoading(false)
     }
   }
-
-  const AuthShell = ({ children }) => (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center flex-shrink-0">
-            <div className="w-4 h-4 rounded-md bg-primary-50 opacity-80" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900 leading-none">Status report</p>
-            <p className="text-xs text-gray-400 mt-0.5 leading-none">Grupo Flamboyant · Tecnologia</p>
-          </div>
-        </div>
-        {children}
-      </div>
-    </div>
-  )
 
   if (success) {
     return (
