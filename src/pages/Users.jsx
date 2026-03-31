@@ -160,8 +160,9 @@ export default function Users() {
         {!loading && !error && tab === 'ativos' && (
           <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
             <div className="px-5 py-3 border-b border-gray-50 grid grid-cols-12 gap-4">
-              <p className="col-span-5 text-xs font-medium text-gray-400">Usuário</p>
-              <p className="col-span-3 text-xs font-medium text-gray-400">Perfil</p>
+              <p className="col-span-4 text-xs font-medium text-gray-400">Usuário</p>
+              <p className="col-span-2 text-xs font-medium text-gray-400">Área</p>
+              <p className="col-span-2 text-xs font-medium text-gray-400">Perfil</p>
               <p className="col-span-3 text-xs font-medium text-gray-400">Alterar perfil</p>
               <p className="col-span-1 text-xs font-medium text-gray-400"></p>
             </div>
@@ -177,7 +178,7 @@ export default function Users() {
                   index !== users.length - 1 ? 'border-b border-gray-50' : ''
                 }`}
               >
-                <div className="col-span-5 flex items-center gap-3">
+                <div className="col-span-4 flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-xs font-medium text-primary-800 shrink-0">
                     {u.name?.charAt(0).toUpperCase()}
                   </div>
@@ -192,7 +193,11 @@ export default function Users() {
                   </div>
                 </div>
 
-                <div className="col-span-3">
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-600 truncate">{u.area || '—'}</p>
+                </div>
+
+                <div className="col-span-2">
                   <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${ROLE_BADGE[u.role]}`}>
                     {ROLE_LABELS[u.role]}
                   </span>

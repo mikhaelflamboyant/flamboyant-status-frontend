@@ -32,7 +32,7 @@ export default function Profile() {
         <div className="bg-white border border-gray-100 rounded-xl p-8">
 
           <div className="flex items-center gap-4 mb-8 pb-8 border-b border-gray-50">
-            <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center text-xl font-medium text-primary-800 flex-shrink-0">
+            <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center text-xl font-medium text-primary-800 shrink-0">
               {user?.name?.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -55,6 +55,10 @@ export default function Profile() {
             <div>
               <p className="text-xs font-medium text-gray-400 mb-1.5">Perfil de acesso</p>
               <p className="text-sm text-gray-800 bg-gray-50 px-3 py-2.5 rounded-lg">{ROLE_LABELS[user?.role] || user?.role}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-400 mb-1.5">Área</p>
+              <p className="text-sm text-gray-800 bg-gray-50 px-3 py-2.5 rounded-lg">{user?.area || '—'}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-400 mb-1.5">Membro desde</p>

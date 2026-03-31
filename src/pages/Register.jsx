@@ -6,6 +6,12 @@ import { Input } from '../components/ui/Input'
 
 const ALLOWED_DOMAIN = 'flamboyant.com.br'
 
+const AREAS = [
+      'RH', 'Jurídica', 'Agropecuária', 'Construção',
+      'Contabilidade', 'Controladoria', 'Processos',
+      'Depto. de Pessoas', 'Comitê Executivo', 'TI', 'Outros'
+]
+
 const validatePassword = (pwd) => {
   if (pwd.length < 8) return 'A senha deve ter no mínimo 8 caracteres.'
   if (!/[A-Z]/.test(pwd)) return 'A senha deve ter pelo menos uma letra maiúscula.'
@@ -19,7 +25,7 @@ const AuthShell = ({ children }) => (
   <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
     <div className="w-full max-w-sm">
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center shrink-0">
           <div className="w-4 h-4 rounded-md bg-primary-50 opacity-80" />
         </div>
         <div>
@@ -35,6 +41,7 @@ const AuthShell = ({ children }) => (
 export default function Register() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [area, setArea] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -58,9 +65,14 @@ export default function Register() {
       return
     }
 
+    if (!area) {
+      setError('Selecione sua área.')
+      return
+    }
+
     setLoading(true)
     try {
-      await authService.register({ name, email, password })
+      await authService.register({ name, email, password, area })
       setSuccess(true)
     } catch (err) {
       setError(err.response?.data?.error || 'Erro ao criar conta. Tente novamente.')
@@ -111,6 +123,21 @@ export default function Register() {
             hint="Somente @flamboyant.com.br"
             required
           />
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray-500">
+              Área <span className="text-red-400">*</span>
+            </label>
+            <select
+              value={area}
+              onChange={e => setArea(e.target.value)}
+              className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
+              required
+            >
+              <option value="">Selecionar área</option>
+              {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-500">

@@ -44,7 +44,7 @@ export function Navbar() {
         <div className="flex items-center gap-1">
           {navLink('/projetos', 'Projetos ativos')}
           {navLink('/projetos/arquivados', 'Finalizados')}
-          {isManager() && navLink('/usuarios', 'Usuários')}
+          {(isManager() || user?.role === 'ANALISTA_MASTER') && navLink('/usuarios', 'Usuários')}
         </div>
       </div>
 
@@ -65,7 +65,7 @@ export function Navbar() {
               }[user?.role] || user?.role}
             </p>
           </div>
-          <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-xs font-medium text-primary-800 flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-xs font-medium text-primary-800 shrink-0">
             {user?.name?.charAt(0).toUpperCase()}
           </div>
         </button>
