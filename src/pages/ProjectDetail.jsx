@@ -247,26 +247,70 @@ export default function ProjectDetail() {
             <Farol value={project.traffic_light} />
           </div>
 
-          <div className="grid grid-cols-4 gap-3 mb-5">
+          <div className="grid grid-cols-2 gap-3 mb-5">
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-400 mb-1">Solicitante</p>
-              <p className="text-sm font-medium text-gray-800">{project.requester_name}</p>
+              <p className="text-xs text-gray-400 mb-2">Solicitante(s)</p>
+              {project.requesters?.filter(r => r.type === 'SOLICITANTE').length > 0 ? (
+                <div className="flex flex-col gap-1">
+                  {project.requesters
+                    .filter(r => r.type === 'SOLICITANTE')
+                    .map(r => (
+                      <div key={r.id} className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">{r.user.area}</span>
+                        <div className="w-px h-3 bg-gray-200" />
+                        <span className="text-sm font-medium text-gray-800">{r.user.name}</span>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-sm font-medium text-gray-800">{project.requester_name || '—'}</p>
+              )}
             </div>
+
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-400 mb-1">Líder</p>
-              <p className="text-sm font-medium text-gray-800">{project.owner?.name || '—'}</p>
+              <p className="text-xs text-gray-400 mb-2">Responsável(is)</p>
+              {project.requesters?.filter(r => r.type === 'RESPONSAVEL').length > 0 ? (
+                <div className="flex flex-col gap-1">
+                  {project.requesters
+                    .filter(r => r.type === 'RESPONSAVEL')
+                    .map(r => (
+                      <div key={r.id} className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">{r.user.area}</span>
+                        <div className="w-px h-3 bg-gray-200" />
+                        <span className="text-sm font-medium text-gray-800">{r.user.name}</span>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-sm font-medium text-gray-800">{project.owner?.name || '—'}</p>
+              )}
             </div>
+
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-400 mb-1">Go-live</p>
               <p className="text-sm font-medium text-gray-800">{goLive}</p>
             </div>
+
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-400 mb-1">Orçamento</p>
-              <p className="text-sm font-medium text-gray-800">
-                {project.budget_planned
-                  ? `R$ ${Number(project.budget_planned).toLocaleString('pt-BR')}`
-                  : '—'}
-              </p>
+              {project.budget_planned ? (
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-sm font-medium text-gray-800">
+                    Planejado: R$ {Number(project.budget_planned).toLocaleString('pt-BR')}
+                  </p>
+                  <p className={`text-sm font-medium ${
+                    project.budget_actual > project.budget_planned
+                      ? 'text-red-500'
+                      : 'text-teal-600'
+                  }`}>
+                    Realizado: {project.budget_actual
+                      ? `R$ ${Number(project.budget_actual).toLocaleString('pt-BR')}`
+                      : '—'}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm font-medium text-gray-800">—</p>
+              )}
             </div>
           </div>
 

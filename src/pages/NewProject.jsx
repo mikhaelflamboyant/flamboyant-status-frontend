@@ -1,33 +1,41 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { Input } from '../components/ui/Input'
+import { CostSelector } from '../components/project/CostSelector'
+import { PeopleSelector } from '../components/project/PeopleSelector'
 import { projectsService } from '../services/projects.service'
-
-const AREAS = [
-  'RH', 'Jurídica', 'Agropecuária', 'Construção',
-  'Contabilidade', 'Controladoria', 'Processos',
-  'Depto. de Pessoas', 'Comitê Executivo', 'Outros'
-]
+import api from '../services/api'
 
 export default function NewProject() {
   const navigate = useNavigate()
-
+  const [users, setUsers] = useState([])
   const [form, setForm] = useState({
     title: '',
     area: '',
-    requester_name: '',
     execution_type: 'INTERNA',
     priority: null,
     description: '',
     go_live: '',
-    budget_planned: '',
-    budget_actual: '',
   })
-
-  const [hasBudget, setHasBudget] = useState(false)
+  const [requesters, setRequesters] = useState([])
+  const [responsibles, setResponsibles] = useState([])
+  const [members, setMembers] = useState([])
+  const [costs, setCosts] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await api.get('/users')
+        setUsers(response.data)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    fetchUsers()
+  }, [])
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -37,18 +45,39 @@ export default function NewProject() {
     e.preventDefault()
     setError('')
 
-    if (!form.title || !form.area || !form.requester_name || !form.description || !form.go_live || !form.priority) {
+    if (!form.title || !form.description || !form.go_live || !form.priority) {
       setError('Preencha todos os campos obrigatórios.')
       return
     }
+
+    if (requesters.length === 0) {
+      setError('Adicione pelo menos um solicitante.')
+      return
+    }
+
+    if (responsibles.length === 0) {
+      setError('Adicione pelo menos um responsável.')
+      return
+    }
+
+    if (form.execution_type === 'FORNECEDOR_EXTERNO' && costs.length === 0) {
+      setError('Projetos com fornecedor externo precisam ter pelo menos um custo cadastrado.')
+      return
+    }
+
+    const area = requesters.map(r => r.area).join(', ')
 
     setLoading(true)
     try {
       const data = {
         ...form,
+        area,
         priority: parseInt(form.priority),
-        budget_planned: hasBudget && form.budget_planned ? parseFloat(form.budget_planned) : null,
-        budget_actual: hasBudget && form.budget_actual ? parseFloat(form.budget_actual) : null,
+        requester_ids: requesters.map(r => r.user_id),
+        responsible_ids: responsibles.map(r => r.user_id),
+        member_ids: members.map(m => m.user_id),
+        owner_id: responsibles[0]?.user_id || null,
+        costs,
       }
       const response = await projectsService.create(data)
       navigate(`/projetos/${response.data.id}`)
@@ -83,152 +112,126 @@ export default function NewProject() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-            <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">Identificação</p>
-              <div className="flex flex-col gap-3">
+            {/* IDENTIFICAÇÃO */}
+            <div className="flex flex-col gap-3">
+              <hr className="border-gray-100" />
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Identificação</p>
+
+              <Input
+                label="Título do projeto"
+                placeholder="Ex: Integração ERP — módulo financeiro"
+                value={form.title}
+                onChange={e => handleChange('title', e.target.value)}
+                required
+              />
+
+              <PeopleSelector
+                label="Solicitante"
+                required
+                users={users}
+                selected={requesters}
+                onChange={setRequesters}
+                buttonLabel="+ Adicionar solicitante"
+                excluded={[...responsibles, ...members]}
+              />
+
+              <PeopleSelector
+                label="Responsável"
+                required
+                users={users}
+                selected={responsibles}
+                onChange={setResponsibles}
+                buttonLabel="+ Adicionar responsável"
+                excluded={[...requesters, ...members]}
+              />
+
+              <PeopleSelector
+                label="Outros envolvidos"
+                users={users}
+                selected={members}
+                onChange={setMembers}
+                buttonLabel="+ Adicionar envolvido"
+                allowEmptyStart
+                excluded={[...requesters, ...responsibles]}
+              />
+            </div>
+
+            <hr className="border-gray-100" />
+
+            {/* DESCRIÇÃO */}
+            <div className="flex flex-col gap-3">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Descrição</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-gray-500">
+                    Tipo de execução <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    value={form.execution_type}
+                    onChange={e => handleChange('execution_type', e.target.value)}
+                    className={selectCls}
+                  >
+                    <option value="INTERNA">Interna</option>
+                    <option value="FORNECEDOR_EXTERNO">Fornecedor externo</option>
+                  </select>
+                </div>
 
                 <Input
-                  label="Título do projeto"
-                  placeholder="Ex: Integração ERP — módulo financeiro"
-                  value={form.title}
-                  onChange={e => handleChange('title', e.target.value)}
+                  label="Go-live (prazo de entrega)"
+                  type="date"
+                  value={form.go_live}
+                  onChange={e => handleChange('go_live', e.target.value)}
                   required
                 />
+              </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-500">
-                      Área solicitante <span className="text-red-400">*</span>
-                    </label>
-                    <select
-                      value={form.area}
-                      onChange={e => handleChange('area', e.target.value)}
-                      className={selectCls}
-                      required
-                    >
-                      <option value="">Selecionar área</option>
-                      {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
-                    </select>
-                  </div>
-
-                  <Input
-                    label="Nome do solicitante"
-                    placeholder="Ex: Carlos Mendes"
-                    value={form.requester_name}
-                    onChange={e => handleChange('requester_name', e.target.value)}
-                    required
-                  />
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">
+                  Prioridade <span className="text-red-400">*</span>
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(p => {
+                    const isSelected = form.priority === p
+                    const bgs = { 1: '#EAF3DE', 2: '#EAF3DE', 3: '#FAEEDA', 4: '#FCEBEB', 5: '#FCEBEB' }
+                    const colors = { 1: '#27500A', 2: '#27500A', 3: '#633806', 4: '#791F1F', 5: '#791F1F' }
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => handleChange('priority', form.priority === p ? null : p)}
+                        style={isSelected ? { backgroundColor: bgs[p], color: colors[p], borderColor: colors[p] } : {}}
+                        className="flex-1 py-2 text-sm rounded-lg border border-gray-200 text-gray-500 hover:border-primary-400 transition-colors"
+                      >
+                        {p}
+                      </button>
+                    )
+                  })}
                 </div>
+                <p className="text-xs text-gray-400 mt-0.5">1 = menor prioridade · 5 = maior prioridade</p>
+              </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-500">
-                      Tipo de execução <span className="text-red-400">*</span>
-                    </label>
-                    <select
-                      value={form.execution_type}
-                      onChange={e => handleChange('execution_type', e.target.value)}
-                      className={selectCls}
-                    >
-                      <option value="INTERNA">Interna (equipe + n8n)</option>
-                      <option value="FORNECEDOR_EXTERNO">Fornecedor externo</option>
-                    </select>
-                  </div>
-
-                  <Input
-                    label="Go-live (prazo de entrega)"
-                    type="date"
-                    value={form.go_live}
-                    onChange={e => handleChange('go_live', e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-500">
-                    Prioridade <span className="text-red-400">*</span>
-                  </label>
-                  <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map(p => {
-                      const isSelected = form.priority === p
-                      const colors = {
-                        1: isSelected ? '#27500A' : '',
-                        2: isSelected ? '#27500A' : '',
-                        3: isSelected ? '#633806' : '',
-                        4: isSelected ? '#791F1F' : '',
-                        5: isSelected ? '#791F1F' : '',
-                      }
-                      const bgs = {
-                        1: isSelected ? '#EAF3DE' : '',
-                        2: isSelected ? '#EAF3DE' : '',
-                        3: isSelected ? '#FAEEDA' : '',
-                        4: isSelected ? '#FCEBEB' : '',
-                        5: isSelected ? '#FCEBEB' : '',
-                      }
-                      return (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => handleChange('priority', form.priority === p ? null : p)}
-                          style={isSelected ? { backgroundColor: bgs[p], color: colors[p], borderColor: colors[p] } : {}}
-                          className="flex-1 py-2 text-sm rounded-lg border border-gray-200 text-gray-500 hover:border-primary-400 transition-colors"
-                        >
-                          {p}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5">1 = menor prioridade · 5 = maior prioridade</p>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-500">
-                    Descrição <span className="text-red-400">*</span>
-                  </label>
-                  <textarea
-                    value={form.description}
-                    onChange={e => handleChange('description', e.target.value)}
-                    rows={4}
-                    placeholder="Descreva o contexto, escopo e objetivos do projeto..."
-                    className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none transition-colors placeholder:text-gray-300"
-                    required
-                  />
-                </div>
-
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">
+                  Descrição <span className="text-red-400">*</span>
+                </label>
+                <textarea
+                  value={form.description}
+                  onChange={e => handleChange('description', e.target.value)}
+                  rows={4}
+                  placeholder="Descreva o contexto, escopo e objetivos do projeto..."
+                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none transition-colors placeholder:text-gray-300"
+                  required
+                />
               </div>
             </div>
 
-            <div className="border-t border-gray-50 pt-5">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-4">Orçamento</p>
+            <hr className="border-gray-100" />
 
-              <label className="flex items-center gap-2.5 cursor-pointer mb-4">
-                <input
-                  type="checkbox"
-                  checked={hasBudget}
-                  onChange={e => setHasBudget(e.target.checked)}
-                  className="w-4 h-4 accent-primary-600"
-                />
-                <span className="text-sm text-gray-600">Este projeto envolve custo com fornecedor externo</span>
-              </label>
-
-              {hasBudget && (
-                <div className="grid grid-cols-2 gap-3">
-                  <Input
-                    label="Valor planejado (R$)"
-                    type="number"
-                    placeholder="0,00"
-                    value={form.budget_planned}
-                    onChange={e => handleChange('budget_planned', e.target.value)}
-                  />
-                  <Input
-                    label="Valor realizado (R$)"
-                    type="number"
-                    placeholder="0,00"
-                    value={form.budget_actual}
-                    onChange={e => handleChange('budget_actual', e.target.value)}
-                  />
-                </div>
-              )}
+            {/* CUSTOS FINANCEIROS */}
+            <div className="flex flex-col gap-3">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Custos financeiros</p>
+              <CostSelector costs={costs} onChange={setCosts} />
             </div>
 
             {error && (
@@ -237,18 +240,20 @@ export default function NewProject() {
               </div>
             )}
 
-            <div className="flex gap-3 justify-end pt-2 border-t border-gray-50">
+            <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
               <button
                 type="button"
                 onClick={() => navigate('/projetos')}
-                className="text-xs text-gray-400 hover:text-gray-600 px-4 py-2 transition-colors"
+                style={{ minWidth: '120px' }}
+                className="text-xs font-medium text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 py-2 rounded-lg transition-colors text-center"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="text-xs bg-primary-600 text-white px-5 py-2 rounded-lg hover:bg-primary-800 disabled:opacity-50 font-medium transition-colors"
+                style={{ minWidth: '120px' }}
+                className="text-xs font-medium bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors text-center"
               >
                 {loading ? 'Criando...' : 'Criar projeto'}
               </button>
