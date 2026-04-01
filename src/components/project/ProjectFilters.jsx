@@ -1,7 +1,11 @@
+import { useState, useEffect, useMemo } from 'react'
+import api from '../../services/api'
+import { useAuth } from '../../hooks/useAuth'
+
 const AREAS = [
-  'Todas as áreas', 'RH', 'Jurídica', 'Agropecuária', 'Construção',
-  'Contabilidade', 'Controladoria', 'Processos', 'Depto. de Pessoas',
-  'Comitê Executivo', 'Outros'
+  'RH', 'Jurídica', 'Agropecuária', 'Construção',
+  'Contabilidade', 'Controladoria', 'Processos',
+  'Depto. de Pessoas', 'Comitê Executivo', 'TI', 'Outros'
 ]
 
 const PHASES = [
@@ -19,6 +23,34 @@ const PHASES = [
 const selectCls = 'h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 outline-none focus:border-primary-600 transition-colors cursor-pointer'
 
 export function ProjectFilters({ filters, onChange }) {
+  const { user } = useAuth()
+  const [users, setUsers] = useState([])
+
+  const canSeeAllAreas = ['SUPERINTENDENTE', 'ANALISTA_MASTER'].includes(user?.role)
+  const isManagerLevel = ['GERENTE', 'COORDENADOR'].includes(user?.role)
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const area = canSeeAllAreas
+          ? (filters.area || '')
+          : user?.area
+        const params = area ? `?area=${encodeURIComponent(area)}` : ''
+        const response = await api.get(`/users${params}`)
+        const sorted = response.data.sort((a, b) => a.name.localeCompare(b.name))
+        setUsers(sorted)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    if (canSeeAllAreas || isManagerLevel) {
+      fetchUsers()
+    }
+  }, [filters.area, user])
+
+  const showUserFilter = canSeeAllAreas || isManagerLevel
+
   return (
     <div className="flex gap-2 flex-wrap">
       <input
@@ -26,7 +58,7 @@ export function ProjectFilters({ filters, onChange }) {
         placeholder="Buscar por nome ou área..."
         value={filters.search}
         onChange={e => onChange({ ...filters, search: e.target.value })}
-        className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-700 outline-none focus:border-primary-600 transition-colors min-w-[200px] placeholder:text-gray-300"
+        className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-700 outline-none focus:border-primary-600 transition-colors min-w-200px placeholder:text-gray-300"
       />
 
       <select
@@ -53,7 +85,8 @@ export function ProjectFilters({ filters, onChange }) {
         onChange={e => onChange({ ...filters, area: e.target.value })}
         className={selectCls}
       >
-        {AREAS.map(a => <option key={a} value={a === 'Todas as áreas' ? '' : a}>{a}</option>)}
+        <option value="">Todas as áreas</option>
+        {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
       </select>
 
       <select
@@ -68,6 +101,19 @@ export function ProjectFilters({ filters, onChange }) {
         <option value="2">Prioridade 2</option>
         <option value="1">Prioridade 1</option>
       </select>
+
+      {showUserFilter && (
+        <select
+          value={filters.user_id}
+          onChange={e => onChange({ ...filters, user_id: e.target.value })}
+          className={selectCls}
+        >
+          <option value="">Todos os usuários</option>
+          {users.map(u => (
+            <option key={u.id} value={u.id}>{u.name}</option>
+          ))}
+        </select>
+      )}
     </div>
   )
 }

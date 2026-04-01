@@ -105,7 +105,7 @@ export default function Users() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-6 py-6">
+      <div className="max-w-6xl mx-auto px-6 py-6">
 
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -225,9 +225,14 @@ export default function Users() {
                     <button
                       onClick={() => handleDelete(u.id)}
                       disabled={updatingId === u.id}
-                      className="text-xs text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                      className="hover:opacity-70 transition-opacity disabled:opacity-30"
                     >
-                      Excluir
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14H6L5 6"/>
+                        <path d="M10 11v6M14 11v6"/>
+                        <path d="M9 6V4h6v2"/>
+                      </svg>
                     </button>
                   )}
                 </div>

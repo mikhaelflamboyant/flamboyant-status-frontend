@@ -25,7 +25,7 @@ export function ProgressBar({ value = 0, color = 'primary', showLabel = true }) 
         />
       </div>
       {showLabel && (
-        <span className="text-xs text-gray-500 min-w-[32px] text-right tabular-nums">
+        <span className="text-xs text-gray-500 min-w-32px text-right tabular-nums">
           {safeValue}%
         </span>
       )}

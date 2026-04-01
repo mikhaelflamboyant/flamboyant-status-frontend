@@ -233,7 +233,7 @@ export default function ProjectDetail() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="max-w-5xl mx-auto px-6 py-6">
+      <div className="max-w-6xl mx-auto px-6 py-6">
 
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">

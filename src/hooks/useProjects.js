@@ -15,6 +15,7 @@ export function useProjects() {
     phase: '',
     area: '',
     priority: '',
+    user_id: '',
   })
 
   const fetchProjects = async () => {
@@ -61,6 +62,12 @@ export function useProjects() {
 
       if (filters.priority && project.priority !== parseInt(filters.priority)) {
         return false
+      }
+
+      if (filters.user_id) {
+        const isRequester = project.requesters?.some(r => r.user_id === filters.user_id)
+        const isMember = project.members?.some(m => m.user_id === filters.user_id)
+        if (!isRequester && !isMember) return false
       }
 
       return true

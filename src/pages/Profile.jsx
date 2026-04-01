@@ -68,12 +68,6 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-gray-50">
-            <p className="text-xs text-gray-400 text-center">
-              Para alterar seus dados, entre em contato com o gerente ou coordenador.
-            </p>
-          </div>
-
         </div>
       </div>
     </div>

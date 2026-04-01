@@ -25,12 +25,12 @@ export function Farol({ value, hideLabel = false, size = 'md' }) {
   const dotSize = size === 'sm' ? 'w-2 h-2' : 'w-3 h-3'
 
   if (hideLabel) {
-    return <div className={`${dotSize} rounded-full ${config.dot} flex-shrink-0 mt-0.5`} />
+    return <div className={`${dotSize} rounded-full ${config.dot} shrink-0 mt-0.5`} />
   }
 
   return (
     <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full ${config.bg}`}>
-      <div className={`${dotSize} rounded-full ${config.dot} flex-shrink-0`} />
+      <div className={`${dotSize} rounded-full ${config.dot} shrink-0`} />
       <span className={`text-xs font-medium ${config.text}`}>{config.label}</span>
     </div>
   )
