@@ -1,10 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { projectsService } from '../services/projects.service'
 
+const PAGE_SIZE = 10
+
 export function useProjects() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
 
   const [filters, setFilters] = useState({
     search: '',
@@ -30,6 +33,10 @@ export function useProjects() {
   useEffect(() => {
     fetchProjects()
   }, [])
+
+  useEffect(() => {
+    setPage(1)
+  }, [filters])
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
@@ -60,6 +67,13 @@ export function useProjects() {
     })
   }, [projects, filters])
 
+  const totalPages = Math.ceil(filteredProjects.length / PAGE_SIZE)
+
+  const paginatedProjects = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE
+    return filteredProjects.slice(start, start + PAGE_SIZE)
+  }, [filteredProjects, page])
+
   const metrics = useMemo(() => {
     return {
       total: projects.length,
@@ -70,12 +84,16 @@ export function useProjects() {
   }, [projects])
 
   return {
-    projects: filteredProjects,
+    projects: paginatedProjects,
+    totalProjects: filteredProjects.length,
     loading,
     error,
     filters,
     setFilters,
     metrics,
     refetch: fetchProjects,
+    page,
+    setPage,
+    totalPages,
   }
 }

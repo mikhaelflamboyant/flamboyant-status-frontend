@@ -141,6 +141,10 @@ export default function ProjectDetail() {
   const isMember = project?.members?.some(m => m.user_id === user?.id)
   const isOwner = project?.owner_id === user?.id
   const canEdit = isOwner || isMember || isPrivileged()
+  const isResponsible = project?.requesters?.some(
+    r => r.user_id === user?.id && r.type === 'RESPONSAVEL'
+  )
+  const canDelete = user?.role === 'ANALISTA_MASTER' || isResponsible
 
   const handleCreateStatus = async (e) => {
     e.preventDefault()
@@ -189,6 +193,16 @@ export default function ProjectDetail() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) return
+    try {
+      await projectsService.delete(id)
+      navigate('/projetos')
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao excluir projeto.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -221,15 +235,25 @@ export default function ProjectDetail() {
 
       <div className="max-w-5xl mx-auto px-6 py-6">
 
-        <div className="flex items-center gap-2 mb-5">
-          <button
-            onClick={() => navigate('/projetos')}
-            className="text-xs text-primary-600 hover:text-primary-800 transition-colors"
-          >
-            ← Projetos
-          </button>
-          <span className="text-xs text-gray-300">/</span>
-          <span className="text-xs text-gray-500 truncate max-w-xs">{project.title}</span>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/projetos')}
+              className="text-xs text-primary-600 hover:text-primary-800 transition-colors"
+            >
+              ← Projetos
+            </button>
+            <span className="text-xs text-gray-300">/</span>
+            <span className="text-xs text-gray-500 truncate max-w-xs">{project.title}</span>
+          </div>
+          {canDelete && (
+            <button
+              onClick={handleDelete}
+              className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors font-medium"
+            >
+              Excluir projeto
+            </button>
+          )}
         </div>
 
         <div className="bg-white border border-gray-100 rounded-xl p-6 mb-4">

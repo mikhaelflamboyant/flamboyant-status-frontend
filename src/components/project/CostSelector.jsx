@@ -109,7 +109,7 @@ export function CostSelector({ costs = [], onChange }) {
               />
             </div>
             <div className="flex-1">
-              <p className="text-xs text-gray-400 mb-1">Valor realizado (R$) <span className="text-gray-300">opcional</span></p>
+              <p className="text-xs text-gray-400 mb-1">Valor realizado (R$)</p>
               <input
                 type="text"
                 placeholder="0,00"

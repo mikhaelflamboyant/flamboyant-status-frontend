@@ -5,7 +5,7 @@ import { ProjectFilters } from '../components/project/ProjectFilters'
 import { useProjects } from '../hooks/useProjects'
 
 export default function Projects() {
-  const { projects, loading, error, filters, setFilters, metrics } = useProjects()
+  const { projects, loading, error, filters, setFilters, metrics, totalProjects, page, setPage, totalPages } = useProjects()
   const navigate = useNavigate()
 
   return (
@@ -67,11 +67,48 @@ export default function Projects() {
         )}
 
         {!loading && !error && projects.length > 0 && (
-          <div className="flex flex-col gap-2.5">
-            {projects.map(project => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
+          <>
+            <div className="flex flex-col gap-2.5">
+              {projects.map(project => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-xs text-gray-400">
+                {projects.length} projeto{projects.length !== 1 ? 's' : ''} nesta página · página {page} de {totalPages}
+              </p>  
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="h-8 px-3 text-xs border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                >
+                  ← Anterior
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`h-8 w-8 text-xs rounded-lg border transition-colors ${
+                      p === page
+                        ? 'bg-primary-600 text-white border-primary-600 font-medium'
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="h-8 px-3 text-xs border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                >
+                  Próxima →
+                </button>
+              </div>
+            </div>
+          </>
         )}
 
       </div>
