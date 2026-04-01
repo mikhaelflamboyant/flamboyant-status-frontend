@@ -11,10 +11,15 @@ export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk
   const handleAddRisk = async () => {
     if (!riskForm.title || !riskForm.description || !riskForm.mitigation) return
     setLoading(true)
-    await onAddRisk(update.id, riskForm)
-    setRiskForm({ title: '', description: '', mitigation: '' })
-    setShowRiskForm(false)
-    setLoading(false)
+    try {
+      await onAddRisk(update.id, riskForm)
+      setRiskForm({ title: '', description: '', mitigation: '' })
+      setShowRiskForm(false)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

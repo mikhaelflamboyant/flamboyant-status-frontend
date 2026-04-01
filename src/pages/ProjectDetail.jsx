@@ -120,6 +120,7 @@ export default function ProjectDetail() {
   const [editingReq, setEditingReq] = useState(false)
   const [reqContent, setReqContent] = useState('')
   const [reqLoading, setReqLoading] = useState(false)
+  const [reqTab, setReqTab] = useState('conteudo')
 
   const fetchProject = async () => {
     try {
@@ -129,6 +130,7 @@ export default function ProjectDetail() {
       const req = response.data.requirements?.[0] || null
       setRequirement(req)
       setReqContent(req?.content || '')
+      setReqTab('conteudo')
     } catch (err) {
       setError('Erro ao carregar projeto.')
     } finally {
@@ -138,12 +140,12 @@ export default function ProjectDetail() {
 
   useEffect(() => { fetchProject() }, [id])
 
-  const isMember = project?.members?.some(m => m.user_id === user?.id)
-  const isOwner = project?.owner_id === user?.id
-  const canEdit = isOwner || isMember || isPrivileged()
+  const isMember = project?.members?.some(m => m.user_id === user?.id) ?? false
+  const isOwner = project?.owner_id === user?.id ?? false
   const isResponsible = project?.requesters?.some(
     r => r.user_id === user?.id && r.type === 'RESPONSAVEL'
-  )
+  ) ?? false
+  const canEdit = isOwner || isMember || isResponsible || isPrivileged()
   const canDelete = user?.role === 'ANALISTA_MASTER' || isResponsible
 
   const handleCreateStatus = async (e) => {
@@ -238,10 +240,10 @@ export default function ProjectDetail() {
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/projetos')}
+              onClick={() => navigate(-1)}
               className="text-xs text-primary-600 hover:text-primary-800 transition-colors"
             >
-              ← Projetos
+              ← Voltar
             </button>
             <span className="text-xs text-gray-300">/</span>
             <span className="text-xs text-gray-500 truncate max-w-xs">{project.title}</span>
@@ -455,58 +457,159 @@ export default function ProjectDetail() {
 
         <div className="bg-white border border-gray-100 rounded-xl p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-sm font-medium text-gray-900">Requisitos de software</h2>
-            {canEdit && !editingReq && (
-              <button
-                onClick={() => setEditingReq(true)}
-                className="text-xs text-primary-600 hover:text-primary-800 transition-colors"
-              >
-                {requirement ? 'Editar' : '+ Adicionar'}
-              </button>
-            )}
-          </div>
-
-          {editingReq ? (
-            <div className="flex flex-col gap-3">
-              <textarea
-                value={reqContent}
-                onChange={e => setReqContent(e.target.value)}
-                rows={10}
-                placeholder="Documente os requisitos do projeto aqui..."
-                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none font-mono bg-gray-50"
-              />
-              <div className="flex gap-2">
+            <div className="flex items-center gap-4">
+              <h2 className="text-sm font-medium text-gray-900">Requisitos de software</h2>
+              <div className="flex gap-1">
                 <button
-                  onClick={handleSaveRequirement}
-                  disabled={reqLoading}
-                  className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50"
+                  onClick={() => setReqTab('conteudo')}
+                  className={`text-xs px-3 py-1 rounded-lg transition-colors ${
+                    reqTab === 'conteudo'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
                 >
-                  {reqLoading ? 'Salvando...' : 'Salvar'}
+                  Conteúdo
                 </button>
                 <button
-                  onClick={() => setEditingReq(false)}
-                  className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5"
+                  onClick={() => setReqTab('historico')}
+                  className={`text-xs px-3 py-1 rounded-lg transition-colors ${
+                    reqTab === 'historico'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
                 >
-                  Cancelar
+                  Histórico {requirement?.history?.length > 0 && `(${requirement.history.length})`}
                 </button>
               </div>
             </div>
-          ) : (
-            <div>
-              {requirement ? (
-                <>
-                  <div
-                    className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: requirement.content }}
+            {canEdit && !editingReq && reqTab === 'conteudo' && (
+              <>
+                {requirement ? (
+                  <button
+                    onClick={() => setEditingReq(true)}
+                    className="hover:opacity-70 transition-opacity"
+                    title="Editar requisitos"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setEditingReq(true)}
+                    className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors font-medium"
+                  >
+                    + Adicionar
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {reqTab === 'conteudo' && (
+            <>
+              {editingReq ? (
+                <div className="flex flex-col gap-3">
+                  <textarea
+                    value={reqContent}
+                    onChange={e => setReqContent(e.target.value)}
+                    rows={10}
+                    placeholder="Documente os requisitos do projeto aqui..."
+                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none font-mono bg-gray-50"
                   />
-                  <p className="text-xs text-gray-300 mt-4">
-                    Última edição: {new Date(requirement.updated_at).toLocaleDateString('pt-BR')} · {requirement.author?.name}
-                  </p>
-                </>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveRequirement}
+                      disabled={reqLoading}
+                      className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50"
+                    >
+                      {reqLoading ? 'Salvando...' : 'Salvar'}
+                    </button>
+                    <button
+                      onClick={() => setEditingReq(false)}
+                      className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
               ) : (
+                <div>
+                  {requirement ? (
+                    <>
+                      <div
+                        className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: requirement.content }}
+                      />
+                      <p className="text-xs text-gray-300 mt-4">
+                        Última edição: {new Date(requirement.updated_at).toLocaleDateString('pt-BR')} · {requirement.author?.name}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-gray-400 text-center py-8">
+                      Nenhum requisito cadastrado ainda.
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {reqTab === 'historico' && (
+            <div className="flex flex-col gap-3">
+              {!requirement?.history?.length ? (
                 <p className="text-xs text-gray-400 text-center py-8">
-                  Nenhum requisito cadastrado ainda.
+                  Nenhuma alteração registrada ainda.
                 </p>
+              ) : (
+                <>
+                  <div className="border border-primary-100 rounded-xl p-4 bg-primary-50/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-medium text-gray-600">Versão atual</span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(requirement.updated_at).toLocaleDateString('pt-BR')} às {new Date(requirement.updated_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="font-mono text-xs bg-white rounded-lg p-3 max-h-48 overflow-y-auto">
+                      {requirement.content.split('\n').map((line, i) => (
+                        <div key={i} className="px-1 text-gray-600">{line || ' '}</div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {requirement.history.map((entry, index) => {
+                    const curr = entry.content_snapshot
+                    const next = index === 0 ? requirement.content : requirement.history[index - 1]?.content_snapshot || ''
+                    const currLines = curr.split('\n')
+                    const nextLines = next.split('\n')
+
+                    return (
+                      <div key={entry.id} className="border border-gray-100 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-medium text-gray-600">{entry.editor?.name}</span>
+                          <span className="text-xs text-gray-400">
+                            {new Date(entry.edited_at).toLocaleDateString('pt-BR')} às {new Date(entry.edited_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <div className="font-mono text-xs bg-gray-50 rounded-lg p-3 flex flex-col gap-0.5 max-h-48 overflow-y-auto">
+                          {currLines.map((line, i) => {
+                            const isRemoved = !nextLines.includes(line) && line.trim() !== ''
+                            const isAdded = nextLines.includes(line) && !currLines.slice(0, i).includes(line)
+                            return (
+                              <div
+                                key={i}
+                                className={`px-1 rounded ${isRemoved ? 'bg-red-50 text-red-700' : 'text-gray-600'}`}
+                              >
+                                {isRemoved ? '- ' : '  '}{line || ' '}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </>
               )}
             </div>
           )}

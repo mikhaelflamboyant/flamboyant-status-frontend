@@ -59,11 +59,11 @@ export function RiskItem({ risk, canEdit, onUpdate, onDelete }) {
     <div className="border border-red-100 bg-red-50 rounded-lg p-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2">
-          <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0 mt-1" />
+          <div className="w-2 h-2 rounded-full bg-red-400 shrink-0 mt-1" />
           <p className="text-xs font-medium text-red-800">{risk.title}</p>
         </div>
         {canEdit && (
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-2 shrink-0">
             <button onClick={() => setEditing(true)} className="text-xs text-gray-400 hover:text-gray-600">
               Editar
             </button>
