@@ -10,6 +10,7 @@ import NewProject from './pages/NewProject'
 import ArchivedProjects from './pages/ArchivedProjects'
 import Users from './pages/Users'
 import Profile from './pages/Profile'
+import Notifications from './pages/Notifications'
 
 function App() {
   return (
@@ -45,7 +46,7 @@ function App() {
         } />
 
         <Route path="/usuarios" element={
-          <ProtectedRoute allowedRoles={['SUPERINTENDENTE', 'GERENTE', 'COORDENADOR', 'ANALISTA_MASTER']}>
+          <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR']}>
             <Users />
           </ProtectedRoute>
         } />
@@ -53,6 +54,12 @@ function App() {
         <Route path="/perfil" element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/notificacoes" element={
+          <ProtectedRoute>
+            <Notifications />
           </ProtectedRoute>
         } />
 
