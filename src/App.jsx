@@ -11,6 +11,7 @@ import ArchivedProjects from './pages/ArchivedProjects'
 import Users from './pages/Users'
 import Profile from './pages/Profile'
 import Notifications from './pages/Notifications'
+import ApiDocs from './pages/ApiDocs'
 
 function App() {
   return (
@@ -65,6 +66,12 @@ function App() {
 
         <Route path="/" element={<Navigate to="/projetos" replace />} />
         <Route path="*" element={<Navigate to="/projetos" replace />} />
+
+        <Route path="/api" element={
+          <ProtectedRoute>
+            <ApiDocs />
+          </ProtectedRoute>
+        } />
 
       </Routes>
     </BrowserRouter>

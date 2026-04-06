@@ -118,6 +118,7 @@ export function Navbar() {
           {navLink('/projetos', 'Projetos ativos')}
           {navLink('/projetos/arquivados', 'Finalizados')}
           {(isManager() || user?.role === 'ANALISTA_MASTER') && navLink('/usuarios', 'Usuários')}
+          {(user?.area === 'Tecnologia da Informação' && user?.role !== 'SUPERINTENDENTE') && navLink('/api', 'API')}
         </div>
       </div>
 
