@@ -1,3 +1,4 @@
+import { PDFExport } from '../components/project/PDFExport'
 import api from '../services/api'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -333,7 +334,12 @@ export default function ProjectDetail() {
                 <Badge variant={priority.variant}>{priority.label}</Badge>
               </div>
             </div>
-            <Farol value={project.traffic_light} />
+            <div className="flex items-center gap-3">
+              {isFromTI && (
+                <PDFExport project={project} statusUpdates={statusUpdates} />
+              )}
+              <Farol value={project.traffic_light} />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-5">
