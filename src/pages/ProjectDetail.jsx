@@ -1,3 +1,4 @@
+import api from '../services/api'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
@@ -11,6 +12,7 @@ import { statusService } from '../services/status.service'
 import { risksService } from '../services/risks.service'
 import { requirementsService } from '../services/requirements.service'
 import { useAuth } from '../hooks/useAuth'
+import { tasksService } from '../services/tasks.service'
 
 const PRIORITY_CONFIG = {
   1: { label: 'Prioridade 1', variant: 'green' },
@@ -121,6 +123,12 @@ export default function ProjectDetail() {
   const [reqContent, setReqContent] = useState('')
   const [reqLoading, setReqLoading] = useState(false)
   const [reqTab, setReqTab] = useState('conteudo')
+  const [tasks, setTasks] = useState([])
+  const [taskTab, setTaskTab] = useState('pendentes')
+  const [showTaskForm, setShowTaskForm] = useState(false)
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', assignee_id: '', due_date: '' })
+  const [taskLoading, setTaskLoading] = useState(false)
+  const [users, setUsers] = useState([])
 
   const fetchProject = async () => {
     try {
@@ -131,6 +139,15 @@ export default function ProjectDetail() {
       setRequirement(req)
       setReqContent(req?.content || '')
       setReqTab('conteudo')
+      const isFromTI = user?.area === 'Tecnologia da Informação' || user?.role === 'ANALISTA_MASTER'
+        if (isFromTI) {
+          const [tasksRes, usersRes] = await Promise.all([
+            tasksService.list(id),
+            api.get('/users')
+          ])
+          setTasks(tasksRes.data)
+          setUsers(usersRes.data)
+        }
     } catch (err) {
       setError('Erro ao carregar projeto.')
     } finally {
@@ -148,9 +165,17 @@ export default function ProjectDetail() {
   const isRequester = project?.requesters?.some(
     r => r.user_id === user?.id && r.type === 'SOLICITANTE'
   ) ?? false
-  const isFromTI = user?.area === 'Tecnologia da Informação'
+  const isFromTI = user?.area === 'Tecnologia da Informação' || user?.role === 'ANALISTA_MASTER'
   const canEdit = (isFromTI || user?.role === 'ANALISTA_MASTER') && (isResponsible || isRequester || user?.role === 'ANALISTA_MASTER')
   const canDelete = (isFromTI || user?.role === 'ANALISTA_MASTER') && (isResponsible || isRequester || user?.role === 'ANALISTA_MASTER')
+  const canManageTasks = isFromTI && (
+    user?.role === 'ANALISTA_MASTER' ||
+    user?.role === 'GERENTE' ||
+    user?.role === 'COORDENADOR' ||
+    isResponsible ||
+    isRequester ||
+    isMember
+  )
 
   const handleCreateStatus = async (e) => {
     e.preventDefault()
@@ -206,6 +231,40 @@ export default function ProjectDetail() {
       navigate('/projetos')
     } catch (err) {
       alert(err.response?.data?.error || 'Erro ao excluir projeto.')
+    }
+  }
+
+  const handleCreateTask = async () => {
+    if (!taskForm.title) return
+    setTaskLoading(true)
+    try {
+      await tasksService.create(id, { ...taskForm, phase: project?.current_phase || null })
+      setTaskForm({ title: '', description: '', assignee_id: '', due_date: '' })
+      setShowTaskForm(false)
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setTaskLoading(false)
+    }
+  }
+
+  const handleCompleteTask = async (taskId) => {
+    try {
+      await tasksService.complete(id, taskId)
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleDeleteTask = async (taskId) => {
+    if (!confirm('Excluir esta tarefa?')) return
+    try {
+      await tasksService.delete(id, taskId)
+      fetchProject()
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -458,6 +517,170 @@ export default function ProjectDetail() {
             ))}
           </div>
         </div>
+
+        {isFromTI && (
+          <div className="bg-white border border-gray-100 rounded-xl p-6 mb-4">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-4">
+                <h2 className="text-sm font-medium text-gray-900">Tarefas</h2>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setTaskTab('pendentes')}
+                    className={`text-xs px-3 py-1 rounded-lg transition-colors ${taskTab === 'pendentes' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Pendentes {tasks.filter(t => !t.completed).length > 0 && `(${tasks.filter(t => !t.completed).length})`}
+                  </button>
+                  <button
+                    onClick={() => setTaskTab('concluidas')}
+                    className={`text-xs px-3 py-1 rounded-lg transition-colors ${taskTab === 'concluidas' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    Concluídas {tasks.filter(t => t.completed).length > 0 && `(${tasks.filter(t => t.completed).length})`}
+                  </button>
+                </div>
+              </div>
+              {canManageTasks && (
+                <button
+                  onClick={() => setShowTaskForm(!showTaskForm)}
+                  className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors"
+                >
+                  + Nova tarefa
+                </button>
+              )}
+            </div>
+
+            {showTaskForm && (
+              <div className="border border-gray-100 rounded-xl p-4 mb-5 bg-gray-50 flex flex-col gap-3">
+                <p className="text-xs font-medium text-gray-600">Nova tarefa</p>
+                <input
+                  placeholder="Título da tarefa *"
+                  value={taskForm.title}
+                  onChange={e => setTaskForm({ ...taskForm, title: e.target.value })}
+                  className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                />
+                <textarea
+                  placeholder="Descrição (opcional)"
+                  value={taskForm.description}
+                  onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
+                  rows={2}
+                  className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
+                />
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">Responsável</p>
+                    <select
+                      value={taskForm.assignee_id}
+                      onChange={e => setTaskForm({ ...taskForm, assignee_id: e.target.value })}
+                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                    >
+                      <option value="">Selecionar</option>
+                      {project?.requesters?.filter(r => r.type === 'RESPONSAVEL').map(r => (
+                        <option key={r.user_id} value={r.user_id}>{r.user.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">Fase vinculada</p>
+                    <div className="h-8 px-3 text-xs border border-gray-100 rounded-lg bg-gray-50 flex items-center text-gray-500">
+                      {project?.current_phase || '—'}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">Prazo</p>
+                    <input
+                      type="date"
+                      value={taskForm.due_date}
+                      onChange={e => setTaskForm({ ...taskForm, due_date: e.target.value })}
+                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCreateTask}
+                    disabled={taskLoading}
+                    className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50"
+                  >
+                    {taskLoading ? 'Salvando...' : 'Salvar'}
+                  </button>
+                  <button
+                    onClick={() => setShowTaskForm(false)}
+                    className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2">
+              {tasks.filter(t => taskTab === 'pendentes' ? !t.completed : t.completed).length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-8">
+                  {taskTab === 'pendentes' ? 'Nenhuma tarefa pendente.' : 'Nenhuma tarefa concluída.'}
+                </p>
+              ) : (
+                tasks.filter(t => taskTab === 'pendentes' ? !t.completed : t.completed).map(task => (
+                  <div key={task.id} className={`border rounded-xl p-4 ${task.completed ? 'border-teal-100 bg-teal-50/30' : 'border-gray-100 bg-white'}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-3 flex-1">
+                        <button
+                          onClick={() => handleCompleteTask(task.id)}
+                          disabled={task.author_id !== user?.id}
+                          className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                            task.completed
+                              ? 'bg-teal-500 border-teal-500'
+                              : 'border-gray-300 hover:border-primary-400'
+                          } disabled:opacity-40 disabled:cursor-not-allowed`}
+                        >
+                          {task.completed && (
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          )}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium ${task.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                            {task.title}
+                          </p>
+                          {task.description && (
+                            <p className="text-xs text-gray-400 mt-0.5">{task.description}</p>
+                          )}
+                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                            {task.assignee && (
+                              <span className="text-xs text-gray-400">→ {task.assignee.name}</span>
+                            )}
+                            {task.phase && (
+                              <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{task.phase}</span>
+                            )}
+                            {task.due_date && (
+                              <span className={`text-xs ${new Date(task.due_date) < new Date() && !task.completed ? 'text-red-500' : 'text-gray-400'}`}>
+                                {new Date(task.due_date).toLocaleDateString('pt-BR')}
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-300">por {task.author.name}</span>
+                          </div>
+                        </div>
+                      </div>
+                      {canManageTasks && (
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="hover:opacity-70 transition-opacity shrink-0"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4h6v2"/>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {(user?.area === 'Tecnologia da Informação' || user?.role === 'ANALISTA_MASTER') && (
           <div className="bg-white border border-gray-100 rounded-xl p-6">
             <div className="flex items-center justify-between mb-5">
@@ -599,7 +822,6 @@ export default function ProjectDetail() {
                           <div className="font-mono text-xs bg-gray-50 rounded-lg p-3 flex flex-col gap-0.5 max-h-48 overflow-y-auto">
                             {currLines.map((line, i) => {
                               const isRemoved = !nextLines.includes(line) && line.trim() !== ''
-                              const isAdded = nextLines.includes(line) && !currLines.slice(0, i).includes(line)
                               return (
                                 <div
                                   key={i}
