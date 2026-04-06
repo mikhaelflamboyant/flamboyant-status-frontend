@@ -1,9 +1,33 @@
 import { useState, useMemo } from 'react'
 
 const AREAS = [
-  'RH', 'Jurídica', 'Agropecuária', 'Construção',
-  'Contabilidade', 'Controladoria', 'Processos',
-  'Depto. de Pessoas', 'Comitê Executivo', 'TI', 'Outros'
+  'Administração Pessoal',
+  'Agropecuária',
+  'Arquitetura',
+  'Comercial',
+  'Conservação',
+  'Contabilidade',
+  'Controladoria',
+  'Engenharia',
+  'Financeiro',
+  'Incorporação',
+  'Instituto',
+  'Inovação',
+  'Jurídico',
+  'Legalização',
+  'Manutenção',
+  'Marketing Coorporativo',
+  'Marketing Institucional',
+  'Marketing Urbanismo',
+  'Pessoas e Cultura',
+  'Planejamento Financeiro',
+  'Processos',
+  'Projetos Executivos',
+  'Relacionamento',
+  'Segurança',
+  'Suprimentos',
+  'Tecnologia da Informação',
+  'Vendas',
 ]
 
 const TrashIcon = ({ color = '#E24B4A' }) => (

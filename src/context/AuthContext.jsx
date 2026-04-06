@@ -8,15 +8,20 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token')
-    const storedUser = localStorage.getItem('user')
+    try {
+      const storedToken = localStorage.getItem('token')
+      const storedUser = localStorage.getItem('user')
 
-    if (storedToken && storedUser) {
-      setToken(storedToken)
-      setUser(JSON.parse(storedUser))
+      if (storedToken && storedUser) {
+        setToken(storedToken)
+        setUser(JSON.parse(storedUser))
+      }
+    } catch (err) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }, [])
 
   const login = (userData, userToken) => {
@@ -33,16 +38,12 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user')
   }
 
-  const isPrivileged = () => {
-    return ['SUPERINTENDENTE', 'GERENTE', 'COORDENADOR', 'ANALISTA_MASTER'].includes(user?.role)
-  }
-
-  const isManager = () => {
-    return ['SUPERINTENDENTE', 'GERENTE', 'COORDENADOR'].includes(user?.role)
-  }
+  const isPrivileged = () => ['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR', 'SUPERVISOR'].includes(user?.role)
+  const isManager = () => ['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
+  const canCreateProject = () => user?.area === 'TI' || user?.role === 'ANALISTA_MASTER'
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, isPrivileged, isManager }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isPrivileged, isManager, canCreateProject, loading }}>
       {children}
     </AuthContext.Provider>
   )

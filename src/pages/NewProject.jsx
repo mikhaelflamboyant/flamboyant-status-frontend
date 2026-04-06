@@ -80,7 +80,7 @@ export default function NewProject() {
         costs,
       }
       const response = await projectsService.create(data)
-      navigate(`/projetos/${response.data.id}`)
+      navigate(`/projetos/${response.data.id}`, { replace: true })
     } catch (err) {
       setError(err.response?.data?.error || 'Erro ao criar projeto. Tente novamente.')
     } finally {

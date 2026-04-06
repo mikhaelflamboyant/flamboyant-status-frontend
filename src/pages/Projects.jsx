@@ -3,10 +3,12 @@ import { Navbar } from '../components/layout/Navbar'
 import { ProjectCard } from '../components/project/ProjectCard'
 import { ProjectFilters } from '../components/project/ProjectFilters'
 import { useProjects } from '../hooks/useProjects'
+import { useAuth } from '../hooks/useAuth'
 
 export default function Projects() {
   const { projects, loading, error, filters, setFilters, metrics, totalProjects, page, setPage, totalPages } = useProjects()
   const navigate = useNavigate()
+  const { user, canCreateProject } = useAuth()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -16,12 +18,14 @@ export default function Projects() {
 
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-base font-medium text-gray-900">Projetos ativos</h1>
-          <button
-            onClick={() => navigate('/projetos/novo')}
-            className="text-xs font-medium px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-800 transition-colors"
-          >
-            + Novo projeto
-          </button>
+          {canCreateProject() && (
+            <button
+              onClick={() => navigate('/projetos/novo')}
+              className="text-xs font-medium px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-800 transition-colors"
+            >
+              + Novo projeto
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-4 gap-3 mb-6">

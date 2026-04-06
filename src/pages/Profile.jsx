@@ -3,10 +3,12 @@ import { Navbar } from '../components/layout/Navbar'
 import { useAuth } from '../hooks/useAuth'
 
 const ROLE_LABELS = {
+  ANALISTA_MASTER: 'Analista Master',
   SUPERINTENDENTE: 'Superintendente',
+  DIRETOR: 'Diretor',
   GERENTE: 'Gerente',
   COORDENADOR: 'Coordenador',
-  ANALISTA_MASTER: 'Analista Master',
+  SUPERVISOR: 'Supervisor',
   ANALISTA: 'Analista',
 }
 
