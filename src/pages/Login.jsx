@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { authService } from '../services/auth.service'
@@ -14,10 +14,26 @@ export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const err = params.get('error')
+
+    if (err === 'pending_approval') {
+      setError('Seu cadastro está aguardando aprovação.')
+    } else if (err === 'rejected') {
+      setError('Seu cadastro foi recusado. Entre em contato com o administrador.')
+    } else if (err === 'saml_error') {
+      setError('Erro ao autenticar com Microsoft. Tente novamente.')
+    } else if (err === 'email_not_found') {
+      setError('Não foi possível obter o e-mail da conta Microsoft.')
+    }
+  }, [])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
+
     try {
       const response = await authService.login({ email, password })
       login(response.data.user, response.data.token)
@@ -34,7 +50,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
 
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center shrink-0">
             <div className="w-4 h-4 rounded-md bg-primary-50 opacity-80" />
           </div>
           <div>
@@ -57,6 +73,7 @@ export default function Login() {
               hint="Somente @flamboyant.com.br"
               required
             />
+
             <Input
               label="Senha"
               type="password"
@@ -77,10 +94,33 @@ export default function Login() {
             </Button>
           </form>
 
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-100" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-3 text-xs text-gray-400">ou</span>
+            </div>
+          </div>
+
+          <a
+            href="http://localhost:3000/auth/saml/login"
+            className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 21 21" fill="none">
+              <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+              <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+              <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+              <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+            </svg>
+            Entrar com Microsoft
+          </a>
+
           <div className="mt-5 pt-5 border-t border-gray-50 flex flex-col gap-2 text-center">
             <Link to="/esqueci-senha" className="text-xs text-primary-600 hover:text-primary-800 transition-colors">
               Esqueci minha senha
             </Link>
+
             <Link to="/cadastro" className="text-xs text-gray-400 hover:text-gray-500 transition-colors">
               Ainda não tem conta? <span className="text-primary-600">Cadastre-se</span>
             </Link>

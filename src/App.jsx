@@ -12,6 +12,7 @@ import Users from './pages/Users'
 import Profile from './pages/Profile'
 import Notifications from './pages/Notifications'
 import ApiDocs from './pages/ApiDocs'
+import SamlSuccess from './pages/SamlSuccess'
 
 function App() {
   return (
@@ -21,6 +22,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Register />} />
         <Route path="/esqueci-senha" element={<ForgotPassword />} />
+
+        <Route path="/auth/saml/success" element={<SamlSuccess />} />
 
         <Route path="/projetos" element={
           <ProtectedRoute>

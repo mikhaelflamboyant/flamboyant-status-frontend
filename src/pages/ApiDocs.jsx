@@ -43,10 +43,23 @@ export default function ApiDocs() {
   const [newToken, setNewToken] = useState(null)
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [tokenTab, setTokenTab] = useState('ativos')
+  const [allTokens, setAllTokens] = useState([])
+  const canSeeHistory = user?.area === 'Tecnologia da Informação' && ['ANALISTA_MASTER', 'GERENTE', 'COORDENADOR'].includes(user?.role)
 
   useEffect(() => {
     fetchTokens()
-  }, [])
+    if (canSeeHistory) fetchAllTokens()
+    }, [])
+
+    const fetchAllTokens = async () => {
+        try {
+        const res = await apitokenService.listAll()
+        setAllTokens(res.data)
+    } catch (err) {
+        console.error(err)
+    }
+    }
 
   const fetchTokens = async () => {
     try {
@@ -154,77 +167,138 @@ export default function ApiDocs() {
             </Section>
 
             <Section title="Tokens de acesso">
-              <div className="mb-5">
-                <p className="text-xs text-gray-500 mb-3">Gere um token para cada sistema ou pessoa que precisar acessar a API (ex: Power BI, scripts, etc.).</p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Nome do token (ex: Power BI Denilton)"
-                    value={newTokenName}
-                    onChange={e => setNewTokenName(e.target.value)}
-                    className="flex-1 h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600"
-                  />
-                  <button
-                    onClick={handleCreate}
-                    disabled={loading || !newTokenName}
-                    className="text-xs bg-primary-600 text-white px-4 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium"
-                  >
-                    {loading ? 'Gerando...' : 'Gerar token'}
-                  </button>
-                </div>
+  <div className="flex gap-1 mb-5">
+    <button
+      onClick={() => setTokenTab('ativos')}
+      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+        tokenTab === 'ativos' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+      }`}
+    >
+      Tokens ativos
+    </button>
+    {canSeeHistory && (
+      <button
+        onClick={() => setTokenTab('historico')}
+        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+          tokenTab === 'historico' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+        }`}
+      >
+        Histórico
+      </button>
+    )}
+  </div>
+
+  {tokenTab === 'ativos' && (
+    <>
+      <div className="mb-5">
+        <p className="text-xs text-gray-500 mb-3">Gere um token para cada sistema ou pessoa que precisar acessar a API (ex: Power BI, scripts, etc.).</p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Nome do token (ex: Power BI Denilton)"
+            value={newTokenName}
+            onChange={e => setNewTokenName(e.target.value)}
+            className="flex-1 h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600"
+          />
+          <button
+            onClick={handleCreate}
+            disabled={loading || !newTokenName}
+            className="text-xs bg-primary-600 text-white px-4 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium"
+          >
+            {loading ? 'Gerando...' : 'Gerar token'}
+          </button>
+        </div>
+      </div>
+
+      {newToken && (
+        <div className="mb-5 p-4 bg-teal-50 border border-teal-100 rounded-xl">
+          <p className="text-xs font-medium text-teal-800 mb-2">Token gerado — copie agora, ele não será exibido novamente!</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs font-mono text-teal-900 bg-white px-3 py-2 rounded-lg border border-teal-200 break-all">{newToken}</code>
+            <button
+              onClick={() => handleCopy(newToken)}
+              className="text-xs text-teal-700 border border-teal-300 px-3 py-1.5 rounded-lg hover:bg-teal-100 transition-colors shrink-0"
+            >
+              {copied ? '✓ Copiado' : 'Copiar'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tokens.length === 0 ? (
+        <p className="text-xs text-gray-400 text-center py-8">Nenhum token ativo.</p>
+      ) : (
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-gray-50 grid grid-cols-12 gap-4">
+            <p className="col-span-4 text-xs font-medium text-gray-400">Nome</p>
+            <p className="col-span-3 text-xs font-medium text-gray-400">Criado por</p>
+            <p className="col-span-3 text-xs font-medium text-gray-400">Último uso</p>
+            <p className="col-span-2 text-xs font-medium text-gray-400"></p>
+          </div>
+          {tokens.map((token, index) => (
+            <div
+              key={token.id}
+              className={`px-4 py-3 grid grid-cols-12 gap-4 items-center hover:bg-gray-50 transition-colors ${index !== tokens.length - 1 ? 'border-b border-gray-50' : ''}`}
+            >
+              <div className="col-span-4">
+                <p className="text-xs font-medium text-gray-800">{token.name}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Criado em {new Date(token.created_at).toLocaleDateString('pt-BR')}</p>
               </div>
+              <p className="col-span-3 text-xs text-gray-600">{token.creator?.name}</p>
+              <p className="col-span-3 text-xs text-gray-400">
+                {token.last_used ? new Date(token.last_used).toLocaleDateString('pt-BR') : 'Nunca usado'}
+              </p>
+              <div className="col-span-2 flex justify-end">
+                <button
+                  onClick={() => handleRevoke(token.id)}
+                  className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-2.5 py-1 rounded-lg transition-colors"
+                >
+                  Revogar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )}
 
-              {newToken && (
-                <div className="mb-5 p-4 bg-teal-50 border border-teal-100 rounded-xl">
-                  <p className="text-xs font-medium text-teal-800 mb-2">Token gerado — copie agora, ele não será exibido novamente!</p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 text-xs font-mono text-teal-900 bg-white px-3 py-2 rounded-lg border border-teal-200 break-all">{newToken}</code>
-                    <button
-                      onClick={() => handleCopy(newToken)}
-                      className="text-xs text-teal-700 border border-teal-300 px-3 py-1.5 rounded-lg hover:bg-teal-100 transition-colors shrink-0"
-                    >
-                      {copied ? '✓ Copiado' : 'Copiar'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {tokens.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-8">Nenhum token gerado ainda.</p>
-              ) : (
-                <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-                  <div className="px-4 py-2.5 border-b border-gray-50 grid grid-cols-12 gap-4">
-                    <p className="col-span-4 text-xs font-medium text-gray-400">Nome</p>
-                    <p className="col-span-3 text-xs font-medium text-gray-400">Criado por</p>
-                    <p className="col-span-3 text-xs font-medium text-gray-400">Último uso</p>
-                    <p className="col-span-2 text-xs font-medium text-gray-400"></p>
-                  </div>
-                  {tokens.map((token, index) => (
-                    <div
-                      key={token.id}
-                      className={`px-4 py-3 grid grid-cols-12 gap-4 items-center hover:bg-gray-50 transition-colors ${index !== tokens.length - 1 ? 'border-b border-gray-50' : ''}`}
-                    >
-                      <div className="col-span-4">
-                        <p className="text-xs font-medium text-gray-800">{token.name}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">Criado em {new Date(token.created_at).toLocaleDateString('pt-BR')}</p>
-                      </div>
-                      <p className="col-span-3 text-xs text-gray-600">{token.creator?.name}</p>
-                      <p className="col-span-3 text-xs text-gray-400">
-                        {token.last_used ? new Date(token.last_used).toLocaleDateString('pt-BR') : 'Nunca usado'}
-                      </p>
-                      <div className="col-span-2 flex justify-end">
-                        <button
-                          onClick={() => handleRevoke(token.id)}
-                          className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-2.5 py-1 rounded-lg transition-colors"
-                        >
-                          Revogar
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Section>
+  {tokenTab === 'historico' && canSeeHistory && (
+    <>
+      {allTokens.length === 0 ? (
+        <p className="text-xs text-gray-400 text-center py-8">Nenhum token registrado.</p>
+      ) : (
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-gray-50 grid grid-cols-12 gap-4">
+            <p className="col-span-4 text-xs font-medium text-gray-400">Nome</p>
+            <p className="col-span-3 text-xs font-medium text-gray-400">Criado por</p>
+            <p className="col-span-3 text-xs font-medium text-gray-400">Data de criação</p>
+            <p className="col-span-2 text-xs font-medium text-gray-400">Status</p>
+          </div>
+          {allTokens.map((token, index) => (
+            <div
+              key={token.id}
+              className={`px-4 py-3 grid grid-cols-12 gap-4 items-center hover:bg-gray-50 transition-colors ${index !== allTokens.length - 1 ? 'border-b border-gray-50' : ''}`}
+            >
+              <div className="col-span-4">
+                <p className="text-xs font-medium text-gray-800">{token.name}</p>
+              </div>
+              <p className="col-span-3 text-xs text-gray-600">{token.creator?.name}</p>
+              <p className="col-span-3 text-xs text-gray-400">{new Date(token.created_at).toLocaleDateString('pt-BR')}</p>
+              <div className="col-span-2">
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  token.active ? 'bg-teal-50 text-teal-800' : 'bg-red-50 text-red-600'
+                }`}>
+                  {token.active ? 'Ativo' : 'Revogado'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )}
+</Section>
           </>
         )}
 
@@ -342,7 +416,7 @@ export default function ApiDocs() {
                 {[
                   { label: 'Backend', desc: 'Node.js + Express + Prisma ORM. Roda na porta 3000. Autenticação via JWT com expiração de 7 dias.' },
                   { label: 'Frontend', desc: 'React + Vite + Tailwind CSS v4. Roda na porta 5173 em desenvolvimento.' },
-                  { label: 'Banco de dados', desc: 'PostgreSQL hospedado no Supabase (região South America — São Paulo). Gerenciado via Prisma Migrate.' },
+                  { label: 'Banco de dados', desc: 'PostgreSQL hospedado no Supabase (região South America - São Paulo). Gerenciado via Prisma Migrate.' },
                   { label: 'Repositórios', desc: 'Backend e frontend em repositórios separados no GitHub da organização Flamboyant.' },
                 ].map(a => (
                   <div key={a.label} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
