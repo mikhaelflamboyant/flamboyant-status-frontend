@@ -423,13 +423,15 @@ export default function ProjectDetail() {
             </div>
           </div>
 
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-xs text-gray-400">Conclusão</p>
-              <p className="text-xs font-medium text-gray-600">{project.completion_pct}%</p>
+          {project.description && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs text-gray-400">Conclusão</p>
+                <p className="text-xs font-medium text-gray-600">{project.completion_pct}%</p>
+              </div>
+              <ProgressBar value={project.completion_pct} color={progressColor} showLabel={false} />
             </div>
-            <ProgressBar value={project.completion_pct} color={progressColor} showLabel={false} />
-          </div>
+          )}
 
           <PhaseStrip currentPhase={project.current_phase} />
 

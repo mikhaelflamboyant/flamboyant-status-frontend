@@ -220,6 +220,13 @@ export function PDFExport({ project, statusUpdates }) {
             </p>
           </div>
 
+          {project.description && (
+            <div style={{ marginBottom: '20px', padding: '12px 14px', background: '#f9fafb', border: '1px solid #f0f0f0', borderRadius: '10px' }}>
+              <p style={{ fontSize: '11px', color: '#9ca3af', margin: '0 0 4px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Descrição</p>
+              <p style={{ fontSize: '13px', color: '#374151', margin: 0, lineHeight: '1.6' }}>{project.description}</p>
+            </div>
+          )}
+          
           <div style={s.infoGrid}>
             <div style={s.infoCell}>
               <p style={s.infoLabel}>Solicitante(s)</p>
