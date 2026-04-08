@@ -46,7 +46,7 @@ const PHASES = [
 
 const selectCls = 'h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 outline-none focus:border-primary-600 transition-colors cursor-pointer'
 
-export function ProjectFilters({ filters, onChange }) {
+export function ProjectFilters({ filters, onChange, hidePhase }) {
   const { user } = useAuth()
   const [users, setUsers] = useState([])
 
@@ -96,13 +96,15 @@ export function ProjectFilters({ filters, onChange }) {
         <option value="VERMELHO">Vermelho</option>
       </select>
 
-      <select
-        value={filters.phase}
-        onChange={e => onChange({ ...filters, phase: e.target.value })}
-        className={selectCls}
-      >
-        {PHASES.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
-      </select>
+      {!hidePhase && (
+        <select
+          value={filters.phase}
+          onChange={e => onChange({ ...filters, phase: e.target.value })}
+          className={selectCls}
+        >
+          {PHASES.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
+        </select>
+      )}
 
       <select
         value={filters.area}

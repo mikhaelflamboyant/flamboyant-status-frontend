@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
-export function ProtectedRoute({ children, allowedRoles }) {
+export function ProtectedRoute({ children, allowedRoles, requiredArea }) {
   const { user, loading } = useAuth()
 
   if (loading) {
@@ -17,6 +17,10 @@ export function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/projetos" replace />
+  }
+
+  if (requiredArea && user.area !== requiredArea) {
     return <Navigate to="/projetos" replace />
   }
 

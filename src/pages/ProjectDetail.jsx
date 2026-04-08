@@ -130,6 +130,7 @@ export default function ProjectDetail() {
   const [taskForm, setTaskForm] = useState({ title: '', description: '', assignee_id: '', due_date: '' })
   const [taskLoading, setTaskLoading] = useState(false)
   const [users, setUsers] = useState([])
+  const [toast, setToast] = useState('')
 
   const fetchProject = async () => {
     try {
@@ -150,7 +151,12 @@ export default function ProjectDetail() {
           setUsers(usersRes.data)
         }
     } catch (err) {
-      setError('Erro ao carregar projeto.')
+      if (err.response?.status === 404) {
+        setToast('Projeto não encontrado ou foi excluído.')
+        setTimeout(() => navigate('/projetos'), 3000)
+      } else {
+        setError('Erro ao carregar projeto.')
+      }
     } finally {
       setLoading(false)
     }
@@ -298,6 +304,14 @@ export default function ProjectDetail() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-xs px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
+          <span>⚠️</span>
+          <span>{toast}</span>
+          <span className="text-gray-400">Redirecionando...</span>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-6 py-6">
 

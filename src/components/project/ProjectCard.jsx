@@ -56,7 +56,7 @@ export function ProjectCard({ project }) {
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-1.5 min-w-[110px]">
+        <div className="flex flex-col items-end gap-1.5 min-w-110px">
           <ProgressBar value={project.completion_pct} color={progressColor} />
           <span className="text-xs text-gray-400">Go-live: {goLive}</span>
         </div>

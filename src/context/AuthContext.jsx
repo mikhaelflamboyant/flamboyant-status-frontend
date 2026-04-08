@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
 
   const isPrivileged = () => ['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR', 'SUPERVISOR'].includes(user?.role)
   const isManager = () => ['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
-  const canCreateProject = () => user?.area === 'TI' || user?.role === 'ANALISTA_MASTER'
+  const canCreateProject = () => user?.area === 'Tecnologia da Informação' || user?.role === 'ANALISTA_MASTER'
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, isPrivileged, isManager, canCreateProject, loading }}>

@@ -50,7 +50,7 @@ function App() {
         } />
 
         <Route path="/usuarios" element={
-          <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR']}>
+          <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR']} requiredArea="Tecnologia da Informação">
             <Users />
           </ProtectedRoute>
         } />

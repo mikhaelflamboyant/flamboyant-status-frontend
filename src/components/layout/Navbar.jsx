@@ -117,7 +117,7 @@ export function Navbar() {
         <div className="flex items-center gap-1">
           {navLink('/projetos', 'Projetos ativos')}
           {navLink('/projetos/arquivados', 'Finalizados')}
-          {(isManager() || user?.role === 'ANALISTA_MASTER') && navLink('/usuarios', 'Usuários')}
+          {(isManager() || user?.role === 'ANALISTA_MASTER') && user?.area === 'Tecnologia da Informação' && navLink('/usuarios', 'Usuários')}
           {(user?.area === 'Tecnologia da Informação' && user?.role !== 'SUPERINTENDENTE') && navLink('/api', 'API')}
         </div>
       </div>
