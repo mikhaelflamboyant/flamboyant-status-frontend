@@ -17,7 +17,6 @@ export default function Login() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const err = params.get('error')
-
     if (err === 'pending_approval') {
       setError('Seu cadastro está aguardando aprovação.')
     } else if (err === 'rejected') {
@@ -33,7 +32,6 @@ export default function Login() {
     e.preventDefault()
     setError('')
     setLoading(true)
-
     try {
       const response = await authService.login({ email, password })
       login(response.data.user, response.data.token)
@@ -73,7 +71,6 @@ export default function Login() {
               hint="Somente @flamboyant.com.br"
               required
             />
-
             <Input
               label="Senha"
               type="password"
@@ -102,8 +99,7 @@ export default function Login() {
               <span className="bg-white px-3 text-xs text-gray-400">ou</span>
             </div>
           </div>
-
-          <a
+          <a          
             href="http://localhost:3000/auth/saml/login"
             className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
           >
@@ -120,7 +116,6 @@ export default function Login() {
             <Link to="/esqueci-senha" className="text-xs text-primary-600 hover:text-primary-800 transition-colors">
               Esqueci minha senha
             </Link>
-
             <Link to="/cadastro" className="text-xs text-gray-400 hover:text-gray-500 transition-colors">
               Ainda não tem conta? <span className="text-primary-600">Cadastre-se</span>
             </Link>
