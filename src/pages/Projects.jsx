@@ -1,3 +1,4 @@
+import { PDFExportGeral } from '../components/project/PDFExportGeral'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
@@ -47,6 +48,9 @@ export default function Projects() {
                   Kanban
                 </button>
               </div>
+            )}
+            {isTI && (
+              <PDFExportGeral allProjects={projects} />
             )}
             {canCreateProject() && (
               <button
