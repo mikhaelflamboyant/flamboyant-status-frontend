@@ -17,6 +17,7 @@ export default function NewProject() {
     priority: null,
     description: '',
     go_live: '',
+    business_unit: '',
   })
   const [requesters, setRequesters] = useState([])
   const [responsibles, setResponsibles] = useState([])
@@ -45,7 +46,7 @@ export default function NewProject() {
     e.preventDefault()
     setError('')
 
-    if (!form.title || !form.description || !form.go_live || !form.priority) {
+    if (!form.title || !form.description || !form.go_live || !form.priority || !form.business_unit) {
       setError('Preencha todos os campos obrigatórios.')
       return
     }
@@ -156,6 +157,24 @@ export default function NewProject() {
                 allowEmptyStart
                 excluded={[...requesters, ...responsibles]}
               />
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">
+                  Unidade de negócio <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={form.business_unit}
+                  onChange={e => handleChange('business_unit', e.target.value)}
+                  className={selectCls}
+                >
+                  <option value="">Selecionar unidade</option>
+                  <option value="Corporativo">Corporativo</option>
+                  <option value="Shopping">Shopping</option>
+                  <option value="Urbanismo">Urbanismo</option>
+                  <option value="Agropecuária">Agropecuária</option>
+                  <option value="Instituto">Instituto</option>
+                </select>
+              </div>
             </div>
 
             <hr className="border-gray-100" />

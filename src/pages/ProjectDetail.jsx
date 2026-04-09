@@ -342,6 +342,9 @@ export default function ProjectDetail() {
               <h1 className="text-base font-medium text-gray-900 mb-2">{project.title}</h1>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="purple">{project.area}</Badge>
+                {project.business_unit && (
+                  <Badge variant="violet">{project.business_unit}</Badge>
+                )}
                 <Badge variant="gray">
                   {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
                 </Badge>
