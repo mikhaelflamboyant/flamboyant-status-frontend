@@ -100,7 +100,7 @@ export default function Login() {
             </div>
           </div>
           <a          
-            href="http://localhost:3000/auth/saml/login"
+            href="http://10.0.0.93:4000/auth/saml/login"
             className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
           >
             <svg width="16" height="16" viewBox="0 0 21 21" fill="none">
