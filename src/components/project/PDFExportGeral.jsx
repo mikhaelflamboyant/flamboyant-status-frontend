@@ -30,7 +30,7 @@ const BUSINESS_UNITS = ['Corporativo', 'Shopping', 'Urbanismo', 'Agropecuária',
 
 const s = {
   wrap: { width: '794px', padding: '48px', backgroundColor: '#ffffff', fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', color: '#111827' },
-  header: { background: '#7a1a1a', margin: '-48px -48px 32px -48px', padding: '28px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
+  header: { margin: '-48px -48px 0 -48px' },
   headerTitle: { color: '#ffffff', fontSize: '15px', fontWeight: '700', margin: '0 0 3px' },
   headerSub: { color: '#F1948A', fontSize: '12px', margin: 0 },
   headerDate: { color: '#F1948A', fontSize: '12px', margin: 0 },
@@ -70,7 +70,24 @@ function makeRedCanvas() {
   return c.toDataURL('image/png')
 }
 
+const SEPARATOR_IMAGES = {
+  'Shopping': '/sep_shopping.png',
+  'Instituto': '/sep_instituto.png',
+  'Urbanismo': '/sep_urbanismo.png',
+  'Agropecuária': '/sep_agropecuaria.png',
+}
+
 function SeparatorPage({ unit }) {
+  const imgSrc = SEPARATOR_IMAGES[unit]
+
+  if (imgSrc) {
+    return (
+      <div style={{ width: '794px', height: '1123px', overflow: 'hidden' }}>
+        <img src={`${window.location.origin}${imgSrc}`} crossOrigin="anonymous" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      </div>
+    )
+  }
+
   return (
     <div style={{ width: '794px', height: '1123px', backgroundColor: '#7a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
@@ -93,18 +110,14 @@ function ProjectPage({ project }) {
 
   return (
     <div style={s.wrap}>
-      <div style={s.header}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <svg width="40" height="40" viewBox="0 0 100 100" fill="none">
-            <path d="M50 8 C50 8 62 30 62 30 L88 30 L68 50 L78 76 L50 60 L22 76 L32 50 L12 30 L38 30 Z" fill="#C0392B" stroke="#E74C3C" strokeWidth="1.5"/>
-            <path d="M50 20 C50 20 60 38 60 38 L80 38 L64 52 L72 70 L50 58 L28 70 L36 52 L20 38 L40 38 Z" fill="#962d2d"/>
-          </svg>
-          <div>
-            <p style={s.headerTitle}>Status report · Grupo Flamboyant</p>
-            <p style={s.headerSub}>Tecnologia da Informação</p>
-          </div>
+      <div>
+        <div style={{ margin: '-48px -48px 0 -48px', background: '#7a1a1a', overflow: 'hidden' }}>
+          <img src={`${window.location.origin}/logo_fundo_vermelho.png`} crossOrigin="anonymous" style={{ width: '100%', display: 'block' }} />
         </div>
-        <p style={s.headerDate}>Gerado em {new Date().toLocaleDateString('pt-BR')}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0 20px', borderBottom: '1.5px solid #e5e7eb', marginBottom: '24px' }}>
+          <p style={s.headerSub}>Tecnologia da Informação</p>
+          <p style={s.headerDate}>Gerado em {new Date().toLocaleDateString('pt-BR')}</p>
+        </div>
       </div>
 
       <p style={s.projectTitle}>{project.title}</p>
@@ -292,7 +305,7 @@ export function PDFExportGeral({ allProjects }) {
       pagina3Img.src = '/pagina3.png'
       await new Promise(resolve => { pagina3Img.onload = resolve })
       const c3 = document.createElement('canvas')
-      c.width = pagina3Img.naturalWidth
+      c3.width = pagina3Img.naturalWidth
       c3.height = pagina3Img.naturalHeight
       c3.getContext('2d').drawImage(pagina3Img, 0, 0)
       pdf.addPage()

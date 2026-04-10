@@ -49,7 +49,7 @@ export function PDFExport({ project, statusUpdates }) {
     try {
       const element = contentRef.current
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
         logging: false,
@@ -59,20 +59,20 @@ export function PDFExport({ project, statusUpdates }) {
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       const pageWidth = pdf.internal.pageSize.getWidth()
       const pageHeight = pdf.internal.pageSize.getHeight()
-      const margin = 10
-      const imgWidth = pageWidth - margin * 2
+
+      const imgWidth = pageWidth
       const imgHeight = (canvas.height * imgWidth) / canvas.width
       let heightLeft = imgHeight
-      let position = margin
+      let position = 0
 
-      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight - margin * 2
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
 
       while (heightLeft > 0) {
-        position = heightLeft - imgHeight + margin
+        position = heightLeft - imgHeight
         pdf.addPage()
-        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight)
-        heightLeft -= pageHeight - margin * 2
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+        heightLeft -= pageHeight
       }
 
       const filename = `status-report-${project.title.toLowerCase().replace(/\s+/g, '-')}-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`
@@ -91,7 +91,9 @@ export function PDFExport({ project, statusUpdates }) {
 
   const s = {
     wrap: { width: '794px', padding: '48px', backgroundColor: '#ffffff', fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', color: '#111827' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1.5px solid #e5e7eb' },
+    header: { margin: '-48px -48px 0 -48px', marginBottom: '0' },
+    headerImg: { width: '100%', display: 'block' },
+    headerMeta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 48px 20px', borderBottom: '1.5px solid #e5e7eb', marginBottom: '24px' },
     logoTitle: { fontSize: '16px', fontWeight: '700', color: '#111827', margin: '0 0 3px', letterSpacing: '-0.2px' },
     logoSub: { fontSize: '12px', color: '#9ca3af', margin: 0 },
     dateText: { fontSize: '12px', color: '#9ca3af', margin: 0 },
@@ -197,22 +199,27 @@ export function PDFExport({ project, statusUpdates }) {
         <div ref={contentRef} style={s.wrap}>
 
           <div style={s.header}>
-            <div>
-              <p style={s.logoTitle}>Status report · Grupo Flamboyant</p>
+            <img src={`${window.location.origin}/logo_fundo_vermelho.png`} crossOrigin="anonymous" style={s.headerImg} />
+            <div style={s.headerMeta}>
               <p style={s.logoSub}>Tecnologia da Informação</p>
+              <p style={s.dateText}>Gerado em {new Date().toLocaleDateString('pt-BR')}</p>
             </div>
-            <p style={s.dateText}>Gerado em {new Date().toLocaleDateString('pt-BR')}</p>
           </div>
 
           <p style={s.projectTitle}>{project.title}</p>
 
           <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <p style={{ fontSize: '13px', color: '#374151', margin: 0 }}>
-                <span style={{ color: '#9ca3af', fontWeight: '500' }}>Área: </span>{project.area}
+              <span style={{ color: '#9ca3af', fontWeight: '500' }}>Área: </span>{project.area}
             </p>
+            {project.business_unit && (
+              <p style={{ fontSize: '12px', color: '#374151', margin: 0 }}>
+                <span style={{ color: '#9ca3af', fontWeight: '500' }}>Unidade de negócio: </span>{project.business_unit}
+              </p>
+            )}
             <p style={{ fontSize: '12px', color: '#374151', margin: 0 }}>
-                <span style={{ color: '#9ca3af', fontWeight: '500' }}>Tipo de execução: </span>
-                {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
+              <span style={{ color: '#9ca3af', fontWeight: '500' }}>Tipo de execução: </span>
+              {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
             </p>
             <p style={{ fontSize: '12px', margin: 0 }}>
                 <span style={{ color: '#9ca3af', fontWeight: '500' }}>Farol: </span>
