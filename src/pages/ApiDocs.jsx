@@ -318,14 +318,14 @@ export default function ApiDocs() {
             <Section title="Perfis de acesso">
               <div className="flex flex-col gap-3">
                 {[
-                  { role: 'Analista Master', color: 'bg-amber-50 text-amber-800', desc: 'Acesso total ao sistema. Vê todos os projetos de todas as áreas, pode criar, editar e excluir qualquer projeto, aprovar usuários e gerenciar tokens de API.' },
+                  { role: 'Analista Master', color: 'bg-amber-50 text-amber-800', desc: 'Acesso total ao sistema. Vê todos os projetos de todas as áreas. Pode criar, editar e excluir qualquer projeto e tudo dentro deles. Gerencia usuários e tokens de API.' },
                   { role: 'Analista Testador', color: 'bg-orange-50 text-orange-800', desc: 'Acesso total ao sistema. Mesmas permissões do Analista Master. Perfil destinado a testes e validações do sistema.' },
-                  { role: 'Superintendente', color: 'bg-violet-100 text-violet-800', desc: 'Vê projetos das áreas que coordena. Pode aprovar usuários.' },
-                  { role: 'Diretor', color: 'bg-purple-100 text-purple-800', desc: 'Vê projetos da sua área corporativa. Pode aprovar usuários.' },
-                  { role: 'Gerente', color: 'bg-primary-50 text-primary-800', desc: 'Vê todos os projetos da sua área. Gerentes de TI veem todos os projetos. Pode aprovar usuários.' },
-                  { role: 'Coordenador', color: 'bg-blue-50 text-blue-800', desc: 'Vê todos os projetos da sua área. Coordenadores de TI veem todos os projetos. Pode aprovar usuários.' },
-                  { role: 'Supervisor', color: 'bg-teal-50 text-teal-800', desc: 'Vê projetos da sua área. Acesso igual ao Coordenador para projetos.' },
-                  { role: 'Analista', color: 'bg-gray-100 text-gray-600', desc: 'Vê apenas projetos nos quais está vinculado como solicitante, responsável ou outro envolvido.' },
+                  { role: 'Superintendente', color: 'bg-violet-100 text-violet-800', desc: 'Vê projetos das áreas que coordena. Não acessa abas de API ou Usuários.' },
+                  { role: 'Diretor', color: 'bg-purple-100 text-purple-800', desc: 'Vê projetos da sua área corporativa. Não acessa abas de API ou Usuários.' },
+                  { role: 'Gerente', color: 'bg-primary-50 text-primary-800', desc: 'Gerentes de TI veem todos os projetos de todas as áreas e acessam as abas de Usuários e API. Gerentes de outras áreas veem apenas projetos da sua área.' },
+                  { role: 'Coordenador', color: 'bg-blue-50 text-blue-800', desc: 'Coordenadores de TI veem todos os projetos de todas as áreas e acessam as abas de Usuários e API. Coordenadores de outras áreas veem apenas projetos da sua área.' },
+                  { role: 'Supervisor', color: 'bg-teal-50 text-teal-800', desc: 'Vê projetos da sua área. Não acessa abas de API ou Usuários.' },
+                  { role: 'Analista', color: 'bg-gray-100 text-gray-600', desc: 'Analistas de TI veem apenas projetos nos quais estão vinculados como solicitante, responsável ou outro envolvido. Analistas de outras áreas veem apenas projetos vinculados à sua área.' },
                 ].map(p => (
                   <div key={p.role} className="flex items-start gap-3">
                     <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${p.color}`}>{p.role}</span>
@@ -338,9 +338,12 @@ export default function ApiDocs() {
             <Section title="Regras de projetos">
               <div className="flex flex-col gap-2">
                 {[
+                  { label: 'Acesso geral', desc: 'Apenas usuários da área de Tecnologia da Informação podem criar, editar e excluir projetos e tudo dentro deles: tarefas, status reports, requisitos, farol, % de conclusão, fase, etc.' },
                   { label: 'Criar projeto', desc: 'Apenas usuários da área de Tecnologia da Informação podem criar projetos.' },
                   { label: 'Editar projeto', desc: 'Apenas solicitantes e responsáveis vinculados ao projeto podem editar. Analista Master e Analista Testador podem editar qualquer projeto.' },
                   { label: 'Excluir projeto', desc: 'Apenas solicitantes e responsáveis vinculados ao projeto podem excluir. Analista Master e Analista Testador podem excluir qualquer projeto.' },
+                  { label: 'Abas API e Usuários', desc: 'Visíveis apenas para usuários da área de Tecnologia da Informação.' },
+                  { label: 'Gestão de usuários', desc: 'Apenas Analista Master, Analista Testador, Gerente e Coordenador de TI podem visualizar, adicionar e excluir usuários.' },
                   { label: 'Farol automático', desc: 'Quando a data de go-live passa sem o projeto ser entregue, o farol muda automaticamente para vermelho.' },
                   { label: 'Arquivamento automático', desc: 'Projetos marcados como "Entregue" ou com 100% de conclusão são arquivados automaticamente.' },
                 ].map(r => (
@@ -372,7 +375,7 @@ export default function ApiDocs() {
               <p className="text-xs text-gray-500 leading-relaxed mb-3">As tarefas ficam dentro do detalhe de cada projeto e são visíveis apenas para usuários da Tecnologia da Informação.</p>
               <div className="flex flex-col gap-2">
                 {[
-                  { label: 'Criar e editar', desc: 'Analista Master e Gerente/Coordenador de TI podem gerenciar tarefas de qualquer projeto. Analistas só podem gerenciar tarefas de projetos que estão vinculados.' },
+                  { label: 'Criar e editar', desc: 'Apenas usuários de TI podem gerenciar tarefas. Analista Master, Analista Testador, Gerente e Coordenador de TI podem gerenciar tarefas de qualquer projeto. Analistas de TI só podem gerenciar tarefas de projetos vinculados.' },
                   { label: 'Concluir tarefa', desc: 'Apenas quem criou a tarefa pode marcá-la como concluída.' },
                   { label: 'Fase vinculada', desc: 'A fase da tarefa é definida automaticamente com base na fase atual do projeto no momento da criação.' },
                 ].map(t => (
