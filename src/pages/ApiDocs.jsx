@@ -319,6 +319,7 @@ export default function ApiDocs() {
               <div className="flex flex-col gap-3">
                 {[
                   { role: 'Analista Master', color: 'bg-amber-50 text-amber-800', desc: 'Acesso total ao sistema. Vê todos os projetos de todas as áreas, pode criar, editar e excluir qualquer projeto, aprovar usuários e gerenciar tokens de API.' },
+                  { role: 'Analista Testador', color: 'bg-orange-50 text-orange-800', desc: 'Acesso total ao sistema. Mesmas permissões do Analista Master. Perfil destinado a testes e validações do sistema.' },
                   { role: 'Superintendente', color: 'bg-violet-100 text-violet-800', desc: 'Vê projetos das áreas que coordena. Pode aprovar usuários.' },
                   { role: 'Diretor', color: 'bg-purple-100 text-purple-800', desc: 'Vê projetos da sua área corporativa. Pode aprovar usuários.' },
                   { role: 'Gerente', color: 'bg-primary-50 text-primary-800', desc: 'Vê todos os projetos da sua área. Gerentes de TI veem todos os projetos. Pode aprovar usuários.' },
@@ -338,8 +339,8 @@ export default function ApiDocs() {
               <div className="flex flex-col gap-2">
                 {[
                   { label: 'Criar projeto', desc: 'Apenas usuários da área de Tecnologia da Informação podem criar projetos.' },
-                  { label: 'Editar projeto', desc: 'Apenas solicitantes e responsáveis vinculados ao projeto podem editar. Analista Master pode editar qualquer projeto.' },
-                  { label: 'Excluir projeto', desc: 'Apenas solicitantes e responsáveis vinculados ao projeto podem excluir. Analista Master pode excluir qualquer projeto.' },
+                  { label: 'Editar projeto', desc: 'Apenas solicitantes e responsáveis vinculados ao projeto podem editar. Analista Master e Analista Testador podem editar qualquer projeto.' },
+                  { label: 'Excluir projeto', desc: 'Apenas solicitantes e responsáveis vinculados ao projeto podem excluir. Analista Master e Analista Testador podem excluir qualquer projeto.' },
                   { label: 'Farol automático', desc: 'Quando a data de go-live passa sem o projeto ser entregue, o farol muda automaticamente para vermelho.' },
                   { label: 'Arquivamento automático', desc: 'Projetos marcados como "Entregue" ou com 100% de conclusão são arquivados automaticamente.' },
                 ].map(r => (
@@ -357,7 +358,7 @@ export default function ApiDocs() {
                 {[
                   { perfil: 'Analista', eventos: 'Vinculado a um projeto, projeto próximo do go-live, projeto atrasado, novo status report (apenas dos projetos vinculados).' },
                   { perfil: 'Gerente e Coordenador', eventos: 'Usuário pendente de aprovação, novo projeto na área, projeto próximo do go-live, projeto atrasado, novo status report (apenas da sua área).' },
-                  { perfil: 'Analista Master e Superintendente', eventos: 'Usuário pendente de aprovação, novo projeto criado, projeto próximo do go-live, projeto atrasado, novo status report (todas as áreas).' },
+                  { perfil: 'Analista Master, Analista Testador e Superintendente', eventos: 'Usuário pendente de aprovação, novo projeto criado, projeto próximo do go-live, projeto atrasado, novo status report (todas as áreas).' },
                 ].map(n => (
                   <div key={n.perfil} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
                     <span className="text-xs font-medium text-gray-700 w-48 shrink-0">{n.perfil}</span>
@@ -401,7 +402,8 @@ export default function ApiDocs() {
             <Section title="Integrações">
               <div className="flex flex-col gap-2">
                 {[
-                  { label: 'FreshService', desc: 'Chamados aprovados no FreshService criam projetos automaticamente via webhook. A integração fica ativa após o deploy em produção.' },
+                  { label: 'Windows AD (LDAP)', desc: 'Login com conta corporativa do Windows AD (@grupoflamboyant.com.br). Usuários do grupo "projetos" no AD podem entrar diretamente na plataforma.' },
+                  { label: 'FreshService', desc: 'Chamados aprovados no FreshService criam projetos automaticamente via webhook. A integração fica ativa após configuração no painel do FreshService.' },
                   { label: 'Azure AD (SSO)', desc: 'Login com conta Microsoft (@flamboyant.com.br). Configurado no Entra ID. Pendente de configuração de SSL/HTTPS no servidor para ativação completa.' },
                   { label: 'API pública', desc: 'Endpoints de leitura disponíveis para sistemas externos (Power BI, scripts, etc.) mediante token de acesso gerado nesta página.' },
                 ].map(i => (
