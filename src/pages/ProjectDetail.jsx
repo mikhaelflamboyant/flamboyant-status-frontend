@@ -118,7 +118,7 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showStatusForm, setShowStatusForm] = useState(false)
-  const [statusForm, setStatusForm] = useState({ description: '', highlights: '', next_steps: '' })
+  const [statusForm, setStatusForm] = useState({ description: '', highlights: [''], next_steps: [''] })
   const [statusLoading, setStatusLoading] = useState(false)
   const [editingReq, setEditingReq] = useState(false)
   const [reqContent, setReqContent] = useState('')
@@ -188,8 +188,12 @@ export default function ProjectDetail() {
     e.preventDefault()
     setStatusLoading(true)
     try {
-      await statusService.create(id, statusForm)
-      setStatusForm({ description: '', highlights: '', next_steps: '' })
+      await statusService.create(id, {
+        ...statusForm,
+        highlights: statusForm.highlights.join('\n'),
+        next_steps: statusForm.next_steps.join('\n'),
+      })
+      setStatusForm({ description: '', highlights: [''], next_steps: [''] })
       setShowStatusForm(false)
       fetchProject()
     } catch (err) {
@@ -488,25 +492,67 @@ export default function ProjectDetail() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Destaques do período</p>
-                  <textarea
-                    value={statusForm.highlights}
-                    onChange={e => setStatusForm({ ...statusForm, highlights: e.target.value })}
-                    rows={3}
-                    placeholder="O que foi feito essa semana?"
-                    className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
-                    required
-                  />
+                  {statusForm.highlights.map((item, i) => (
+                    <div key={i} className="flex items-center gap-1 mb-1">
+                      <input
+                        value={item}
+                        onChange={e => {
+                          const arr = [...statusForm.highlights]
+                          arr[i] = e.target.value
+                          setStatusForm({ ...statusForm, highlights: arr })
+                        }}
+                        placeholder={`Item ${i + 1}`}
+                        className="flex-1 h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                      />
+                      <button type="button" onClick={() => {
+                        setStatusForm({ ...statusForm, highlights: statusForm.highlights.filter((_, idx) => idx !== i) })
+                      }} className="hover:opacity-70 transition-opacity shrink-0">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14H6L5 6"/>
+                          <path d="M10 11v6M14 11v6"/>
+                          <path d="M9 6V4h6v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button"
+                    onClick={() => setStatusForm({ ...statusForm, highlights: [...statusForm.highlights, ''] })}
+                    className="text-xs text-primary-600 hover:text-primary-800 mt-1">
+                    {statusForm.highlights.length === 0 ? '+ Adicionar item' : '+ Adicionar'}
+                  </button>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Próximos passos</p>
-                  <textarea
-                    value={statusForm.next_steps}
-                    onChange={e => setStatusForm({ ...statusForm, next_steps: e.target.value })}
-                    rows={3}
-                    placeholder="O que será feito na próxima semana?"
-                    className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
-                    required
-                  />
+                  {statusForm.next_steps.map((item, i) => (
+                    <div key={i} className="flex items-center gap-1 mb-1">
+                      <input
+                        value={item}
+                        onChange={e => {
+                          const arr = [...statusForm.next_steps]
+                          arr[i] = e.target.value
+                          setStatusForm({ ...statusForm, next_steps: arr })
+                        }}
+                        placeholder={`Item ${i + 1}`}
+                        className="flex-1 h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                      />
+                      <button type="button" onClick={() => {
+                        setStatusForm({ ...statusForm, next_steps: statusForm.next_steps.filter((_, idx) => idx !== i) })
+                      }} className="hover:opacity-70 transition-opacity shrink-0">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14H6L5 6"/>
+                          <path d="M10 11v6M14 11v6"/>
+                          <path d="M9 6V4h6v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button"
+                    onClick={() => setStatusForm({ ...statusForm, next_steps: [...statusForm.next_steps, ''] })}
+                    className="text-xs text-primary-600 hover:text-primary-800 mt-1">
+                    {statusForm.next_steps.length === 0 ? '+ Adicionar item' : '+ Adicionar'}
+                  </button>
                 </div>
               </div>
               <div className="flex gap-2">

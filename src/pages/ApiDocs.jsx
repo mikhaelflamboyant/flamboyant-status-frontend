@@ -3,7 +3,7 @@ import { Navbar } from '../components/layout/Navbar'
 import { apitokenService } from '../services/apitoken.service'
 import { useAuth } from '../hooks/useAuth'
 
-const BASE_URL = 'https://sua-api.flamboyant.com.br'
+const BASE_URL = 'http://10.0.0.93:4000'
 
 const CodeBlock = ({ code }) => (
   <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
@@ -309,7 +309,7 @@ export default function ApiDocs() {
                 O <strong>Status Report</strong> é um sistema interno do Grupo Flamboyant desenvolvido pela equipe de Tecnologia da Informação para gerenciar e acompanhar projetos de TI. Ele centraliza informações sobre andamento, prazos, riscos e requisitos de cada projeto, permitindo que diferentes perfis da organização acompanhem o desenvolvimento de forma transparente.
               </p>
               <p className="text-xs text-gray-500 leading-relaxed">
-                O sistema foi desenvolvido com backend em <strong>Node.js + Express + Prisma</strong>, banco de dados <strong>PostgreSQL</strong> hospedado no Supabase, e frontend em <strong>React + Vite + Tailwind CSS</strong>.
+                O sistema foi desenvolvido com backend em <strong>Node.js + Express + Prisma</strong>, banco de dados <strong>PostgreSQL</strong> hospedado internamente no servidor 10.0.0.93, e frontend em <strong>React + Vite + Tailwind CSS</strong>.
               </p>
             </Section>
 
@@ -400,7 +400,7 @@ export default function ApiDocs() {
               <div className="flex flex-col gap-2">
                 {[
                   { label: 'FreshService', desc: 'Chamados aprovados no FreshService criam projetos automaticamente via webhook. A integração fica ativa após o deploy em produção.' },
-                  { label: 'Azure AD (SSO)', desc: 'Login com conta Microsoft (@flamboyant.com.br). Pendente de configuração com a equipe de Infraestrutura.' },
+                  { label: 'Azure AD (SSO)', desc: 'Login com conta Microsoft (@flamboyant.com.br). Configurado no Entra ID. Pendente de configuração de SSL/HTTPS no servidor para ativação completa.' },
                   { label: 'API pública', desc: 'Endpoints de leitura disponíveis para sistemas externos (Power BI, scripts, etc.) mediante token de acesso gerado nesta página.' },
                 ].map(i => (
                   <div key={i.label} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
@@ -414,9 +414,9 @@ export default function ApiDocs() {
             <Section title="Arquitetura técnica">
               <div className="flex flex-col gap-2">
                 {[
-                  { label: 'Backend', desc: 'Node.js + Express + Prisma ORM. Roda na porta 3000. Autenticação via JWT com expiração de 7 dias.' },
+                  { label: 'Backend', desc: 'Node.js + Express + Prisma ORM. Roda na porta 4000. Autenticação via JWT com expiração de 7 dias.' },
                   { label: 'Frontend', desc: 'React + Vite + Tailwind CSS v4. Roda na porta 5173 em desenvolvimento.' },
-                  { label: 'Banco de dados', desc: 'PostgreSQL hospedado no Supabase (região South America - São Paulo). Gerenciado via Prisma Migrate.' },
+                  { label: 'Banco de dados', desc: 'PostgreSQL interno hospedado no servidor 10.0.0.93. Gerenciado via Prisma Migrate.' },
                   { label: 'Repositórios', desc: 'Backend e frontend em repositórios separados no GitHub da organização Flamboyant.' },
                 ].map(a => (
                   <div key={a.label} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">

@@ -25,6 +25,26 @@ const FAROL_COLORS = {
   VERMELHO: '#E24B4A',
 }
 
+function renderMultiline(text, style) {
+  if (!text) return null
+  const lines = text.split('\n').filter(l => l.trim())
+  if (lines.length === 0) return null
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      {lines.map((line, i) => (
+        <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+          <div style={{
+            minWidth: '18px', height: '18px', background: '#7a1a1a', color: '#ffffff',
+            borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '10px', fontWeight: '600', flexShrink: 0, marginTop: '1px'
+          }}>{i + 1}</div>
+          <span style={{ ...style, margin: 0, flex: 1, lineHeight: '1.5', paddingTop: '1px' }}>{line}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function PDFExport({ project, statusUpdates }) {
   const [showModal, setShowModal] = useState(false)
   const [selected, setSelected] = useState([])
@@ -93,14 +113,10 @@ export function PDFExport({ project, statusUpdates }) {
     wrap: { width: '794px', padding: '48px', backgroundColor: '#ffffff', fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', color: '#111827' },
     header: { margin: '-48px -48px 0 -48px', marginBottom: '0' },
     headerImg: { width: '100%', display: 'block' },
-    headerMeta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 48px 20px', borderBottom: '1.5px solid #e5e7eb', marginBottom: '24px' },
-    logoTitle: { fontSize: '16px', fontWeight: '700', color: '#111827', margin: '0 0 3px', letterSpacing: '-0.2px' },
+    headerMeta: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0 20px', borderBottom: '1.5px solid #e5e7eb', marginBottom: '24px' },
     logoSub: { fontSize: '12px', color: '#9ca3af', margin: 0 },
     dateText: { fontSize: '12px', color: '#9ca3af', margin: 0 },
     projectTitle: { fontSize: '24px', fontWeight: '700', color: '#111827', margin: '0 0 12px', letterSpacing: '-0.3px' },
-    badgeWrap: { display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '20px', alignItems: 'center' },
-    badgePurple: { fontSize: '11px', padding: '3px 10px', borderRadius: '20px', background: '#EEEDFE', color: '#3C3489', fontWeight: '600', display: 'inline-block' },
-    badgeGray: { fontSize: '11px', padding: '3px 10px', borderRadius: '20px', background: '#f3f4f6', color: '#6b7280', fontWeight: '600', display: 'inline-block' },
     infoGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' },
     infoCell: { background: '#f9fafb', border: '1px solid #f0f0f0', borderRadius: '10px', padding: '10px 14px' },
     infoLabel: { fontSize: '11px', color: '#9ca3af', margin: '0 0 3px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' },
@@ -114,8 +130,8 @@ export function PDFExport({ project, statusUpdates }) {
     sectionTitle: { fontSize: '14px', fontWeight: '700', color: '#111827', margin: '0 0 14px', letterSpacing: '-0.1px' },
     statusCard: { border: '1.5px solid #e5e7eb', borderRadius: '10px', padding: '14px 16px', marginBottom: '14px', background: '#ffffff' },
     statusMeta: { fontSize: '11px', color: '#9ca3af', margin: '0 0 10px', fontWeight: '500' },
-    statusSectionLabel: { fontSize: '11px', color: '#6b7280', margin: '0 0 3px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.4px' },
-    statusText: { fontSize: '13px', color: '#374151', margin: '0 0 12px', lineHeight: '1.6' },
+    statusSectionLabel: { fontSize: '11px', color: '#6b7280', margin: '0 0 6px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.4px' },
+    statusText: { fontSize: '13px', color: '#374151', margin: '0 0 4px', lineHeight: '1.6' },
     statusGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' },
     riskWrap: { marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #f0f0f0' },
     riskItem: { display: 'flex', gap: '8px', padding: '8px 10px', background: '#fef2f2', borderRadius: '8px', marginBottom: '6px', border: '1px solid #fee2e2' },
@@ -129,10 +145,7 @@ export function PDFExport({ project, statusUpdates }) {
 
   return (
     <>
-      <button
-        onClick={handleOpen}
-        className="text-xs text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1.5"
-      >
+      <button onClick={handleOpen} className="text-xs text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1.5">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
@@ -143,10 +156,7 @@ export function PDFExport({ project, statusUpdates }) {
       </button>
 
       {showModal && (
-        <div
-          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false) }}
-        >
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <div className="bg-white rounded-xl border border-gray-100 p-6 w-80 max-h-[80vh] flex flex-col">
             <h3 className="text-sm font-medium text-gray-900 mb-1">Gerar PDF</h3>
             <p className="text-xs text-gray-400 mb-4">Selecione os status reports a incluir:</p>
@@ -155,21 +165,10 @@ export function PDFExport({ project, statusUpdates }) {
                 <p className="text-xs text-gray-400 text-center py-4">Nenhum status report disponível.</p>
               ) : (
                 statusUpdates.map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => toggleSelect(s.id)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${
-                      selected.includes(s.id) ? 'border-primary-300 bg-primary-50/40' : 'border-gray-100 hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                      selected.includes(s.id) ? 'bg-primary-600 border-primary-600' : 'border-gray-300'
-                    }`}>
-                      {selected.includes(s.id) && (
-                        <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                          <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
-                        </svg>
-                      )}
+                  <button key={s.id} onClick={() => toggleSelect(s.id)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${selected.includes(s.id) ? 'border-primary-300 bg-primary-50/40' : 'border-gray-100 hover:bg-gray-50'}`}>
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${selected.includes(s.id) ? 'bg-primary-600 border-primary-600' : 'border-gray-300'}`}>
+                      {selected.includes(s.id) && <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/></svg>}
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-medium text-gray-800">{new Date(s.created_at).toLocaleDateString('pt-BR')}</p>
@@ -180,14 +179,9 @@ export function PDFExport({ project, statusUpdates }) {
               )}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setShowModal(false)} className="flex-1 text-xs text-gray-500 border border-gray-200 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-                Cancelar
-              </button>
-              <button
-                onClick={handleGenerate}
-                disabled={selected.length === 0 || generating}
-                className="flex-1 text-xs bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium"
-              >
+              <button onClick={() => setShowModal(false)} className="flex-1 text-xs text-gray-500 border border-gray-200 py-2 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+              <button onClick={handleGenerate} disabled={selected.length === 0 || generating}
+                className="flex-1 text-xs bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium">
                 {generating ? 'Gerando...' : 'Gerar PDF'}
               </button>
             </div>
@@ -197,7 +191,6 @@ export function PDFExport({ project, statusUpdates }) {
 
       <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
         <div ref={contentRef} style={s.wrap}>
-
           <div style={s.header}>
             <img src={`${window.location.origin}/logo_fundo_vermelho.png`} crossOrigin="anonymous" style={s.headerImg} />
             <div style={s.headerMeta}>
@@ -207,7 +200,6 @@ export function PDFExport({ project, statusUpdates }) {
           </div>
 
           <p style={s.projectTitle}>{project.title}</p>
-
           <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <p style={{ fontSize: '13px', color: '#374151', margin: 0 }}>
               <span style={{ color: '#9ca3af', fontWeight: '500' }}>Área: </span>{project.area}
@@ -222,8 +214,8 @@ export function PDFExport({ project, statusUpdates }) {
               {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
             </p>
             <p style={{ fontSize: '12px', margin: 0 }}>
-                <span style={{ color: '#9ca3af', fontWeight: '500' }}>Farol: </span>
-                <span style={{ color: FAROL_COLORS[project.traffic_light], fontWeight: '600' }}>{FAROL_LABELS[project.traffic_light]}</span>
+              <span style={{ color: '#9ca3af', fontWeight: '500' }}>Farol: </span>
+              <span style={{ color: FAROL_COLORS[project.traffic_light], fontWeight: '600' }}>{FAROL_LABELS[project.traffic_light]}</span>
             </p>
           </div>
 
@@ -233,24 +225,12 @@ export function PDFExport({ project, statusUpdates }) {
               <p style={{ fontSize: '13px', color: '#374151', margin: 0, lineHeight: '1.6' }}>{project.description}</p>
             </div>
           )}
-          
+
           <div style={s.infoGrid}>
-            <div style={s.infoCell}>
-              <p style={s.infoLabel}>Solicitante(s)</p>
-              <p style={s.infoValue}>{solicitantes.length > 0 ? solicitantes.map(r => r.user.name).join(', ') : '—'}</p>
-            </div>
-            <div style={s.infoCell}>
-              <p style={s.infoLabel}>Responsável(is)</p>
-              <p style={s.infoValue}>{responsaveis.length > 0 ? responsaveis.map(r => r.user.name).join(', ') : '—'}</p>
-            </div>
-            <div style={s.infoCell}>
-              <p style={s.infoLabel}>Go-live</p>
-              <p style={s.infoValue}>{goLive}</p>
-            </div>
-            <div style={s.infoCell}>
-              <p style={s.infoLabel}>Fase atual</p>
-              <p style={s.infoValue}>{PHASE_LABELS[project.current_phase] || project.current_phase}</p>
-            </div>
+            <div style={s.infoCell}><p style={s.infoLabel}>Solicitante(s)</p><p style={s.infoValue}>{solicitantes.length > 0 ? solicitantes.map(r => r.user.name).join(', ') : '—'}</p></div>
+            <div style={s.infoCell}><p style={s.infoLabel}>Responsável(is)</p><p style={s.infoValue}>{responsaveis.length > 0 ? responsaveis.map(r => r.user.name).join(', ') : '—'}</p></div>
+            <div style={s.infoCell}><p style={s.infoLabel}>Go-live</p><p style={s.infoValue}>{goLive}</p></div>
+            <div style={s.infoCell}><p style={s.infoLabel}>Fase atual</p><p style={s.infoValue}>{PHASE_LABELS[project.current_phase] || project.current_phase}</p></div>
           </div>
 
           <div style={s.progressWrap}>
@@ -264,22 +244,21 @@ export function PDFExport({ project, statusUpdates }) {
           </div>
 
           <div style={s.divider} />
-
           <p style={s.sectionTitle}>Status reports</p>
 
           {selectedUpdates.map((update) => (
             <div key={update.id} style={s.statusCard}>
               <p style={s.statusMeta}>{new Date(update.created_at).toLocaleDateString('pt-BR')} · {update.author?.name}</p>
               <p style={s.statusSectionLabel}>Status geral</p>
-              <p style={s.statusText}>{update.description}</p>
+              <p style={{ ...s.statusText, marginBottom: '12px', whiteSpace: 'pre-wrap' }}>{update.description}</p>
               <div style={s.statusGrid}>
                 <div>
                   <p style={s.statusSectionLabel}>Destaques do período</p>
-                  <p style={{ ...s.statusText, margin: 0 }}>{update.highlights}</p>
+                  {renderMultiline(update.highlights, { ...s.statusText, margin: '0 0 2px' })}
                 </div>
                 <div>
                   <p style={s.statusSectionLabel}>Próximos passos</p>
-                  <p style={{ ...s.statusText, margin: 0 }}>{update.next_steps}</p>
+                  {renderMultiline(update.next_steps, { ...s.statusText, margin: '0 0 2px' })}
                 </div>
               </div>
               {update.risks?.length > 0 && (
@@ -304,7 +283,6 @@ export function PDFExport({ project, statusUpdates }) {
             <p style={s.footerText}>Grupo Flamboyant · Tecnologia da Informação</p>
             <p style={s.footerText}>Gerado em {new Date().toLocaleDateString('pt-BR')}</p>
           </div>
-
         </div>
       </div>
     </>

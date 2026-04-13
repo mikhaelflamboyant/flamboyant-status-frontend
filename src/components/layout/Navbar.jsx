@@ -117,8 +117,8 @@ export function Navbar() {
         <div className="flex items-center gap-1">
           {navLink('/projetos', 'Projetos ativos')}
           {navLink('/projetos/arquivados', 'Finalizados')}
-          {(isManager() || user?.role === 'ANALISTA_MASTER') && user?.area === 'Tecnologia da Informação' && navLink('/usuarios', 'Usuários')}
-          {(user?.area === 'Tecnologia da Informação' && user?.role !== 'SUPERINTENDENTE') && navLink('/api', 'API')}
+          {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) && navLink('/usuarios', 'Usuários')}
+          {(user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) && navLink('/api', 'API')}
         </div>
       </div>
 
@@ -210,9 +210,12 @@ export function Navbar() {
             <p className="text-xs text-gray-400 mt-0.5 leading-none">
               {{
                 SUPERINTENDENTE: 'Superintendente',
+                DIRETOR: 'Diretor',
                 GERENTE: 'Gerente',
                 COORDENADOR: 'Coordenador',
+                SUPERVISOR: 'Supervisor',
                 ANALISTA_MASTER: 'Analista Master',
+                ANALISTA_TESTADOR: 'Analista Testador',
                 ANALISTA: 'Analista',
               }[user?.role] || user?.role}
             </p>

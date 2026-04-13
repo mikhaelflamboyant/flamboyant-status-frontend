@@ -38,9 +38,9 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user')
   }
 
-  const isPrivileged = () => ['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR', 'SUPERVISOR'].includes(user?.role)
-  const isManager = () => ['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
-  const canCreateProject = () => user?.area === 'Tecnologia da Informação' || user?.role === 'ANALISTA_MASTER'
+  const isPrivileged = () => ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR', 'SUPERVISOR'].includes(user?.role)
+  const isManager = () => ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
+  const canCreateProject = () => user?.area === 'Tecnologia da Informação' || user?.role === 'ANALISTA_MASTER' || user?.role === 'ANALISTA_TESTADOR'
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, isPrivileged, isManager, canCreateProject, loading }}>

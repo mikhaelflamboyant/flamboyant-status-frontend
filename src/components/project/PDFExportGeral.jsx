@@ -30,8 +30,6 @@ const BUSINESS_UNITS = ['Corporativo', 'Shopping', 'Urbanismo', 'Agropecuária',
 
 const s = {
   wrap: { width: '794px', padding: '48px', backgroundColor: '#ffffff', fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', color: '#111827' },
-  header: { margin: '-48px -48px 0 -48px' },
-  headerTitle: { color: '#ffffff', fontSize: '15px', fontWeight: '700', margin: '0 0 3px' },
   headerSub: { color: '#F1948A', fontSize: '12px', margin: 0 },
   headerDate: { color: '#F1948A', fontSize: '12px', margin: 0 },
   projectTitle: { fontSize: '22px', fontWeight: '700', color: '#111827', margin: '0 0 12px', letterSpacing: '-0.3px' },
@@ -48,8 +46,8 @@ const s = {
   sectionTitle: { fontSize: '14px', fontWeight: '700', color: '#111827', margin: '0 0 14px' },
   statusCard: { border: '1.5px solid #e5e7eb', borderRadius: '10px', padding: '14px 16px', marginBottom: '14px', background: '#ffffff' },
   statusMeta: { fontSize: '11px', color: '#9ca3af', margin: '0 0 10px', fontWeight: '500' },
-  statusSectionLabel: { fontSize: '11px', color: '#6b7280', margin: '0 0 3px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.4px' },
-  statusText: { fontSize: '13px', color: '#374151', margin: '0 0 12px', lineHeight: '1.6' },
+  statusSectionLabel: { fontSize: '11px', color: '#6b7280', margin: '0 0 6px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.4px' },
+  statusText: { fontSize: '13px', color: '#374151', margin: '0 0 4px', lineHeight: '1.6' },
   statusGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' },
   riskWrap: { marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #f0f0f0' },
   riskItem: { display: 'flex', gap: '8px', padding: '8px 10px', background: '#fef2f2', borderRadius: '8px', marginBottom: '6px', border: '1px solid #fee2e2' },
@@ -59,6 +57,26 @@ const s = {
   riskMit: { fontSize: '12px', color: '#0F6E56', margin: 0, fontWeight: '500' },
   footer: { borderTop: '1.5px solid #e5e7eb', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', marginTop: '8px' },
   footerText: { fontSize: '11px', color: '#9ca3af', margin: 0, fontWeight: '500' },
+}
+
+function renderMultiline(text, style) {
+  if (!text) return null
+  const lines = text.split('\n').filter(l => l.trim())
+  if (lines.length === 0) return null
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      {lines.map((line, i) => (
+        <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+          <div style={{
+            minWidth: '18px', height: '18px', background: '#7a1a1a', color: '#ffffff',
+            borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '10px', fontWeight: '600', flexShrink: 0, marginTop: '1px'
+          }}>{i + 1}</div>
+          <span style={{ ...style, margin: 0, flex: 1, lineHeight: '1.5', paddingTop: '1px' }}>{line}</span>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function makeRedCanvas() {
@@ -79,7 +97,6 @@ const SEPARATOR_IMAGES = {
 
 function SeparatorPage({ unit }) {
   const imgSrc = SEPARATOR_IMAGES[unit]
-
   if (imgSrc) {
     return (
       <div style={{ width: '794px', height: '1123px', overflow: 'hidden' }}>
@@ -87,7 +104,6 @@ function SeparatorPage({ unit }) {
       </div>
     )
   }
-
   return (
     <div style={{ width: '794px', height: '1123px', backgroundColor: '#7a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
@@ -106,7 +122,7 @@ function ProjectPage({ project }) {
   const goLive = new Date(project.go_live).toLocaleDateString('pt-BR')
   const solicitantes = project.requesters?.filter(r => r.type === 'SOLICITANTE') || []
   const responsaveis = project.requesters?.filter(r => r.type === 'RESPONSAVEL') || []
-  const statusUpdates = project.status_updates || []
+  const statusUpdates = (project.status_updates || []).slice(0, 1)
 
   return (
     <div style={s.wrap}>
@@ -121,7 +137,6 @@ function ProjectPage({ project }) {
       </div>
 
       <p style={s.projectTitle}>{project.title}</p>
-
       <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <p style={{ fontSize: '13px', color: '#111827', margin: 0 }}>
           <span style={{ color: '#9ca3af', fontWeight: '500' }}>Área: </span>{project.area}
@@ -149,22 +164,10 @@ function ProjectPage({ project }) {
       )}
 
       <div style={s.infoGrid}>
-        <div style={s.infoCell}>
-          <p style={s.infoLabel}>Solicitante(s)</p>
-          <p style={s.infoValue}>{solicitantes.length > 0 ? solicitantes.map(r => r.user.name).join(', ') : '—'}</p>
-        </div>
-        <div style={s.infoCell}>
-          <p style={s.infoLabel}>Responsável(is)</p>
-          <p style={s.infoValue}>{responsaveis.length > 0 ? responsaveis.map(r => r.user.name).join(', ') : '—'}</p>
-        </div>
-        <div style={s.infoCell}>
-          <p style={s.infoLabel}>Go-live</p>
-          <p style={s.infoValue}>{goLive}</p>
-        </div>
-        <div style={s.infoCell}>
-          <p style={s.infoLabel}>Fase atual</p>
-          <p style={s.infoValue}>{PHASE_LABELS[project.current_phase] || project.current_phase}</p>
-        </div>
+        <div style={s.infoCell}><p style={s.infoLabel}>Solicitante(s)</p><p style={s.infoValue}>{solicitantes.length > 0 ? solicitantes.map(r => r.user.name).join(', ') : '—'}</p></div>
+        <div style={s.infoCell}><p style={s.infoLabel}>Responsável(is)</p><p style={s.infoValue}>{responsaveis.length > 0 ? responsaveis.map(r => r.user.name).join(', ') : '—'}</p></div>
+        <div style={s.infoCell}><p style={s.infoLabel}>Go-live</p><p style={s.infoValue}>{goLive}</p></div>
+        <div style={s.infoCell}><p style={s.infoLabel}>Fase atual</p><p style={s.infoValue}>{PHASE_LABELS[project.current_phase] || project.current_phase}</p></div>
       </div>
 
       <div style={s.progressWrap}>
@@ -181,19 +184,19 @@ function ProjectPage({ project }) {
         <>
           <div style={s.divider} />
           <p style={s.sectionTitle}>Status reports</p>
-          {statusUpdates.slice(0, 2).map((update) => (
+          {statusUpdates.map((update) => (
             <div key={update.id} style={s.statusCard}>
               <p style={s.statusMeta}>{new Date(update.created_at).toLocaleDateString('pt-BR')} · {update.author?.name}</p>
               <p style={s.statusSectionLabel}>Status geral</p>
-              <p style={s.statusText}>{update.description}</p>
+              <p style={{ ...s.statusText, marginBottom: '12px', whiteSpace: 'pre-wrap' }}>{update.description}</p>
               <div style={s.statusGrid}>
                 <div>
                   <p style={s.statusSectionLabel}>Destaques do período</p>
-                  <p style={{ ...s.statusText, margin: 0 }}>{update.highlights}</p>
+                  {renderMultiline(update.highlights, { ...s.statusText, margin: '0 0 2px' })}
                 </div>
                 <div>
                   <p style={s.statusSectionLabel}>Próximos passos</p>
-                  <p style={{ ...s.statusText, margin: 0 }}>{update.next_steps}</p>
+                  {renderMultiline(update.next_steps, { ...s.statusText, margin: '0 0 2px' })}
                 </div>
               </div>
               {update.risks?.length > 0 && (
@@ -232,12 +235,9 @@ export function PDFExportGeral({ allProjects }) {
   const [fullProjects, setFullProjects] = useState([])
   const pagesRef = useRef([])
 
-  const toggleProject = (id) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    )
-  }
-
+  const toggleProject = (id) => setSelectedIds(prev =>
+    prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+  )
   const selectAll = () => setSelectedIds(allProjects.map(p => p.id))
   const deselectAll = () => setSelectedIds([])
 
@@ -258,84 +258,58 @@ export function PDFExportGeral({ allProjects }) {
     setGenerating(true)
     try {
       setLoadingProjects(true)
-      const responses = await Promise.all(
-        selectedIds.map(id => api.get(`/projects/${id}`))
-      )
+      const responses = await Promise.all(selectedIds.map(id => api.get(`/projects/${id}`)))
       const projects = responses.map(r => r.data)
       setFullProjects(projects)
       setLoadingProjects(false)
-
       await new Promise(resolve => setTimeout(resolve, 500))
 
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
       const pageWidth = pdf.internal.pageSize.getWidth()
       const pageHeight = pdf.internal.pageSize.getHeight()
 
+      const loadImg = (src) => new Promise(resolve => {
+        const img = new Image()
+        img.src = src
+        img.onload = () => {
+          const c = document.createElement('canvas')
+          c.width = img.naturalWidth
+          c.height = img.naturalHeight
+          c.getContext('2d').drawImage(img, 0, 0)
+          resolve(c.toDataURL('image/png'))
+        }
+      })
+
+      pdf.addImage(await loadImg('/pagina1.png'), 'PNG', 0, 0, pageWidth, pageHeight)
+      pdf.addPage()
+      pdf.addImage(await loadImg('/pagina2.png'), 'PNG', 0, 0, pageWidth, pageHeight)
+      pdf.setFontSize(16); pdf.setTextColor(220, 180, 180); pdf.setFont('helvetica', 'normal')
+      pdf.text(new Date().toLocaleDateString('pt-BR'), pageWidth / 2, pageHeight * 0.54, { align: 'center' })
+      pdf.addPage()
+      pdf.addImage(await loadImg('/pagina3.png'), 'PNG', 0, 0, pageWidth, pageHeight)
+
       const unitKeys = Object.keys(projectsByUnit).filter(unit =>
         projectsByUnit[unit].some(p => selectedIds.includes(p.id))
       )
 
-      // Página 1 — arte Flamboyant (usa a página em branco que o jsPDF cria)
-      const pagina1Img = new Image()
-      pagina1Img.src = '/pagina1.png'
-      await new Promise(resolve => { pagina1Img.onload = resolve })
-      const c1 = document.createElement('canvas')
-      c1.width = pagina1Img.naturalWidth
-      c1.height = pagina1Img.naturalHeight
-      c1.getContext('2d').drawImage(pagina1Img, 0, 0)
-      pdf.addImage(c1.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, pageHeight)
-
-      // Página 2 — arte com data dinâmica
-      const pagina2Img = new Image()
-      pagina2Img.src = '/pagina2.png'
-      await new Promise(resolve => { pagina2Img.onload = resolve })
-      const c2 = document.createElement('canvas')
-      c2.width = pagina2Img.naturalWidth
-      c2.height = pagina2Img.naturalHeight
-      c2.getContext('2d').drawImage(pagina2Img, 0, 0)
-      pdf.addPage()
-      pdf.addImage(c2.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, pageHeight)
-      pdf.setFontSize(16)
-      pdf.setTextColor(220, 180, 180)
-      pdf.setFont('helvetica', 'normal')
-      pdf.text(new Date().toLocaleDateString('pt-BR'), pageWidth / 2, pageHeight * 0.54, { align: 'center' })
-      
-      // Página 3 — vermelha simples por enquanto
-      const pagina3Img = new Image()
-      pagina3Img.src = '/pagina3.png'
-      await new Promise(resolve => { pagina3Img.onload = resolve })
-      const c3 = document.createElement('canvas')
-      c3.width = pagina3Img.naturalWidth
-      c3.height = pagina3Img.naturalHeight
-      c3.getContext('2d').drawImage(pagina3Img, 0, 0)
-      pdf.addPage()
-      pdf.addImage(c3.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, pageHeight)
-
-      // Páginas por unidade de negócio
-      for (let u = 0; u < unitKeys.length; u++) {
-        const unit = unitKeys[u]
+      for (const unit of unitKeys) {
         const unitProjects = projectsByUnit[unit].filter(p => selectedIds.includes(p.id))
-
         const sepEl = pagesRef.current[`sep-${unit}`]
         if (sepEl) {
           pdf.addPage()
-          const canvas = await html2canvas(sepEl, { scale: 2, backgroundColor: '#7a1a1a', logging: false })
+          const canvas = await html2canvas(sepEl, { scale: 2, backgroundColor: '#7a1a1a', logging: false, useCORS: true })
           pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageWidth, pageHeight)
         }
 
-        for (let i = 0; i < unitProjects.length; i++) {
-          const proj = projects.find(p => p.id === unitProjects[i].id)
+        for (const up of unitProjects) {
+          const proj = projects.find(p => p.id === up.id)
           if (!proj) continue
           const el = pagesRef.current[`proj-${proj.id}`]
           if (!el) continue
 
           pdf.addPage()
           const canvas = await html2canvas(el, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            allowTaint: true,
+            scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, allowTaint: true,
           })
           const imgData = canvas.toDataURL('image/png')
           const imgWidth = pageWidth
@@ -355,12 +329,10 @@ export function PDFExportGeral({ allProjects }) {
         }
       }
 
-      // Última página vermelha
       pdf.addPage()
-      pdf.addImage(makeRedCanvas(), 'PNG', 0, 0, pageWidth, pageHeight)
+      pdf.addImage(await loadImg('/ultima_pagina.png'), 'PNG', 0, 0, pageWidth, pageHeight)
 
-      const filename = `status-report-geral-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`
-      pdf.save(filename)
+      pdf.save(`status-report-geral-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`)
       setShowModal(false)
     } catch (err) {
       console.error(err)
@@ -372,10 +344,7 @@ export function PDFExportGeral({ allProjects }) {
 
   return (
     <>
-      <button
-        onClick={handleOpen}
-        className="text-xs font-medium px-4 h-8 rounded-lg border border-primary-600 text-primary-600 hover:bg-primary-50 transition-colors flex items-center gap-1.5"
-      >
+      <button onClick={handleOpen} className="text-xs font-medium px-4 h-8 rounded-lg border border-primary-600 text-primary-600 hover:bg-primary-50 transition-colors flex items-center gap-1.5">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
@@ -386,78 +355,40 @@ export function PDFExportGeral({ allProjects }) {
       </button>
 
       {showModal && (
-        <div
-          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false) }}
-        >
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <div className="bg-white rounded-xl border border-gray-100 p-6 w-96 max-h-[80vh] flex flex-col">
             <h3 className="text-sm font-medium text-gray-900 mb-1">Gerar PDF Geral</h3>
             <p className="text-xs text-gray-400 mb-3">Selecione os projetos a incluir:</p>
-
             <div className="flex gap-2 mb-3">
-              <button
-                onClick={selectAll}
-                className="text-xs text-primary-600 hover:text-primary-800 border border-primary-200 px-3 py-1 rounded-lg transition-colors"
-              >
-                Selecionar todos
-              </button>
-              <button
-                onClick={deselectAll}
-                className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-3 py-1 rounded-lg transition-colors"
-              >
-                Desmarcar todos
-              </button>
+              <button onClick={selectAll} className="text-xs text-primary-600 hover:text-primary-800 border border-primary-200 px-3 py-1 rounded-lg transition-colors">Selecionar todos</button>
+              <button onClick={deselectAll} className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-3 py-1 rounded-lg transition-colors">Desmarcar todos</button>
             </div>
-
             <div className="flex flex-col gap-4 overflow-y-auto flex-1 mb-4">
               {Object.entries(projectsByUnit).map(([unit, projects]) => (
                 <div key={unit}>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">{unit}</p>
                   <div className="flex flex-col gap-1.5">
                     {projects.map(p => (
-                      <button
-                        key={p.id}
-                        onClick={() => toggleProject(p.id)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${
-                          selectedIds.includes(p.id) ? 'border-primary-300 bg-primary-50/40' : 'border-gray-100 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                          selectedIds.includes(p.id) ? 'bg-primary-600 border-primary-600' : 'border-gray-300'
-                        }`}>
-                          {selectedIds.includes(p.id) && (
-                            <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                              <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
-                            </svg>
-                          )}
+                      <button key={p.id} onClick={() => toggleProject(p.id)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors ${selectedIds.includes(p.id) ? 'border-primary-300 bg-primary-50/40' : 'border-gray-100 hover:bg-gray-50'}`}>
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${selectedIds.includes(p.id) ? 'bg-primary-600 border-primary-600' : 'border-gray-300'}`}>
+                          {selectedIds.includes(p.id) && <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/></svg>}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium text-gray-800 truncate">{p.title}</p>
                           <p className="text-xs text-gray-400 truncate">{p.area}</p>
                         </div>
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${
-                          p.traffic_light === 'VERDE' ? 'bg-teal-400' :
-                          p.traffic_light === 'AMARELO' ? 'bg-amber-400' : 'bg-red-400'
-                        }`} />
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${p.traffic_light === 'VERDE' ? 'bg-teal-400' : p.traffic_light === 'AMARELO' ? 'bg-amber-400' : 'bg-red-400'}`} />
                       </button>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
-
             <div className="flex gap-2">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 text-xs text-gray-500 border border-gray-200 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleGenerate}
-                disabled={selectedIds.length === 0 || generating}
-                className="flex-1 text-xs bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium"
-              >
+              <button onClick={() => setShowModal(false)} className="flex-1 text-xs text-gray-500 border border-gray-200 py-2 rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+              <button onClick={handleGenerate} disabled={selectedIds.length === 0 || generating}
+                className="flex-1 text-xs bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium">
                 {generating ? (loadingProjects ? 'Carregando...' : 'Gerando...') : `Gerar (${selectedIds.length})`}
               </button>
             </div>

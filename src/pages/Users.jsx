@@ -3,26 +3,28 @@ import { Navbar } from '../components/layout/Navbar'
 import { useAuth } from '../hooks/useAuth'
 import api from '../services/api'
 
-const ROLES = ['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR', 'SUPERVISOR', 'ANALISTA']
+const ROLES = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR', 'SUPERVISOR', 'ANALISTA']
 
 const ROLE_LABELS = {
-  ANALISTA_MASTER: 'Analista Master',
-  SUPERINTENDENTE: 'Superintendente',
-  DIRETOR:         'Diretor',
-  GERENTE:         'Gerente',
-  COORDENADOR:     'Coordenador',
-  SUPERVISOR:      'Supervisor',
-  ANALISTA:        'Analista',
+  ANALISTA_MASTER:   'Analista Master',
+  ANALISTA_TESTADOR: 'Analista Testador',
+  SUPERINTENDENTE:   'Superintendente',
+  DIRETOR:           'Diretor',
+  GERENTE:           'Gerente',
+  COORDENADOR:       'Coordenador',
+  SUPERVISOR:        'Supervisor',
+  ANALISTA:          'Analista',
 }
 
 const ROLE_BADGE = {
-  ANALISTA_MASTER: 'bg-amber-50 text-amber-800',
-  SUPERINTENDENTE: 'bg-violet-100 text-violet-800',
-  DIRETOR:         'bg-purple-100 text-purple-800',
-  GERENTE:         'bg-primary-50 text-primary-800',
-  COORDENADOR:     'bg-blue-50 text-blue-800',
-  SUPERVISOR:      'bg-teal-50 text-teal-800',
-  ANALISTA:        'bg-gray-100 text-gray-600',
+  ANALISTA_MASTER:   'bg-amber-50 text-amber-800',
+  ANALISTA_TESTADOR: 'bg-orange-50 text-orange-800',
+  SUPERINTENDENTE:   'bg-violet-100 text-violet-800',
+  DIRETOR:           'bg-purple-100 text-purple-800',
+  GERENTE:           'bg-primary-50 text-primary-800',
+  COORDENADOR:       'bg-blue-50 text-blue-800',
+  SUPERVISOR:        'bg-teal-50 text-teal-800',
+  ANALISTA:          'bg-gray-100 text-gray-600',
 }
 
 const CAN_APPROVE = ['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR']

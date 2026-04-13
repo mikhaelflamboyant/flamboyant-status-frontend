@@ -35,18 +35,32 @@ export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk
       {update.description && (
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
           <p className="text-xs text-gray-400 mb-1 font-medium">Status geral</p>
-          <p className="text-sm text-gray-700 leading-relaxed">{update.description}</p>
+          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{update.description}</p>
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <p className="text-xs font-medium text-gray-400 mb-1.5">Destaques do período</p>
-          <p className="text-sm text-gray-700 leading-relaxed">{update.highlights}</p>
+          <ul className="flex flex-col gap-1 list-none p-0 m-0">
+            {(update.highlights || '').split('\n').filter(l => l.trim()).map((item, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-gray-700 list-none">
+                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0 inline-block" style={{minWidth: '6px'}} />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
         <div>
           <p className="text-xs font-medium text-gray-400 mb-1.5">Próximos passos</p>
-          <p className="text-sm text-gray-700 leading-relaxed">{update.next_steps}</p>
+          <ul className="flex flex-col gap-1 list-none p-0 m-0">
+            {(update.next_steps || '').split('\n').filter(l => l.trim()).map((item, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-gray-700 list-none">
+                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0 inline-block" style={{minWidth: '6px'}} />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 

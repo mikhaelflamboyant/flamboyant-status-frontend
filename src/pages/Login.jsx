@@ -10,6 +10,24 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showLdapForm, setShowLdapForm] = useState(false)
+  const [ldapEmail, setLdapEmail] = useState('')
+  const [ldapPassword, setLdapPassword] = useState('')
+  const [ldapLoading, setLdapLoading] = useState(false)
+
+  const handleLdapLogin = async () => {
+    setError('')
+    setLdapLoading(true)
+    try {
+      const response = await authService.ldapLogin({ email: ldapEmail, password: ldapPassword })
+      login(response.data.user, response.data.token)
+      navigate('/projetos')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erro ao autenticar com o Active Directory.')
+    } finally {
+      setLdapLoading(false)
+    }
+  }
 
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -99,18 +117,46 @@ export default function Login() {
               <span className="bg-white px-3 text-xs text-gray-400">ou</span>
             </div>
           </div>
-          <a          
-            href="http://10.0.0.93:4000/auth/saml/login"
-            className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 21 21" fill="none">
-              <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
-              <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-              <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
-              <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-            </svg>
-            Entrar com Microsoft
-          </a>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setShowLdapForm(!showLdapForm)}
+              className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-lg py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              Entrar com Windows AD
+            </button>
+
+            {showLdapForm && (
+              <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <Input
+                  label="E-mail corporativo"
+                  type="email"
+                  placeholder="joao@grupoflamboyant.com.br"
+                  value={ldapEmail}
+                  onChange={e => setLdapEmail(e.target.value)}
+                />
+                <Input
+                  label="Senha do Windows"
+                  type="password"
+                  placeholder="••••••••"
+                  value={ldapPassword}
+                  onChange={e => setLdapPassword(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  onClick={handleLdapLogin}
+                  disabled={ldapLoading}
+                  className="w-full"
+                >
+                  {ldapLoading ? 'Autenticando...' : 'Entrar'}
+                </Button>
+              </div>
+            )}
+          </div>
 
           <div className="mt-5 pt-5 border-t border-gray-50 flex flex-col gap-2 text-center">
             <Link to="/esqueci-senha" className="text-xs text-primary-600 hover:text-primary-800 transition-colors">
