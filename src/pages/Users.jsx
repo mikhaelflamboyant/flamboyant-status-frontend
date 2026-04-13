@@ -37,6 +37,23 @@ export default function Users() {
   const [loading, setLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState(null)
   const [error, setError] = useState('')
+  const [syncing, setSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState('')
+
+  const handleSync = async () => {
+    if (!confirm('Sincronizar usuários do Active Directory?')) return
+    setSyncing(true)
+    setSyncResult('')
+    try {
+      const res = await api.post('/auth/ldap/sync')
+      setSyncResult(res.data.message)
+      fetchUsers()
+    } catch (err) {
+      setSyncResult('Erro ao sincronizar com o AD.')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const fetchUsers = async () => {
     try {
@@ -120,7 +137,22 @@ export default function Users() {
               {users.length} usuário{users.length !== 1 ? 's' : ''} ativo{users.length !== 1 ? 's' : ''}
               {pending.length > 0 && ` · ${pending.length} pendente${pending.length !== 1 ? 's' : ''}`}
             </p>
+            {syncResult && <p className="text-xs text-teal-600 mt-1">{syncResult}</p>}
           </div>
+          {['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) && (
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="text-xs bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium flex items-center gap-2"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+              {syncing ? 'Sincronizando...' : 'Sincronizar AD'}
+            </button>
+          )}
         </div>
 
         <div className="flex gap-1 mb-5">
