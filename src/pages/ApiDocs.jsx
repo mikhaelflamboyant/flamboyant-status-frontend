@@ -122,14 +122,16 @@ export default function ApiDocs() {
           >
             API & Tokens
           </button>
-          <button
-            onClick={() => setTab('docs')}
-            className={`text-xs px-4 py-2 rounded-lg font-medium transition-colors ${
-              tab === 'docs' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'
-            }`}
-          >
-            Documentação do sistema
-          </button>
+          {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) && (
+            <button
+              onClick={() => setTab('docs')}
+              className={`text-xs px-4 py-2 rounded-lg font-medium transition-colors ${
+                tab === 'docs' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              Documentação do sistema
+            </button>
+          )}
         </div>
 
         {tab === 'api' && (
