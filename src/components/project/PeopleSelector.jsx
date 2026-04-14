@@ -101,23 +101,35 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
               className={selectCls}
             />
           ) : (
-            <select
-              value={userId}
-              onChange={handleUserChange}
-              disabled={!area}
-              className={selectCls}
-              style={!area ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
-            >
-              {!area && <option value="">Selecione a área primeiro</option>}
-              {area && filteredUsers.length > 0 && (
-                <>
-                  <option value="">Selecione o nome</option>
-                  {filteredUsers.map(u => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </>
+            <div className="flex flex-col gap-1.5">
+              <select
+                value={userId}
+                onChange={handleUserChange}
+                disabled={!area}
+                className={selectCls}
+                style={!area ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+              >
+                {!area && <option value="">Selecione a área primeiro</option>}
+                {area && filteredUsers.length > 0 && (
+                  <>
+                    <option value="">Selecione o nome</option>
+                    {filteredUsers.map(u => (
+                      <option key={u.id} value={u.id}>{u.name}</option>
+                    ))}
+                  </>
+                )}
+              </select>
+              {area && (
+                <input
+                  type="text"
+                  value={manualName}
+                  onChange={e => setManualName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleManualAdd()}
+                  placeholder="Ou digite um nome manualmente"
+                  className={selectCls}
+                />
               )}
-            </select>
+            </div>
           )}
         </div>
         {canRemoveRow && (
