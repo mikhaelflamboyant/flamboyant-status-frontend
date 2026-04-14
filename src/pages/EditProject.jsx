@@ -69,6 +69,7 @@ export default function EditProject() {
             budget_planned: c.budget_planned,
             budget_actual: c.budget_actual || '',
         })) || [])
+        console.log('COSTS:', p.costs)
       } catch (err) {
         setError('Erro ao carregar projeto.')
       } finally {
