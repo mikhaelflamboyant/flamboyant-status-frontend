@@ -91,45 +91,44 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
         </div>
         <div className="flex-1">
           <p className="text-xs text-gray-400 mb-1">Nome</p>
-          {noUsersFound ? (
+          {!area ? (
             <input
               type="text"
-              value={manualName}
-              onChange={e => setManualName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleManualAdd()}
-              placeholder="Digite o nome manualmente"
+              disabled
+              placeholder="Selecione a área primeiro"
               className={selectCls}
+              style={{ opacity: 0.6, cursor: 'not-allowed' }}
             />
           ) : (
-            <div className="flex flex-col gap-1.5">
-              <select
-                value={userId}
-                onChange={handleUserChange}
-                disabled={!area}
+            <>
+              <input
+                type="text"
+                list={`users-${area}-${Date.now()}`}
+                value={manualName}
+                onChange={e => {
+                  setManualName(e.target.value)
+                  const user = users.find(u => u.name === e.target.value && u.area === area)
+                  if (user) {
+                    onAdd({ user_id: user.id, name: user.name, area: user.area })
+                    setManualName('')
+                    setArea('')
+                  }
+                }}
+                onKeyDown={e => e.key === 'Enter' && handleManualAdd()}
+                placeholder={noUsersFound ? 'Nenhum usuário encontrado. Digite o nome manualmente' : 'Selecione ou digite um nome'}
                 className={selectCls}
-                style={!area ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
-              >
-                {!area && <option value="">Selecione a área primeiro</option>}
-                {area && filteredUsers.length > 0 && (
-                  <>
-                    <option value="">Selecione o nome</option>
-                    {filteredUsers.map(u => (
-                      <option key={u.id} value={u.id}>{u.name}</option>
-                    ))}
-                  </>
-                )}
-              </select>
-              {area && (
-                <input
-                  type="text"
-                  value={manualName}
-                  onChange={e => setManualName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleManualAdd()}
-                  placeholder="Ou digite um nome manualmente"
-                  className={selectCls}
-                />
+              />
+              <datalist id={`users-${area}-${Date.now()}`}>
+                {filteredUsers.map(u => (
+                  <option key={u.id} value={u.name} />
+                ))}
+              </datalist>
+              {noUsersFound && (
+                <p className="text-xs text-amber-600 mt-1">
+                  Nenhum usuário encontrado nesta área. Digite o nome manualmente e clique em adicionar.
+                </p>
               )}
-            </div>
+            </>
           )}
         </div>
         {canRemoveRow && (
