@@ -74,10 +74,13 @@ export default function NewProject() {
         ...form,
         area,
         priority: parseInt(form.priority),
-        requester_ids: requesters.map(r => r.user_id),
-        responsible_ids: responsibles.map(r => r.user_id),
-        member_ids: members.map(m => m.user_id),
-        owner_id: responsibles[0]?.user_id || null,
+        requester_ids: requesters.filter(r => !String(r.user_id).startsWith('manual_')).map(r => r.user_id),
+        requester_names: requesters.filter(r => String(r.user_id).startsWith('manual_')).map(r => ({ name: r.name, area: r.area })),
+        responsible_ids: responsibles.filter(r => !String(r.user_id).startsWith('manual_')).map(r => r.user_id),
+        responsible_names: responsibles.filter(r => String(r.user_id).startsWith('manual_')).map(r => ({ name: r.name, area: r.area })),
+        member_ids: members.filter(m => !String(m.user_id).startsWith('manual_')).map(m => m.user_id),
+        member_names: members.filter(m => String(m.user_id).startsWith('manual_')).map(m => ({ name: m.name, area: m.area })),
+        owner_id: responsibles.find(r => !String(r.user_id).startsWith('manual_'))?.user_id || null,
         costs,
       }
       const response = await projectsService.create(data)

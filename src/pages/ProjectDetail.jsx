@@ -369,12 +369,12 @@ export default function ProjectDetail() {
               {project.requesters?.filter(r => r.type === 'SOLICITANTE').length > 0 ? (
                 <div className="flex flex-col gap-1">
                   {project.requesters
-                    .filter(r => r.type === 'SOLICITANTE')
+                    .filter(r => r.type === 'RESPONSAVEL')
                     .map(r => (
                       <div key={r.id} className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">{r.user.area}</span>
+                        <span className="text-xs text-gray-400">{r.user?.area || r.manual_area}</span>
                         <div className="w-px h-3 bg-gray-200" />
-                        <span className="text-sm font-medium text-gray-800">{r.user.name}</span>
+                        <span className="text-sm font-medium text-gray-800">{r.user?.name || r.manual_name}</span>
                       </div>
                     ))}
                 </div>
@@ -391,9 +391,9 @@ export default function ProjectDetail() {
                     .filter(r => r.type === 'RESPONSAVEL')
                     .map(r => (
                       <div key={r.id} className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">{r.user.area}</span>
+                        <span className="text-xs text-gray-400">{r.user?.area || r.manual_area}</span>
                         <div className="w-px h-3 bg-gray-200" />
-                        <span className="text-sm font-medium text-gray-800">{r.user.name}</span>
+                        <span className="text-sm font-medium text-gray-800">{r.user?.name || r.manual_name}</span>
                       </div>
                     ))}
                 </div>
@@ -649,8 +649,8 @@ export default function ProjectDetail() {
                       className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                     >
                       <option value="">Selecionar</option>
-                      {project?.requesters?.filter(r => r.type === 'RESPONSAVEL').map(r => (
-                        <option key={r.user_id} value={r.user_id}>{r.user.name}</option>
+                      {project?.requesters?.filter(r => r.type === 'RESPONSAVEL' && r.user_id).map(r => (
+                        <option key={r.user_id} value={r.user_id}>{r.user?.name || r.manual_name}</option>
                       ))}
                     </select>
                   </div>
