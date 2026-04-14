@@ -65,9 +65,9 @@ export default function EditProject() {
           area: m.user?.area || m.manual_area,
         })) || [])
         setCosts(p.costs?.map(c => ({
-          name: c.name,
-          budget_planned: c.budget_planned,
-          budget_actual: c.budget_actual || '',
+            name: c.name,
+            budget_planned: c.budget_planned,
+            budget_actual: c.budget_actual || '',
         })) || [])
       } catch (err) {
         setError('Erro ao carregar projeto.')
@@ -114,7 +114,11 @@ export default function EditProject() {
         member_ids: members.filter(m => !String(m.user_id).startsWith('manual_')).map(m => m.user_id),
         member_names: members.filter(m => String(m.user_id).startsWith('manual_')).map(m => ({ name: m.name, area: m.area })),
         owner_id: responsibles.find(r => !String(r.user_id).startsWith('manual_'))?.user_id || null,
-        costs,
+        costs: costs.map(c => ({
+            name: c.name,
+            budget_planned: parseFloat(String(c.budget_planned).replace(/\./g, '').replace(',', '.')),
+            budget_actual: c.budget_actual ? parseFloat(String(c.budget_actual).replace(/\./g, '').replace(',', '.')) : null,
+        })),
       })
       navigate(`/projetos/${id}`)
     } catch (err) {

@@ -105,7 +105,7 @@ export function PDFExport({ project, statusUpdates }) {
     }
   }
 
-  const goLive = new Date(project.go_live).toLocaleDateString('pt-BR')
+  const goLive = new Date(project.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
   const solicitantes = project.requesters?.filter(r => r.type === 'SOLICITANTE') || []
   const responsaveis = project.requesters?.filter(r => r.type === 'RESPONSAVEL') || []
 

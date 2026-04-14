@@ -142,14 +142,14 @@ export default function ProjectDetail() {
       setReqContent(req?.content || '')
       setReqTab('conteudo')
       const isFromTI = user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
-        if (isFromTI) {
-          const [tasksRes, usersRes] = await Promise.all([
-            tasksService.list(id),
-            api.get('/users')
-          ])
-          setTasks(tasksRes.data)
-          setUsers(usersRes.data)
-        }
+      if (isFromTI) {
+        const [tasksRes, usersRes] = await Promise.all([
+          tasksService.list(id),
+          api.get('/users')
+        ])
+        setTasks(tasksRes.data)
+        setUsers(usersRes.data)
+      }
     } catch (err) {
       if (err.response?.status === 404) {
         setToast('Projeto não encontrado ou foi excluído.')
@@ -166,12 +166,8 @@ export default function ProjectDetail() {
 
   const isMember = project?.members?.some(m => m.user_id === user?.id) ?? false
   const isOwner = project?.owner_id === user?.id ?? false
-  const isResponsible = project?.requesters?.some(
-    r => r.user_id === user?.id && r.type === 'RESPONSAVEL'
-  ) ?? false
-  const isRequester = project?.requesters?.some(
-    r => r.user_id === user?.id && r.type === 'SOLICITANTE'
-  ) ?? false
+  const isResponsible = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'RESPONSAVEL') ?? false
+  const isRequester = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'SOLICITANTE') ?? false
   const isFromTI = user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
   const canEdit = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
   const canDelete = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
@@ -179,9 +175,7 @@ export default function ProjectDetail() {
     ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) ||
     user?.role === 'GERENTE' ||
     user?.role === 'COORDENADOR' ||
-    isResponsible ||
-    isRequester ||
-    isMember
+    isResponsible || isRequester || isMember
   )
 
   const handleCreateStatus = async (e) => {
@@ -303,7 +297,7 @@ export default function ProjectDetail() {
 
   const priority = PRIORITY_CONFIG[project.priority] || PRIORITY_CONFIG[3]
   const progressColor = FAROL_COLOR[project.traffic_light] || 'primary'
-  const goLive = new Date(project.go_live).toLocaleDateString('pt-BR')
+  const goLive = new Date(project.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -356,9 +350,7 @@ export default function ProjectDetail() {
               <h1 className="text-base font-medium text-gray-900 mb-2">{project.title}</h1>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="purple">{project.area}</Badge>
-                {project.business_unit && (
-                  <Badge variant="violet">{project.business_unit}</Badge>
-                )}
+                {project.business_unit && <Badge variant="violet">{project.business_unit}</Badge>}
                 <Badge variant="gray">
                   {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
                 </Badge>
@@ -366,9 +358,7 @@ export default function ProjectDetail() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {isFromTI && (
-                <PDFExport project={project} statusUpdates={statusUpdates} />
-              )}
+              {isFromTI && <PDFExport project={project} statusUpdates={statusUpdates} />}
               <Farol value={project.traffic_light} />
             </div>
           </div>
@@ -378,15 +368,13 @@ export default function ProjectDetail() {
               <p className="text-xs text-gray-400 mb-2">Solicitante(s)</p>
               {project.requesters?.filter(r => r.type === 'SOLICITANTE').length > 0 ? (
                 <div className="flex flex-col gap-1">
-                  {project.requesters
-                    .filter(r => r.type === 'RESPONSAVEL')
-                    .map(r => (
-                      <div key={r.id} className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">{r.user?.area || r.manual_area}</span>
-                        <div className="w-px h-3 bg-gray-200" />
-                        <span className="text-sm font-medium text-gray-800">{r.user?.name || r.manual_name}</span>
-                      </div>
-                    ))}
+                  {project.requesters.filter(r => r.type === 'SOLICITANTE').map(r => (
+                    <div key={r.id} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">{r.user?.area || r.manual_area}</span>
+                      <div className="w-px h-3 bg-gray-200" />
+                      <span className="text-sm font-medium text-gray-800">{r.user?.name || r.manual_name}</span>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="text-sm font-medium text-gray-800">{project.requester_name || '—'}</p>
@@ -397,15 +385,13 @@ export default function ProjectDetail() {
               <p className="text-xs text-gray-400 mb-2">Responsável(is)</p>
               {project.requesters?.filter(r => r.type === 'RESPONSAVEL').length > 0 ? (
                 <div className="flex flex-col gap-1">
-                  {project.requesters
-                    .filter(r => r.type === 'RESPONSAVEL')
-                    .map(r => (
-                      <div key={r.id} className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">{r.user?.area || r.manual_area}</span>
-                        <div className="w-px h-3 bg-gray-200" />
-                        <span className="text-sm font-medium text-gray-800">{r.user?.name || r.manual_name}</span>
-                      </div>
-                    ))}
+                  {project.requesters.filter(r => r.type === 'RESPONSAVEL').map(r => (
+                    <div key={r.id} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">{r.user?.area || r.manual_area}</span>
+                      <div className="w-px h-3 bg-gray-200" />
+                      <span className="text-sm font-medium text-gray-800">{r.user?.name || r.manual_name}</span>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="text-sm font-medium text-gray-800">{project.owner?.name || '—'}</p>
@@ -418,21 +404,26 @@ export default function ProjectDetail() {
             </div>
 
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-400 mb-1">Orçamento</p>
-              {project.budget_planned ? (
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-sm font-medium text-gray-800">
-                    Planejado: R$ {Number(project.budget_planned).toLocaleString('pt-BR')}
-                  </p>
-                  <p className={`text-sm font-medium ${
-                    project.budget_actual > project.budget_planned
-                      ? 'text-red-500'
-                      : 'text-teal-600'
-                  }`}>
-                    Realizado: {project.budget_actual
-                      ? `R$ ${Number(project.budget_actual).toLocaleString('pt-BR')}`
-                      : '—'}
-                  </p>
+              <p className="text-xs text-gray-400 mb-1">Custos</p>
+              {project.costs?.length > 0 ? (
+                <div className="flex flex-col gap-1.5">
+                  {project.costs.map(c => (
+                    <div key={c.id} className="flex flex-col gap-0.5">
+                      <p className="text-xs text-gray-500 font-medium">{c.name}</p>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-gray-400">
+                          Planejado: <span className="font-medium text-gray-700">R$ {Number(c.budget_planned).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </span>
+                        {c.budget_actual && (
+                          <span className="text-xs text-gray-400">
+                            Realizado: <span className={`font-medium ${Number(c.budget_actual) > Number(c.budget_planned) ? 'text-red-500' : 'text-teal-600'}`}>
+                              R$ {Number(c.budget_actual).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="text-sm font-medium text-gray-800">—</p>
@@ -457,7 +448,7 @@ export default function ProjectDetail() {
 
           <PhaseStrip currentPhase={project.current_phase} />
 
-          {isFromTI && (
+          {canEdit && (
             <ControlPanel
               project={project}
               onSave={async (data) => {
@@ -518,10 +509,7 @@ export default function ProjectDetail() {
                         setStatusForm({ ...statusForm, highlights: statusForm.highlights.filter((_, idx) => idx !== i) })
                       }} className="hover:opacity-70 transition-opacity shrink-0">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6"/>
-                          <path d="M19 6l-1 14H6L5 6"/>
-                          <path d="M10 11v6M14 11v6"/>
-                          <path d="M9 6V4h6v2"/>
+                          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
                         </svg>
                       </button>
                     </div>
@@ -550,10 +538,7 @@ export default function ProjectDetail() {
                         setStatusForm({ ...statusForm, next_steps: statusForm.next_steps.filter((_, idx) => idx !== i) })
                       }} className="hover:opacity-70 transition-opacity shrink-0">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6"/>
-                          <path d="M19 6l-1 14H6L5 6"/>
-                          <path d="M10 11v6M14 11v6"/>
-                          <path d="M9 6V4h6v2"/>
+                          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
                         </svg>
                       </button>
                     </div>
@@ -566,18 +551,12 @@ export default function ProjectDetail() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={statusLoading}
-                  className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50"
-                >
+                <button type="submit" disabled={statusLoading}
+                  className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50">
                   {statusLoading ? 'Salvando...' : 'Salvar'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowStatusForm(false)}
-                  className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5"
-                >
+                <button type="button" onClick={() => setShowStatusForm(false)}
+                  className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
                   Cancelar
                 </button>
               </div>
@@ -585,9 +564,7 @@ export default function ProjectDetail() {
           )}
 
           {statusUpdates.length === 0 && (
-            <p className="text-xs text-gray-400 text-center py-8">
-              Nenhuma atualização registrada ainda.
-            </p>
+            <p className="text-xs text-gray-400 text-center py-8">Nenhuma atualização registrada ainda.</p>
           )}
 
           <div className="flex flex-col gap-3">
@@ -610,25 +587,19 @@ export default function ProjectDetail() {
               <div className="flex items-center gap-4">
                 <h2 className="text-sm font-medium text-gray-900">Tarefas</h2>
                 <div className="flex gap-1">
-                  <button
-                    onClick={() => setTaskTab('pendentes')}
-                    className={`text-xs px-3 py-1 rounded-lg transition-colors ${taskTab === 'pendentes' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-600'}`}
-                  >
+                  <button onClick={() => setTaskTab('pendentes')}
+                    className={`text-xs px-3 py-1 rounded-lg transition-colors ${taskTab === 'pendentes' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-600'}`}>
                     Pendentes {tasks.filter(t => !t.completed).length > 0 && `(${tasks.filter(t => !t.completed).length})`}
                   </button>
-                  <button
-                    onClick={() => setTaskTab('concluidas')}
-                    className={`text-xs px-3 py-1 rounded-lg transition-colors ${taskTab === 'concluidas' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-600'}`}
-                  >
+                  <button onClick={() => setTaskTab('concluidas')}
+                    className={`text-xs px-3 py-1 rounded-lg transition-colors ${taskTab === 'concluidas' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-600'}`}>
                     Concluídas {tasks.filter(t => t.completed).length > 0 && `(${tasks.filter(t => t.completed).length})`}
                   </button>
                 </div>
               </div>
               {canManageTasks && (
-                <button
-                  onClick={() => setShowTaskForm(!showTaskForm)}
-                  className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors"
-                >
+                <button onClick={() => setShowTaskForm(!showTaskForm)}
+                  className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors">
                   + Nova tarefa
                 </button>
               )}
@@ -672,26 +643,19 @@ export default function ProjectDetail() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <p className="text-xs text-gray-400">Prazo</p>
-                    <input
-                      type="date"
-                      value={taskForm.due_date}
+                    <input type="date" value={taskForm.due_date}
                       onChange={e => setTaskForm({ ...taskForm, due_date: e.target.value })}
                       className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                     />
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={handleCreateTask}
-                    disabled={taskLoading}
-                    className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50"
-                  >
+                  <button onClick={handleCreateTask} disabled={taskLoading}
+                    className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50">
                     {taskLoading ? 'Salvando...' : 'Salvar'}
                   </button>
-                  <button
-                    onClick={() => setShowTaskForm(false)}
-                    className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5"
-                  >
+                  <button onClick={() => setShowTaskForm(false)}
+                    className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
                     Cancelar
                   </button>
                 </div>
@@ -712,9 +676,7 @@ export default function ProjectDetail() {
                           onClick={() => handleCompleteTask(task.id)}
                           disabled={task.author_id !== user?.id}
                           className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                            task.completed
-                              ? 'bg-teal-500 border-teal-500'
-                              : 'border-gray-300 hover:border-primary-400'
+                            task.completed ? 'bg-teal-500 border-teal-500' : 'border-gray-300 hover:border-primary-400'
                           } disabled:opacity-40 disabled:cursor-not-allowed`}
                         >
                           {task.completed && (
@@ -727,16 +689,10 @@ export default function ProjectDetail() {
                           <p className={`text-sm font-medium ${task.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
                             {task.title}
                           </p>
-                          {task.description && (
-                            <p className="text-xs text-gray-400 mt-0.5">{task.description}</p>
-                          )}
+                          {task.description && <p className="text-xs text-gray-400 mt-0.5">{task.description}</p>}
                           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                            {task.assignee && (
-                              <span className="text-xs text-gray-400">→ {task.assignee.name}</span>
-                            )}
-                            {task.phase && (
-                              <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{task.phase}</span>
-                            )}
+                            {task.assignee && <span className="text-xs text-gray-400">→ {task.assignee.name}</span>}
+                            {task.phase && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{task.phase}</span>}
                             {task.due_date && (
                               <span className={`text-xs ${new Date(task.due_date) < new Date() && !task.completed ? 'text-red-500' : 'text-gray-400'}`}>
                                 {new Date(task.due_date).toLocaleDateString('pt-BR')}
@@ -747,15 +703,9 @@ export default function ProjectDetail() {
                         </div>
                       </div>
                       {canManageTasks && (
-                        <button
-                          onClick={() => handleDeleteTask(task.id)}
-                          className="hover:opacity-70 transition-opacity shrink-0"
-                        >
+                        <button onClick={() => handleDeleteTask(task.id)} className="hover:opacity-70 transition-opacity shrink-0">
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6l-1 14H6L5 6"/>
-                            <path d="M10 11v6M14 11v6"/>
-                            <path d="M9 6V4h6v2"/>
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
                           </svg>
                         </button>
                       )}
@@ -773,24 +723,12 @@ export default function ProjectDetail() {
               <div className="flex items-center gap-4">
                 <h2 className="text-sm font-medium text-gray-900">Requisitos de software</h2>
                 <div className="flex gap-1">
-                  <button
-                    onClick={() => setReqTab('conteudo')}
-                    className={`text-xs px-3 py-1 rounded-lg transition-colors ${
-                      reqTab === 'conteudo'
-                        ? 'bg-primary-600 text-white'
-                        : 'text-gray-400 hover:text-gray-600'
-                    }`}
-                  >
+                  <button onClick={() => setReqTab('conteudo')}
+                    className={`text-xs px-3 py-1 rounded-lg transition-colors ${reqTab === 'conteudo' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-600'}`}>
                     Conteúdo
                   </button>
-                  <button
-                    onClick={() => setReqTab('historico')}
-                    className={`text-xs px-3 py-1 rounded-lg transition-colors ${
-                      reqTab === 'historico'
-                        ? 'bg-primary-600 text-white'
-                        : 'text-gray-400 hover:text-gray-600'
-                    }`}
-                  >
+                  <button onClick={() => setReqTab('historico')}
+                    className={`text-xs px-3 py-1 rounded-lg transition-colors ${reqTab === 'historico' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-600'}`}>
                     Histórico {requirement?.history?.length > 0 && `(${requirement.history.length})`}
                   </button>
                 </div>
@@ -798,21 +736,15 @@ export default function ProjectDetail() {
               {canEdit && !editingReq && reqTab === 'conteudo' && (
                 <>
                   {requirement ? (
-                    <button
-                      onClick={() => setEditingReq(true)}
-                      className="hover:opacity-70 transition-opacity"
-                      title="Editar requisitos"
-                    >
+                    <button onClick={() => setEditingReq(true)} className="hover:opacity-70 transition-opacity" title="Editar requisitos">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                       </svg>
                     </button>
                   ) : (
-                    <button
-                      onClick={() => setEditingReq(true)}
-                      className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors font-medium"
-                    >
+                    <button onClick={() => setEditingReq(true)}
+                      className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors font-medium">
                       + Adicionar
                     </button>
                   )}
@@ -832,17 +764,12 @@ export default function ProjectDetail() {
                       className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none font-mono bg-gray-50"
                     />
                     <div className="flex gap-2">
-                      <button
-                        onClick={handleSaveRequirement}
-                        disabled={reqLoading}
-                        className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50"
-                      >
+                      <button onClick={handleSaveRequirement} disabled={reqLoading}
+                        className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50">
                         {reqLoading ? 'Salvando...' : 'Salvar'}
                       </button>
-                      <button
-                        onClick={() => setEditingReq(false)}
-                        className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5"
-                      >
+                      <button onClick={() => setEditingReq(false)}
+                        className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
                         Cancelar
                       </button>
                     </div>
@@ -851,18 +778,14 @@ export default function ProjectDetail() {
                   <div>
                     {requirement ? (
                       <>
-                        <div
-                          className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: requirement.content }}
-                        />
+                        <div className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: requirement.content }} />
                         <p className="text-xs text-gray-300 mt-4">
                           Última edição: {new Date(requirement.updated_at).toLocaleDateString('pt-BR')} · {requirement.author?.name}
                         </p>
                       </>
                     ) : (
-                      <p className="text-xs text-gray-400 text-center py-8">
-                        Nenhum requisito cadastrado ainda.
-                      </p>
+                      <p className="text-xs text-gray-400 text-center py-8">Nenhum requisito cadastrado ainda.</p>
                     )}
                   </div>
                 )}
@@ -872,9 +795,7 @@ export default function ProjectDetail() {
             {reqTab === 'historico' && (
               <div className="flex flex-col gap-3">
                 {!requirement?.history?.length ? (
-                  <p className="text-xs text-gray-400 text-center py-8">
-                    Nenhuma alteração registrada ainda.
-                  </p>
+                  <p className="text-xs text-gray-400 text-center py-8">Nenhuma alteração registrada ainda.</p>
                 ) : (
                   <>
                     <div className="border border-primary-100 rounded-xl p-4 bg-primary-50/20">
@@ -890,13 +811,11 @@ export default function ProjectDetail() {
                         ))}
                       </div>
                     </div>
-
                     {requirement.history.map((entry, index) => {
                       const curr = entry.content_snapshot
                       const next = index === 0 ? requirement.content : requirement.history[index - 1]?.content_snapshot || ''
                       const currLines = curr.split('\n')
                       const nextLines = next.split('\n')
-
                       return (
                         <div key={entry.id} className="border border-gray-100 rounded-xl p-4">
                           <div className="flex items-center justify-between mb-3">
@@ -909,10 +828,7 @@ export default function ProjectDetail() {
                             {currLines.map((line, i) => {
                               const isRemoved = !nextLines.includes(line) && line.trim() !== ''
                               return (
-                                <div
-                                  key={i}
-                                  className={`px-1 rounded ${isRemoved ? 'bg-red-50 text-red-700' : 'text-gray-600'}`}
-                                >
+                                <div key={i} className={`px-1 rounded ${isRemoved ? 'bg-red-50 text-red-700' : 'text-gray-600'}`}>
                                   {isRemoved ? '- ' : '  '}{line || ' '}
                                 </div>
                               )
