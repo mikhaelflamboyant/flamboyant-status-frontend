@@ -42,6 +42,7 @@ const TrashIcon = ({ color = '#E24B4A' }) => (
 function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemoveRow }) {
   const [area, setArea] = useState('')
   const [userId, setUserId] = useState('')
+  const [manualName, setManualName] = useState('')
 
   const filteredUsers = useMemo(() => {
     if (!area) return []
@@ -52,9 +53,12 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
     )
   }, [area, users, selected, excluded])
 
+  const noUsersFound = area && filteredUsers.length === 0
+
   const handleAreaChange = (e) => {
     setArea(e.target.value)
     setUserId('')
+    setManualName('')
   }
 
   const handleUserChange = (e) => {
@@ -66,46 +70,80 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
     }
   }
 
+  const handleManualAdd = () => {
+    if (!manualName.trim()) return
+    onAdd({ user_id: `manual_${Date.now()}`, name: manualName.trim(), area })
+    setManualName('')
+    setArea('')
+  }
+
   const selectCls = 'h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700'
 
   return (
-    <div className="flex items-end gap-2">
-      <div className="flex-1">
-        <p className="text-xs text-gray-400 mb-1">Área</p>
-        <select value={area} onChange={handleAreaChange} className={selectCls}>
-          <option value="">Selecionar área</option>
-          {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
-        </select>
-      </div>
-      <div className="flex-1">
-        <p className="text-xs text-gray-400 mb-1">Nome</p>
-        <select
-          value={userId}
-          onChange={handleUserChange}
-          disabled={!area}
-          className={selectCls}
-          style={!area ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
-        >
-          {!area && <option value="">Selecione a área primeiro</option>}
-          {area && filteredUsers.length === 0 && <option value="">Nenhum usuário encontrado</option>}
-          {area && filteredUsers.length > 0 && (
-            <>
-              <option value="">Selecione o nome</option>
-              {filteredUsers.map(u => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <p className="text-xs text-gray-400 mb-1">Área</p>
+          <select value={area} onChange={handleAreaChange} className={selectCls}>
+            <option value="">Selecionar área</option>
+            {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </div>
+        <div className="flex-1">
+          <p className="text-xs text-gray-400 mb-1">Nome</p>
+          {noUsersFound ? (
+            <input
+              type="text"
+              value={manualName}
+              onChange={e => setManualName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleManualAdd()}
+              placeholder="Digite o nome manualmente"
+              className={selectCls}
+            />
+          ) : (
+            <select
+              value={userId}
+              onChange={handleUserChange}
+              disabled={!area}
+              className={selectCls}
+              style={!area ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+            >
+              {!area && <option value="">Selecione a área primeiro</option>}
+              {area && filteredUsers.length > 0 && (
+                <>
+                  <option value="">Selecione o nome</option>
+                  {filteredUsers.map(u => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </>
+              )}
+            </select>
           )}
-        </select>
+        </div>
+        {canRemoveRow && (
+          <button
+            type="button"
+            onClick={onRemoveRow}
+            className="h-9 w-9 flex items-center justify-center hover:opacity-70 transition-opacity shrink-0"
+          >
+            <TrashIcon />
+          </button>
+        )}
       </div>
-      {canRemoveRow && (
-        <button
-          type="button"
-          onClick={onRemoveRow}
-          className="h-9 w-9 flex items-center justify-center hover:opacity-70 transition-opacity shrink-0"
-        >
-          <TrashIcon />
-        </button>
+      {noUsersFound && (
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-amber-600 flex-1">
+            Nenhum usuário encontrado nesta área — digite o nome manualmente e clique em adicionar.
+          </p>
+          <button
+            type="button"
+            onClick={handleManualAdd}
+            disabled={!manualName.trim()}
+            className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium shrink-0"
+          >
+            Adicionar
+          </button>
+        </div>
       )}
     </div>
   )
