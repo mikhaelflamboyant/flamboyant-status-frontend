@@ -42,6 +42,7 @@ const TrashIcon = ({ color = '#E24B4A' }) => (
 function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemoveRow }) {
   const [area, setArea] = useState('')
   const [userId, setUserId] = useState('')
+  const [manualMode, setManualMode] = useState(false)
   const [manualName, setManualName] = useState('')
 
   const filteredUsers = useMemo(() => {
@@ -58,15 +59,24 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
   const handleAreaChange = (e) => {
     setArea(e.target.value)
     setUserId('')
+    setManualMode(false)
     setManualName('')
   }
 
   const handleUserChange = (e) => {
-    const id = e.target.value
-    if (!id) return
-    const user = users.find(u => u.id === id)
+    const val = e.target.value
+    if (!val) return
+    if (val === '__manual__') {
+      setManualMode(true)
+      setUserId('')
+      return
+    }
+    const user = users.find(u => u.id === val)
     if (user) {
       onAdd({ user_id: user.id, name: user.name, area: user.area })
+      setUserId('')
+      setArea('')
+      setManualMode(false)
     }
   }
 
@@ -75,12 +85,13 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
     onAdd({ user_id: `manual_${Date.now()}`, name: manualName.trim(), area })
     setManualName('')
     setArea('')
+    setManualMode(false)
   }
 
   const selectCls = 'h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700'
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1">
       <div className="flex items-end gap-2">
         <div className="flex-1">
           <p className="text-xs text-gray-400 mb-1">Área</p>
@@ -92,43 +103,39 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
         <div className="flex-1">
           <p className="text-xs text-gray-400 mb-1">Nome</p>
           {!area ? (
-            <input
-              type="text"
-              disabled
-              placeholder="Selecione a área primeiro"
-              className={selectCls}
-              style={{ opacity: 0.6, cursor: 'not-allowed' }}
-            />
-          ) : (
-            <>
+            <select disabled className={selectCls} style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+              <option>Selecione a área primeiro</option>
+            </select>
+          ) : noUsersFound || manualMode ? (
+            <div className="flex items-center gap-1">
               <input
                 type="text"
-                list={`users-${area}-${Date.now()}`}
                 value={manualName}
-                onChange={e => {
-                  setManualName(e.target.value)
-                  const user = users.find(u => u.name === e.target.value && u.area === area)
-                  if (user) {
-                    onAdd({ user_id: user.id, name: user.name, area: user.area })
-                    setManualName('')
-                    setArea('')
-                  }
-                }}
+                onChange={e => setManualName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleManualAdd()}
-                placeholder={noUsersFound ? 'Nenhum usuário encontrado. Digite o nome manualmente' : 'Selecione ou digite um nome'}
+                placeholder="Digite o nome manualmente"
+                autoFocus={manualMode}
                 className={selectCls}
               />
-              <datalist id={`users-${area}-${Date.now()}`}>
-                {filteredUsers.map(u => (
-                  <option key={u.id} value={u.name} />
-                ))}
-              </datalist>
-              {noUsersFound && (
-                <p className="text-xs text-amber-600 mt-1">
-                  Nenhum usuário encontrado nesta área. Digite o nome manualmente e clique em adicionar.
-                </p>
+              {manualMode && !noUsersFound && (
+                <button
+                  type="button"
+                  onClick={() => { setManualMode(false); setManualName('') }}
+                  className="text-xs text-gray-400 hover:text-gray-600 transition-colors shrink-0 px-2 h-9 border border-gray-200 rounded-lg bg-white"
+                  title="Voltar para lista"
+                >
+                  ↩
+                </button>
               )}
-            </>
+            </div>
+          ) : (
+            <select value={userId} onChange={handleUserChange} className={selectCls}>
+              <option value="">Selecione o nome</option>
+              {filteredUsers.map(u => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+              <option value="__manual__">Digite o nome manualmente</option>
+            </select>
           )}
         </div>
         {canRemoveRow && (
@@ -141,9 +148,11 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
           </button>
         )}
       </div>
-      {noUsersFound && (
-        <p className="text-xs text-amber-600">
-          Nenhum usuário encontrado nesta área. Digite o nome manualmente e clique em adicionar.
+      {(noUsersFound || manualMode) && (
+        <p className="text-xs text-amber-600 mt-0.5">
+          {noUsersFound
+            ? 'Nenhum usuário encontrado nesta área. Digite o nome manualmente e clique em adicionar.'
+            : 'Digite o nome e pressione Enter ou clique em adicionar.'}
         </p>
       )}
     </div>
