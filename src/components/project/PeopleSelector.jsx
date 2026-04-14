@@ -131,19 +131,9 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
         )}
       </div>
       {noUsersFound && (
-        <div className="flex items-center gap-2">
-          <p className="text-xs text-amber-600 flex-1">
-            Nenhum usuário encontrado nesta área — digite o nome manualmente e clique em adicionar.
-          </p>
-          <button
-            type="button"
-            onClick={handleManualAdd}
-            disabled={!manualName.trim()}
-            className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium shrink-0"
-          >
-            Adicionar
-          </button>
-        </div>
+        <p className="text-xs text-amber-600">
+          Nenhum usuário encontrado nesta área. Digite o nome manualmente e clique em adicionar.
+        </p>
       )}
     </div>
   )
@@ -218,7 +208,21 @@ export function PeopleSelector({ label, required = false, users = [], selected =
       <div className="flex justify-end">
         <button
             type="button"
-            onClick={handleAddRow}
+            onClick={() => {
+              // salva nome manual pendente antes de adicionar nova linha
+              const pendingRow = rows[rows.length - 1]
+              if (pendingRow) {
+                const input = document.querySelector(`input[placeholder="Digite o nome manualmente"]`)
+                if (input?.value?.trim()) {
+                  const areaSelect = input.closest('.flex')?.querySelector('select')
+                  const areaValue = areaSelect?.value
+                  if (areaValue) {
+                    onChange([...selected, { user_id: `manual_${Date.now()}`, name: input.value.trim(), area: areaValue }])
+                  }
+                }
+              }
+              handleAddRow()
+            }}
             style={{ minWidth: '180px' }}
             className="h-9 px-4 text-xs font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-800 transition-colors text-center"
         >
