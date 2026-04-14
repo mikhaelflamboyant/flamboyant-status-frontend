@@ -227,8 +227,8 @@ export function PDFExport({ project, statusUpdates }) {
           )}
 
           <div style={s.infoGrid}>
-            <div style={s.infoCell}><p style={s.infoLabel}>Solicitante(s)</p><p style={s.infoValue}>{solicitantes.length > 0 ? solicitantes.map(r => r.user.name).join(', ') : '—'}</p></div>
-            <div style={s.infoCell}><p style={s.infoLabel}>Responsável(is)</p><p style={s.infoValue}>{responsaveis.length > 0 ? responsaveis.map(r => r.user.name).join(', ') : '—'}</p></div>
+            <div style={s.infoCell}><p style={s.infoLabel}>Solicitante(s)</p><p style={s.infoValue}>{solicitantes.length > 0 ? solicitantes.map(r => r.user?.name || r.manual_name).join(', ') : '—'}</p></div>
+            <div style={s.infoCell}><p style={s.infoLabel}>Responsável(is)</p><p style={s.infoValue}>{responsaveis.length > 0 ? responsaveis.map(r => r.user?.name || r.manual_name).join(', ') : '—'}</p></div>
             <div style={s.infoCell}><p style={s.infoLabel}>Go-live</p><p style={s.infoValue}>{goLive}</p></div>
             <div style={s.infoCell}><p style={s.infoLabel}>Fase atual</p><p style={s.infoValue}>{PHASE_LABELS[project.current_phase] || project.current_phase}</p></div>
           </div>

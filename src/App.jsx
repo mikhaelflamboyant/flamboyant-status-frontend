@@ -13,6 +13,7 @@ import Profile from './pages/Profile'
 import Notifications from './pages/Notifications'
 import ApiDocs from './pages/ApiDocs'
 import SamlSuccess from './pages/SamlSuccess'
+import EditProject from './pages/EditProject'
 
 function App() {
   return (
@@ -48,6 +49,8 @@ function App() {
             <ProjectDetail />
           </ProtectedRoute>
         } />
+
+        <Route path="/projetos/:id/editar" element={<EditProject />} />
 
         <Route path="/usuarios" element={
           <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR']}>

@@ -141,7 +141,7 @@ export default function ProjectDetail() {
       setRequirement(req)
       setReqContent(req?.content || '')
       setReqTab('conteudo')
-      const isFromTI = user?.area === 'Tecnologia da Informação' || user?.role === 'ANALISTA_MASTER'
+      const isFromTI = user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
         if (isFromTI) {
           const [tasksRes, usersRes] = await Promise.all([
             tasksService.list(id),
@@ -172,11 +172,11 @@ export default function ProjectDetail() {
   const isRequester = project?.requesters?.some(
     r => r.user_id === user?.id && r.type === 'SOLICITANTE'
   ) ?? false
-  const isFromTI = user?.area === 'Tecnologia da Informação' || user?.role === 'ANALISTA_MASTER'
-  const canEdit = (isFromTI || user?.role === 'ANALISTA_MASTER') && (isResponsible || isRequester || user?.role === 'ANALISTA_MASTER')
-  const canDelete = (isFromTI || user?.role === 'ANALISTA_MASTER') && (isResponsible || isRequester || user?.role === 'ANALISTA_MASTER')
+  const isFromTI = user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
+  const canEdit = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
+  const canDelete = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
   const canManageTasks = isFromTI && (
-    user?.role === 'ANALISTA_MASTER' ||
+    ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) ||
     user?.role === 'GERENTE' ||
     user?.role === 'COORDENADOR' ||
     isResponsible ||
@@ -322,22 +322,32 @@ export default function ProjectDetail() {
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/projetos')}
               className="text-xs text-primary-600 hover:text-primary-800 transition-colors"
             >
-              ← Voltar
+              ← Projetos
             </button>
             <span className="text-xs text-gray-300">/</span>
             <span className="text-xs text-gray-500 truncate max-w-xs">{project.title}</span>
           </div>
-          {canDelete && (
-            <button
-              onClick={handleDelete}
-              className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors font-medium"
-            >
-              Excluir projeto
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {canEdit && (
+              <button
+                onClick={() => navigate(`/projetos/${id}/editar`)}
+                className="text-xs text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 px-3 py-1.5 rounded-lg transition-colors font-medium"
+              >
+                Editar projeto
+              </button>
+            )}
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors font-medium"
+              >
+                Excluir projeto
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="bg-white border border-gray-100 rounded-xl p-6 mb-4">
@@ -447,7 +457,7 @@ export default function ProjectDetail() {
 
           <PhaseStrip currentPhase={project.current_phase} />
 
-          {(user?.area === 'Tecnologia da Informação' || user?.role === 'ANALISTA_MASTER') && (
+          {isFromTI && (
             <ControlPanel
               project={project}
               onSave={async (data) => {
@@ -757,7 +767,7 @@ export default function ProjectDetail() {
           </div>
         )}
 
-        {(user?.area === 'Tecnologia da Informação' || user?.role === 'ANALISTA_MASTER') && (
+        {isFromTI && (
           <div className="bg-white border border-gray-100 rounded-xl p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-4">
