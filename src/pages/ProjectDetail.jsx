@@ -401,6 +401,24 @@ export default function ProjectDetail() {
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-400 mb-1">Go-live</p>
               <p className="text-sm font-medium text-gray-800">{goLive}</p>
+              {project.go_live_history?.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <p className="text-xs text-gray-400 mb-1.5">Histórico de alterações</p>
+                  <div className="flex flex-col gap-1">
+                    {project.go_live_history.map(h => (
+                      <div key={h.id} className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <span>{new Date(h.previous_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
+                        <span>→</span>
+                        <span className="text-gray-600 font-medium">{new Date(h.new_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span>
+                        <span>·</span>
+                        <span>{h.changed_by_user?.name}</span>
+                        <span>·</span>
+                        <span>{new Date(h.changed_at).toLocaleDateString('pt-BR')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-gray-50 rounded-lg p-3">
