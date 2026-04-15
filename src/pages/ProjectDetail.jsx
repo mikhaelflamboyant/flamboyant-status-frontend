@@ -715,7 +715,9 @@ export default function ProjectDetail() {
                           <p className={`text-sm font-medium ${task.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
                             {task.title}
                           </p>
-                          {task.description && <p className="text-xs text-gray-400 mt-0.5">{task.description}</p>}
+                          {task.description && (
+                            <p className="text-xs text-gray-400 mt-0.5 whitespace-pre-wrap">{task.description}</p>
+                          )}
                           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                             {task.assignee && <span className="text-xs text-gray-400">→ {task.assignee.name}</span>}
                             {task.phase && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{task.phase}</span>}
