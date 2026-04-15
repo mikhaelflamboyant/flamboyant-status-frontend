@@ -14,6 +14,8 @@ import { risksService } from '../services/risks.service'
 import { requirementsService } from '../services/requirements.service'
 import { useAuth } from '../hooks/useAuth'
 import { tasksService } from '../services/tasks.service'
+import { MarkdownEditor } from '../components/ui/MarkdownEditor'
+import { MarkdownContent } from '../components/ui/MarkdownContent'
 
 const PRIORITY_CONFIG = {
   1: { label: 'Prioridade 1', variant: 'green' },
@@ -452,7 +454,7 @@ export default function ProjectDetail() {
           {project.description && (
             <div className="bg-gray-50 rounded-lg p-3 mb-5">
               <p className="text-xs text-gray-400 mb-1">Descrição</p>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{project.description}</p>
+              <MarkdownContent content={project.description} />
             </div>
           )}
 
@@ -640,12 +642,11 @@ export default function ProjectDetail() {
                   onChange={e => setTaskForm({ ...taskForm, title: e.target.value })}
                   className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                 />
-                <textarea
-                  placeholder="Descrição (opcional)"
+                <MarkdownEditor
                   value={taskForm.description}
-                  onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
+                  onChange={val => setTaskForm({ ...taskForm, description: val })}
                   rows={2}
-                  className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
+                  placeholder="Descrição (opcional)"
                 />
                 <div className="grid grid-cols-3 gap-3">
                   <div className="flex flex-col gap-1">
@@ -716,7 +717,7 @@ export default function ProjectDetail() {
                             {task.title}
                           </p>
                           {task.description && (
-                            <p className="text-xs text-gray-400 mt-0.5 whitespace-pre-wrap">{task.description}</p>
+                            <MarkdownContent content={task.description} className="text-xs text-gray-400 mt-0.5" />
                           )}
                           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                             {task.assignee && <span className="text-xs text-gray-400">→ {task.assignee.name}</span>}
@@ -784,12 +785,11 @@ export default function ProjectDetail() {
               <>
                 {editingReq ? (
                   <div className="flex flex-col gap-3">
-                    <textarea
+                    <MarkdownEditor
                       value={reqContent}
-                      onChange={e => setReqContent(e.target.value)}
+                      onChange={setReqContent}
                       rows={10}
                       placeholder="Documente os requisitos do projeto aqui..."
-                      className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none font-mono bg-gray-50"
                     />
                     <div className="flex gap-2">
                       <button onClick={handleSaveRequirement} disabled={reqLoading}
@@ -806,11 +806,7 @@ export default function ProjectDetail() {
                   <div>
                     {requirement ? (
                       <>
-                        <div
-                          className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap"
-                        >
-                          {requirement.content}
-                        </div>
+                        <MarkdownContent content={requirement.content} />
                         <p className="text-xs text-gray-300 mt-4">
                           Última edição: {new Date(requirement.updated_at).toLocaleDateString('pt-BR')} · {requirement.author?.name}
                         </p>

@@ -5,6 +5,7 @@ import { Input } from '../components/ui/Input'
 import { CostSelector } from '../components/project/CostSelector'
 import { PeopleSelector } from '../components/project/PeopleSelector'
 import { projectsService } from '../services/projects.service'
+import { MarkdownEditor } from '../components/ui/MarkdownEditor'
 import api from '../services/api'
 
 export default function NewProject() {
@@ -239,13 +240,11 @@ export default function NewProject() {
                 <label className="text-xs font-medium text-gray-500">
                   Descrição <span className="text-red-400">*</span>
                 </label>
-                <textarea
+                <MarkdownEditor
                   value={form.description}
-                  onChange={e => handleChange('description', e.target.value)}
+                  onChange={val => handleChange('description', val)}
                   rows={4}
                   placeholder="Descreva o contexto, escopo e objetivos do projeto..."
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none transition-colors placeholder:text-gray-300"
-                  required
                 />
               </div>
             </div>
