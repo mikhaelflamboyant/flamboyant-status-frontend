@@ -576,6 +576,14 @@ export default function ProjectDetail() {
                 onAddRisk={handleAddRisk}
                 onUpdateRisk={handleUpdateRisk}
                 onDeleteRisk={handleDeleteRisk}
+                onUpdateStatus={async (statusId, data) => {
+                  await statusService.update(id, statusId, data)
+                  fetchProject()
+                }}
+                onDeleteStatus={async (statusId) => {
+                  await statusService.delete(id, statusId)
+                  fetchProject()
+                }}
               />
             ))}
           </div>
