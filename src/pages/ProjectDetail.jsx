@@ -452,7 +452,7 @@ export default function ProjectDetail() {
           {project.description && (
             <div className="bg-gray-50 rounded-lg p-3 mb-5">
               <p className="text-xs text-gray-400 mb-1">Descrição</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{project.description}</p>
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{project.description}</p>
             </div>
           )}
 
@@ -804,8 +804,11 @@ export default function ProjectDetail() {
                   <div>
                     {requirement ? (
                       <>
-                        <div className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: requirement.content }} />
+                        <div
+                          className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap"
+                        >
+                          {requirement.content}
+                        </div>
                         <p className="text-xs text-gray-300 mt-4">
                           Última edição: {new Date(requirement.updated_at).toLocaleDateString('pt-BR')} · {requirement.author?.name}
                         </p>
