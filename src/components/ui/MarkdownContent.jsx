@@ -1,3 +1,4 @@
+/*
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
@@ -13,3 +14,4 @@ export function MarkdownContent({ content, className = '' }) {
     />
   )
 }
+*/

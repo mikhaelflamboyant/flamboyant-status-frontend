@@ -105,7 +105,7 @@ export function PDFExport({ project, statusUpdates }) {
     }
   }
 
-  const goLive = new Date(project.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+  const goLive = project.go_live ? new Date(project.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'
   const solicitantes = project.requesters?.filter(r => r.type === 'SOLICITANTE') || []
   const responsaveis = project.requesters?.filter(r => r.type === 'RESPONSAVEL') || []
 

@@ -21,6 +21,7 @@ export default function EditProject() {
     priority: null,
     description: '',
     go_live: '',
+    go_live_undefined: false,
     business_unit: '',
   })
   const [requesters, setRequesters] = useState([])
@@ -43,6 +44,7 @@ export default function EditProject() {
           priority: p.priority || null,
           description: p.description || '',
           go_live: p.go_live ? p.go_live.split('T')[0] : '',
+          go_live_undefined: !p.go_live,
           business_unit: p.business_unit || '',
         })
         setRequesters(p.requesters
@@ -87,9 +89,9 @@ export default function EditProject() {
     e.preventDefault()
     setError('')
 
-    if (!form.title || !form.description || !form.go_live || !form.priority || !form.business_unit) {
-      setError('Preencha todos os campos obrigatórios.')
-      return
+    if (!form.title || !form.description || (!form.go_live && !form.go_live_undefined) || !form.priority || !form.business_unit) {
+        setError('Preencha todos os campos obrigatórios.')
+        return
     }
     if (requesters.length === 0) {
       setError('Adicione pelo menos um solicitante.')
@@ -106,6 +108,7 @@ export default function EditProject() {
     try {
       await projectsService.update(id, {
         ...form,
+        go_live: form.go_live_undefined ? null : form.go_live,
         area,
         priority: parseInt(form.priority),
         requester_ids: requesters.filter(r => !String(r.user_id).startsWith('manual_')).map(r => r.user_id),
@@ -240,13 +243,31 @@ export default function EditProject() {
                   </select>
                 </div>
 
-                <Input
-                  label="Go-live (prazo de entrega)"
-                  type="date"
-                  value={form.go_live}
-                  onChange={e => handleChange('go_live', e.target.value)}
-                  required
-                />
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-gray-500">
+                    Go-live (prazo de entrega) {!form.go_live_undefined && <span className="text-red-400">*</span>}
+                  </label>
+                  {!form.go_live_undefined && (
+                    <input
+                      type="date"
+                      value={form.go_live}
+                      onChange={e => handleChange('go_live', e.target.value)}
+                      className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
+                    />
+                  )}
+                  <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.go_live_undefined}
+                      onChange={e => {
+                        handleChange('go_live_undefined', e.target.checked)
+                        if (e.target.checked) handleChange('go_live', '')
+                      }}
+                      className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
+                    />
+                    <span className="text-xs text-gray-400">Sem previsão</span>
+                  </label>
+                </div>
               </div>
 
               <div className="flex flex-col gap-1">
