@@ -26,6 +26,7 @@ export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk
     description: update.description || '',
     highlights: (update.highlights || '').split('\n').filter(l => l.trim()),
     next_steps: (update.next_steps || '').split('\n').filter(l => l.trim()),
+    reported_by_name: update.reported_by_name || '',
   })
   const [editLoading, setEditLoading] = useState(false)
 
@@ -52,6 +53,7 @@ export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk
         description: editForm.description,
         highlights: editForm.highlights.join('\n'),
         next_steps: editForm.next_steps.join('\n'),
+        reported_by_name: editForm.reported_by_name || null,
       })
       setEditing(false)
     } catch (err) {
@@ -77,7 +79,7 @@ export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk
         <span className="text-xs text-gray-400">{date}</span>
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full">
-            {update.author?.name}
+            {update.reported_by_name || update.author?.name}
           </span>
           {canEdit && !editing && (
             <>
@@ -94,6 +96,16 @@ export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk
 
       {editing ? (
         <div className="flex flex-col gap-3 mb-4">
+          <div>
+            <p className="text-xs text-gray-400 mb-1">Autor do status</p>
+            <input
+              type="text"
+              value={editForm.reported_by_name || ''}
+              onChange={e => setEditForm({ ...editForm, reported_by_name: e.target.value })}
+              placeholder="Nome do autor real do status"
+              className="w-full h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white mb-2"
+            />
+          </div>
           <div>
             <p className="text-xs text-gray-400 mb-1">Status geral</p>
             <textarea

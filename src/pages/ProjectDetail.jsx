@@ -120,7 +120,7 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showStatusForm, setShowStatusForm] = useState(false)
-  const [statusForm, setStatusForm] = useState({ description: '', highlights: [''], next_steps: [''] })
+  const [statusForm, setStatusForm] = useState({ description: '', highlights: [''], next_steps: [''], reported_by_name: '' })
   const [statusLoading, setStatusLoading] = useState(false)
   const [editingReq, setEditingReq] = useState(false)
   const [reqContent, setReqContent] = useState('')
@@ -188,6 +188,7 @@ export default function ProjectDetail() {
         ...statusForm,
         highlights: statusForm.highlights.join('\n'),
         next_steps: statusForm.next_steps.join('\n'),
+        reported_by_name: statusForm.reported_by_name || null,
       })
       setStatusForm({ description: '', highlights: [''], next_steps: [''] })
       setShowStatusForm(false)
@@ -499,6 +500,28 @@ export default function ProjectDetail() {
           {showStatusForm && (
             <form onSubmit={handleCreateStatus} className="border border-gray-100 rounded-xl p-4 mb-5 bg-gray-50 flex flex-col gap-3">
               <p className="text-xs font-medium text-gray-600">Nova atualização</p>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">
+                  Autor do status <span className="text-gray-300">(opcional — preencha se estiver cadastrando por outra pessoa)</span>
+                </p>
+                <select
+                  value={statusForm.reported_by_name || ''}
+                  onChange={e => setStatusForm({ ...statusForm, reported_by_name: e.target.value })}
+                  className="w-full h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white mb-3"
+                >
+                  <option value="">Eu mesmo ({user?.name})</option>
+                  {project?.requesters?.filter(r => r.user_id !== user?.id || r.manual_name).map(r => (
+                    <option key={r.id} value={r.user?.name || r.manual_name}>
+                      {r.user?.name || r.manual_name} ({r.type === 'SOLICITANTE' ? 'Solicitante' : 'Responsável'})
+                    </option>
+                  ))}
+                  {project?.members?.filter(m => m.user_id !== user?.id || m.manual_name).map(m => (
+                    <option key={m.id} value={m.user?.name || m.manual_name}>
+                      {m.user?.name || m.manual_name} (Envolvido)
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <p className="text-xs text-gray-400 mb-1">Status geral</p>
                 <textarea

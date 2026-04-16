@@ -50,7 +50,11 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/projetos/:id/editar" element={<EditProject />} />
+        <Route path="/projetos/:id/editar" element={
+          <ProtectedRoute>
+            <EditProject />
+          </ProtectedRoute>
+        } />
 
         <Route path="/usuarios" element={
           <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR']}>
