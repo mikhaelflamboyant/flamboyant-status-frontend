@@ -67,9 +67,9 @@ export default function EditProject() {
           area: m.user?.area || m.manual_area,
         })) || [])
         setCosts(p.costs?.map(c => ({
-            name: c.name,
-            budget_planned: c.budget_planned,
-            budget_actual: c.budget_actual || '',
+          name: c.name,
+          budget_planned: c.budget_planned,
+          budget_actual: c.budget_actual || '',
         })) || [])
         console.log('COSTS:', p.costs)
       } catch (err) {
@@ -103,6 +103,12 @@ export default function EditProject() {
     }
 
     const area = requesters.map(r => r.area).join(', ')
+
+    console.log('COSTS ENVIADOS:', JSON.stringify(costs.map(c => ({
+      name: c.name,
+      budget_planned: parseFloat(String(c.budget_planned).replace(/\./g, '').replace(',', '.')),
+      budget_actual: c.budget_actual ? parseFloat(String(c.budget_actual).replace(/\./g, '').replace(',', '.')) : null,
+    }))))
 
     setSaving(true)
     try {

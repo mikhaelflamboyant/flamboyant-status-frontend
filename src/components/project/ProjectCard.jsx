@@ -32,7 +32,9 @@ export function ProjectCard({ project }) {
   const navigate = useNavigate()
   const priority = PRIORITY_CONFIG[project.priority] || PRIORITY_CONFIG[3]
   const progressColor = FAROL_COLOR[project.traffic_light] || 'primary'
-  const goLive = new Date(project.go_live).toLocaleDateString('pt-BR')
+  const goLive = project.go_live
+    ? new Date(project.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+    : 'Sem previsão'
 
   return (
     <div
