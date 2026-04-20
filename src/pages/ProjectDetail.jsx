@@ -14,6 +14,7 @@ import { risksService } from '../services/risks.service'
 import { requirementsService } from '../services/requirements.service'
 import { useAuth } from '../hooks/useAuth'
 import { tasksService } from '../services/tasks.service'
+import { scopeService } from '../services/scope.service'
 // import { MarkdownEditor } from '../components/ui/MarkdownEditor'
 // import { MarkdownContent } from '../components/ui/MarkdownContent'
 
@@ -129,8 +130,15 @@ export default function ProjectDetail() {
   const [tasks, setTasks] = useState([])
   const [taskTab, setTaskTab] = useState('pendentes')
   const [showTaskForm, setShowTaskForm] = useState(false)
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', assignee_id: '', start_date: '', end_date: '' })
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', assignee_id: '', start_date: '', end_date: '', scope_item_id: null })
   const [taskLoading, setTaskLoading] = useState(false)
+  const [scopeItems, setScopeItems] = useState([])
+  const [showScopeForm, setShowScopeForm] = useState(false)
+  const [scopeForm, setScopeForm] = useState({ title: '', description: '', phase: '', start_date: '', end_date: '', completion_pct: 0 })
+  const [scopeLoading, setScopeLoading] = useState(false)
+  const [expandedScope, setExpandedScope] = useState({})
+  const [editingScopeItem, setEditingScopeItem] = useState(null)
+  const [editScopeForm, setEditScopeForm] = useState({})
   const [users, setUsers] = useState([])
   const [toast, setToast] = useState('')
 
@@ -150,6 +158,8 @@ export default function ProjectDetail() {
           api.get('/users')
         ])
         setTasks(tasksRes.data)
+        const scopeRes = await scopeService.list(id)
+        setScopeItems(scopeRes.data)
         setUsers(usersRes.data)
       }
     } catch (err) {
@@ -173,6 +183,7 @@ export default function ProjectDetail() {
   const isFromTI = user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
   const canEdit = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
   const canDelete = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
+  const canApproveScope = isFromTI && ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
   const canManageTasks = isFromTI && (
     ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) ||
     user?.role === 'GERENTE' ||
@@ -274,6 +285,70 @@ export default function ProjectDetail() {
     if (!confirm('Excluir esta tarefa?')) return
     try {
       await tasksService.delete(id, taskId)
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleCreateScopeItem = async () => {
+    if (!scopeForm.title) return
+    setScopeLoading(true)
+    try {
+      await scopeService.create(id, scopeForm)
+      setScopeForm({ title: '', description: '', phase: '', start_date: '', end_date: '', completion_pct: 0 })
+      setShowScopeForm(false)
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setScopeLoading(false)
+    }
+  }
+
+  const handleRequestApproval = async () => {
+    try {
+      await scopeService.requestApproval(id)
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleApproveScope = async () => {
+    try {
+      await scopeService.approve(id)
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleRejectScope = async () => {
+    try {
+      await scopeService.reject(id)
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleDeleteScopeItem = async (scopeId) => {
+    if (!confirm('Excluir esta atividade do escopo?')) return
+    try {
+      await scopeService.delete(id, scopeId)
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleUpdateScopeItem = async () => {
+    if (!editScopeForm.title) return
+    try {
+      await scopeService.update(id, editingScopeItem, editScopeForm)
+      setEditingScopeItem(null)
+      setEditScopeForm({})
       fetchProject()
     } catch (err) {
       console.error(err)
@@ -698,10 +773,17 @@ export default function ProjectDetail() {
                     </select>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <p className="text-xs text-gray-400">Fase vinculada</p>
-                    <div className="h-8 px-3 text-xs border border-gray-100 rounded-lg bg-gray-50 flex items-center text-gray-500">
-                      {project?.current_phase || '—'}
-                    </div>
+                    <p className="text-xs text-gray-400">Atividade do escopo</p>
+                    <select
+                      value={taskForm.scope_item_id || ''}
+                      onChange={e => setTaskForm({ ...taskForm, scope_item_id: e.target.value || null })}
+                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                    >
+                      <option value="">Nenhuma</option>
+                      {scopeItems.map(s => (
+                        <option key={s.id} value={s.id}>{s.display_title}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="flex flex-col gap-1">
                     <p className="text-xs text-gray-400">Data de início</p>
@@ -780,19 +862,6 @@ export default function ProjectDetail() {
                                 ({Math.ceil((new Date(task.end_date) - new Date(task.start_date)) / (1000 * 60 * 60 * 24))} dias)
                               </span>
                             )}
-                            {task.date_history?.length > 0 && (
-                              <div className="mt-1 flex flex-col gap-0.5">
-                                {task.date_history.map(h => (
-                                  <span key={h.id} className="text-xs text-gray-300">
-                                    {h.previous_date ? new Date(h.previous_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'sem data'}
-                                    {' → '}
-                                    {h.new_date ? new Date(h.new_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'sem data'}
-                                    {' · '}{h.changed_by_user?.name}
-                                    {' · '}{new Date(h.changed_at).toLocaleDateString('pt-BR')}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
                             <span className="text-xs text-gray-300">por {task.author.name}</span>
                           </div>
                         </div>
@@ -807,6 +876,289 @@ export default function ProjectDetail() {
                     </div>
                   </div>
                 ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {isFromTI && (
+          <div className="bg-white border border-gray-100 rounded-xl p-6 mb-4">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-4">
+                <h2 className="text-sm font-medium text-gray-900">Escopo do projeto</h2>
+                {scopeItems.length > 0 && (() => {
+                  const allApproved = scopeItems.every(s => s.status === 'APROVADO')
+                  const anyPending = scopeItems.some(s => s.status === 'AGUARDANDO_APROVACAO')
+                  const anyPendingAction = scopeItems.some(s => s.pending_action)
+                  if (allApproved && !anyPendingAction) return <span className="text-xs bg-teal-50 text-teal-700 px-2.5 py-1 rounded-full">Aprovado</span>
+                  if (anyPending) return <span className="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full">Aguardando aprovação</span>
+                  if (anyPendingAction) return <span className="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full">Alteração pendente</span>
+                  return <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">Rascunho</span>
+                })()}
+              </div>
+              <div className="flex items-center gap-2">
+                {canEdit && scopeItems.some(s => s.status === 'RASCUNHO') && (
+                  <button onClick={handleRequestApproval}
+                    className="text-xs border border-gray-200 text-gray-500 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                    Solicitar aprovação
+                  </button>
+                )}
+                {canEdit && (
+                  <button onClick={() => setShowScopeForm(!showScopeForm)}
+                    className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors">
+                    + Nova atividade
+                  </button>
+                )}
+                {canApproveScope && scopeItems.some(s => s.status === 'AGUARDANDO_APROVACAO' || s.pending_action) && (
+                  <div className="flex gap-1">
+                    <button onClick={handleApproveScope}
+                      className="text-xs bg-teal-600 text-white px-3 py-1.5 rounded-lg hover:bg-teal-800 transition-colors">
+                      Aprovar
+                    </button>
+                    <button onClick={handleRejectScope}
+                      className="text-xs bg-red-400 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 transition-colors">
+                      Rejeitar
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {showScopeForm && (
+              <div className="border border-gray-100 rounded-xl p-4 mb-5 bg-gray-50 flex flex-col gap-3">
+                <p className="text-xs font-medium text-gray-600">Nova atividade</p>
+                <input
+                  placeholder="Título da atividade *"
+                  value={scopeForm.title}
+                  onChange={e => setScopeForm({ ...scopeForm, title: e.target.value })}
+                  className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                />
+                <textarea
+                  placeholder="Descrição da atividade (opcional)"
+                  value={scopeForm.description}
+                  onChange={e => setScopeForm({ ...scopeForm, description: e.target.value })}
+                  rows={2}
+                  className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
+                />
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">Fase vinculada</p>
+                    <select
+                      value={scopeForm.phase}
+                      onChange={e => setScopeForm({ ...scopeForm, phase: e.target.value })}
+                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                    >
+                      <option value="">Selecionar</option>
+                      <option value="RECEBIDA">Recebida</option>
+                      <option value="ENTREVISTA_SOLICITANTE">Entrevista com solicitante</option>
+                      <option value="LEVANTAMENTO_REQUISITOS">Levantamento de requisitos</option>
+                      <option value="ANALISE_SOLUCAO">Análise da solução</option>
+                      <option value="DESENVOLVIMENTO">Desenvolvimento</option>
+                      <option value="TESTES">Testes</option>
+                      <option value="VALIDACAO_SOLICITANTE">Validação com solicitante</option>
+                      <option value="ENTREGUE">Entregue</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">Data de início</p>
+                    <input type="date" value={scopeForm.start_date}
+                      onChange={e => setScopeForm({ ...scopeForm, start_date: e.target.value })}
+                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">Data de fim</p>
+                    <input type="date" value={scopeForm.end_date}
+                      onChange={e => setScopeForm({ ...scopeForm, end_date: e.target.value })}
+                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">% inicial</p>
+                    <input type="number" min="0" max="100" value={scopeForm.completion_pct}
+                      onChange={e => setScopeForm({ ...scopeForm, completion_pct: parseInt(e.target.value) || 0 })}
+                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={handleCreateScopeItem} disabled={scopeLoading}
+                    className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50">
+                    {scopeLoading ? 'Salvando...' : 'Salvar'}
+                  </button>
+                  <button onClick={() => setShowScopeForm(false)}
+                    className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {scopeItems.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-8">Nenhuma atividade cadastrada ainda.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {scopeItems.map(item => {
+                  const isExpanded = expandedScope[item.id]
+                  const completedTasks = item.tasks?.filter(t => t.completed).length || 0
+                  const totalTasks = item.tasks?.length || 0
+                  const autoProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : null
+                  const progress = autoProgress ?? item.display_completion_pct
+
+                  return (
+                    <div key={item.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                      <div
+                        className="grid gap-0 items-center px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                        style={{ gridTemplateColumns: '1fr 160px 95px 95px 55px 90px 28px' }}
+                        onClick={() => setExpandedScope(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-800">{item.display_title}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {item.showing_pending && (
+                              <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">Alteração pendente</span>
+                            )}
+                            {item.pending_action === 'EXCLUIR' && (
+                              <span className="text-xs bg-red-50 text-red-500 px-2 py-0.5 rounded-full">Exclusão pendente</span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-400 truncate block">{item.display_phase || '—'}</span>
+                        <span className="text-xs text-gray-400">
+                          {item.display_start_date ? new Date(item.display_start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {item.display_end_date ? new Date(item.display_end_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+                        </span>
+                        <span className={`text-xs font-medium ${progress === 100 ? 'text-teal-600' : progress > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                          {progress}%
+                        </span>
+                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div style={{ width: `${progress}%` }}
+                            className={`h-full rounded-full ${progress === 100 ? 'bg-teal-500' : 'bg-amber-400'}`} />
+                        </div>
+                        <span className="text-xs text-gray-400 text-center">{isExpanded ? '▼' : '▶'}</span>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="px-4 py-3 border-t border-gray-100 bg-white">
+                          <p className="text-xs font-medium text-gray-500 mb-1">Descrição</p>
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">
+                            {item.display_description || '—'}
+                          </p>
+                          <p className="text-xs text-gray-400 mb-3">
+                            {totalTasks > 0 ? `${completedTasks} de ${totalTasks} tarefas concluídas` : 'Nenhuma tarefa vinculada'}
+                          </p>
+                          {canEdit && item.status !== 'AGUARDANDO_APROVACAO' && !item.pending_action && (
+                            editingScopeItem === item.id ? (
+                              <div className="flex flex-col gap-2 mt-2">
+                                <input
+                                  value={editScopeForm.title || ''}
+                                  onChange={e => setEditScopeForm({ ...editScopeForm, title: e.target.value })}
+                                  placeholder="Título"
+                                  className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                />
+                                <textarea
+                                  value={editScopeForm.description || ''}
+                                  onChange={e => setEditScopeForm({ ...editScopeForm, description: e.target.value })}
+                                  rows={2}
+                                  placeholder="Descrição"
+                                  className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
+                                />
+                                <div className="grid grid-cols-4 gap-2">
+                                  <select
+                                    value={editScopeForm.phase || ''}
+                                    onChange={e => setEditScopeForm({ ...editScopeForm, phase: e.target.value })}
+                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                  >
+                                    <option value="">Fase</option>
+                                    <option value="RECEBIDA">Recebida</option>
+                                    <option value="ENTREVISTA_SOLICITANTE">Entrevista</option>
+                                    <option value="LEVANTAMENTO_REQUISITOS">Levantamento</option>
+                                    <option value="ANALISE_SOLUCAO">Análise</option>
+                                    <option value="DESENVOLVIMENTO">Desenvolvimento</option>
+                                    <option value="TESTES">Testes</option>
+                                    <option value="VALIDACAO_SOLICITANTE">Validação</option>
+                                    <option value="ENTREGUE">Entregue</option>
+                                  </select>
+                                  <input type="date" value={editScopeForm.start_date || ''}
+                                    onChange={e => setEditScopeForm({ ...editScopeForm, start_date: e.target.value })}
+                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                  />
+                                  <input type="date" value={editScopeForm.end_date || ''}
+                                    onChange={e => setEditScopeForm({ ...editScopeForm, end_date: e.target.value })}
+                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                  />
+                                  <input type="number" min="0" max="100" value={editScopeForm.completion_pct ?? 0}
+                                    onChange={e => setEditScopeForm({ ...editScopeForm, completion_pct: parseInt(e.target.value) || 0 })}
+                                    placeholder="%"
+                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <button onClick={handleUpdateScopeItem}
+                                    className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800">
+                                    Salvar
+                                  </button>
+                                  <button onClick={() => { setEditingScopeItem(null); setEditScopeForm({}) }}
+                                    className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingScopeItem(item.id)
+                                    setEditScopeForm({
+                                      title: item.display_title,
+                                      description: item.display_description || '',
+                                      phase: item.display_phase || '',
+                                      start_date: item.display_start_date ? new Date(item.display_start_date).toISOString().split('T')[0] : '',
+                                      end_date: item.display_end_date ? new Date(item.display_end_date).toISOString().split('T')[0] : '',
+                                      completion_pct: item.display_completion_pct || 0,
+                                    })
+                                  }}
+                                  className="hover:opacity-70 transition-opacity" title="Editar">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteScopeItem(item.id)}
+                                    className="hover:opacity-70 transition-opacity" title="Excluir">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                    </svg>
+                                  </button>
+                              </div>
+                            )
+                          )}
+                          {item.pending_action === 'EXCLUIR' && (
+                            <p className="text-xs text-red-400">Exclusão aguardando aprovação do gestor</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
+              <span className="text-xs text-gray-400">
+                {scopeItems.length} atividade{scopeItems.length !== 1 ? 's' : ''} · progresso calculado pelas tarefas vinculadas
+              </span>
+              {scopeItems.length > 0 && (
+                <span className="text-xs font-medium text-gray-700">
+                  Progresso geral: {Math.round(scopeItems.reduce((acc, s) => {
+                    const total = s.tasks?.length || 0
+                    const done = s.tasks?.filter(t => t.completed).length || 0
+                    return acc + (total > 0 ? (done / total) * 100 : s.display_completion_pct || 0)
+                  }, 0) / scopeItems.length)}%
+                </span>
               )}
             </div>
           </div>
