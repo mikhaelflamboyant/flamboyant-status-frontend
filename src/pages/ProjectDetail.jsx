@@ -780,6 +780,19 @@ export default function ProjectDetail() {
                                 ({Math.ceil((new Date(task.end_date) - new Date(task.start_date)) / (1000 * 60 * 60 * 24))} dias)
                               </span>
                             )}
+                            {task.date_history?.length > 0 && (
+                              <div className="mt-1 flex flex-col gap-0.5">
+                                {task.date_history.map(h => (
+                                  <span key={h.id} className="text-xs text-gray-300">
+                                    {h.previous_date ? new Date(h.previous_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'sem data'}
+                                    {' → '}
+                                    {h.new_date ? new Date(h.new_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'sem data'}
+                                    {' · '}{h.changed_by_user?.name}
+                                    {' · '}{new Date(h.changed_at).toLocaleDateString('pt-BR')}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                             <span className="text-xs text-gray-300">por {task.author.name}</span>
                           </div>
                         </div>
