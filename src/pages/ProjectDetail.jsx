@@ -366,7 +366,7 @@ export default function ProjectDetail() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="grid grid-cols-3 gap-3 mb-5">
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-400 mb-2">Solicitante(s)</p>
               {project.requesters?.filter(r => r.type === 'SOLICITANTE').length > 0 ? (
@@ -399,6 +399,13 @@ export default function ProjectDetail() {
               ) : (
                 <p className="text-sm font-medium text-gray-800">{project.owner?.name || '—'}</p>
               )}
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-400 mb-1">Data de início</p>
+              <p className="text-sm font-medium text-gray-800">
+                {project.start_date ? new Date(project.start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+              </p>
             </div>
 
             <div className="bg-gray-50 rounded-lg p-3">
