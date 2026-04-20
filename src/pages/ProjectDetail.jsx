@@ -469,7 +469,7 @@ export default function ProjectDetail() {
 
           <PhaseStrip currentPhase={project.current_phase} />
 
-          {canEdit && (
+          {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) && (
             <ControlPanel
               project={project}
               onSave={async (data) => {

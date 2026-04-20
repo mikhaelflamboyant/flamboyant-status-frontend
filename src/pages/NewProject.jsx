@@ -17,6 +17,7 @@ export default function NewProject() {
     execution_type: 'INTERNA',
     priority: null,
     description: '',
+    start_date: '',
     go_live: '',
     go_live_undefined: false,
     business_unit: '',
@@ -189,7 +190,7 @@ export default function NewProject() {
             <div className="flex flex-col gap-3">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Descrição</p>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-500">
                     Tipo de execução <span className="text-red-400">*</span>
@@ -202,6 +203,16 @@ export default function NewProject() {
                     <option value="INTERNA">Interna</option>
                     <option value="FORNECEDOR_EXTERNO">Fornecedor externo</option>
                   </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-gray-500">Data de início</label>
+                  <input
+                    type="date"
+                    value={form.start_date}
+                    onChange={e => handleChange('start_date', e.target.value)}
+                    className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">
