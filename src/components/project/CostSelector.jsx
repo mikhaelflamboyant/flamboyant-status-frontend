@@ -26,7 +26,13 @@ const TrashIcon = ({ color = '#E24B4A' }) => (
 
 const displayValue = (value) => {
   if (!value && value !== 0) return ''
-  const num = parseFloat(String(value).replace(/\./g, '').replace(',', '.'))
+  const str = String(value)
+  let num
+  if (str.includes(',')) {
+    num = parseFloat(str.replace(/\./g, '').replace(',', '.'))
+  } else {
+    num = parseFloat(str)
+  }
   if (isNaN(num)) return ''
   return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }

@@ -132,8 +132,8 @@ export default function EditProject() {
         owner_id: responsibles.find(r => !String(r.user_id).startsWith('manual_'))?.user_id || null,
         costs: costs.map(c => ({
             name: c.name,
-            budget_planned: parseFloat(String(c.budget_planned).replace(/\./g, '').replace(',', '.')),
-            budget_actual: c.budget_actual ? parseFloat(String(c.budget_actual).replace(/\./g, '').replace(',', '.')) : null,
+            budget_planned: parseFloat(String(c.budget_planned).replace(',', '.')),
+            budget_actual: c.budget_actual ? parseFloat(String(c.budget_actual).replace(',', '.')) : null,
         })),
       })
       navigate(`/projetos/${id}`)
