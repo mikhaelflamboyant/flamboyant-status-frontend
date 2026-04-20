@@ -1,23 +1,29 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { ProjectCard } from '../components/project/ProjectCard'
 import { projectsService } from '../services/projects.service'
 
 const PAGE_SIZE = 10
 
+const selectCls = 'h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 outline-none focus:border-primary-600 transition-colors cursor-pointer'
+
 export default function ArchivedProjects() {
+  const [searchParams] = useSearchParams()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [filtro, setFiltro] = useState(searchParams.get('filtro') || '')
   const [page, setPage] = useState(1)
   const navigate = useNavigate()
 
   useEffect(() => {
     const fetch = async () => {
+      setLoading(true)
       try {
-        const response = await projectsService.listArchived()
+        const params = filtro ? `filtro=${filtro}` : ''
+        const response = await projectsService.listArchived(params)
         setProjects(response.data)
       } catch (err) {
         setError('Erro ao carregar projetos finalizados.')
@@ -26,11 +32,9 @@ export default function ArchivedProjects() {
       }
     }
     fetch()
-  }, [])
+  }, [filtro])
 
-  useEffect(() => {
-    setPage(1)
-  }, [search])
+  useEffect(() => { setPage(1) }, [search, filtro])
 
   const filtered = useMemo(() => {
     return projects.filter(p =>
@@ -58,7 +62,7 @@ export default function ArchivedProjects() {
           </button>
         </div>
 
-        <div className="mb-4">
+        <div className="flex gap-2 flex-wrap mb-4">
           <input
             type="text"
             placeholder="Buscar por nome ou área..."
@@ -66,6 +70,14 @@ export default function ArchivedProjects() {
             onChange={e => setSearch(e.target.value)}
             className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-700 outline-none focus:border-primary-600 min-w-200px"
           />
+          <select
+            value={filtro}
+            onChange={e => setFiltro(e.target.value)}
+            className={selectCls}
+          >
+            <option value="">Filtros especiais</option>
+            <option value="entregues_mes">Entregues no mês</option>
+          </select>
         </div>
 
         {loading && <div className="text-center py-16"><p className="text-sm text-gray-400">Carregando...</p></div>}

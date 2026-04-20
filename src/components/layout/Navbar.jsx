@@ -115,8 +115,11 @@ export function Navbar() {
         <div className="h-4 w-px bg-gray-100" />
 
         <div className="flex items-center gap-1">
+          {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) &&
+            (user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) &&
+            navLink('/painel', 'Painel de gestão')}
           {navLink('/projetos', 'Projetos ativos')}
-          {navLink('/projetos/arquivados', 'Finalizados')}
+          {navLink('/projetos/arquivados', 'Projetos finalizados')}
           {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) && navLink('/usuarios', 'Usuários')}
           {user?.area === 'Tecnologia da Informação' && navLink('/api', 'API')}
         </div>

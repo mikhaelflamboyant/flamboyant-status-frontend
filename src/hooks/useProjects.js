@@ -1,28 +1,36 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { projectsService } from '../services/projects.service'
 
 const PAGE_SIZE = 10
 
 export function useProjects() {
+  const [searchParams] = useSearchParams()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [page, setPage] = useState(1)
 
+  const initialFarol = searchParams.get('farol') || ''
+  const initialFiltro = searchParams.get('filtro') || ''
+
   const [filters, setFilters] = useState({
     search: '',
-    traffic_light: '',
+    traffic_light: initialFarol,
     phase: '',
     area: '',
     priority: '',
     user_id: '',
+    filtro: initialFiltro,
   })
 
   const fetchProjects = async () => {
     setLoading(true)
     setError('')
     try {
-      const response = await projectsService.list()
+      const params = new URLSearchParams()
+      if (filters.filtro) params.set('filtro', filters.filtro)
+      const response = await projectsService.list(params.toString())
       setProjects(response.data)
     } catch (err) {
       setError('Erro ao carregar projetos.')
@@ -33,7 +41,7 @@ export function useProjects() {
 
   useEffect(() => {
     fetchProjects()
-  }, [])
+  }, [filters.filtro])
 
   useEffect(() => {
     setPage(1)

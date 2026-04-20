@@ -14,6 +14,7 @@ import Notifications from './pages/Notifications'
 import ApiDocs from './pages/ApiDocs'
 import SamlSuccess from './pages/SamlSuccess'
 import EditProject from './pages/EditProject'
+import Management from './pages/Management'
 
 function App() {
   return (
@@ -31,6 +32,8 @@ function App() {
             <Projects />
           </ProtectedRoute>
         } />
+
+        <Route path="/painel" element={<Management />} />
 
         <Route path="/projetos/novo" element={
           <ProtectedRoute>

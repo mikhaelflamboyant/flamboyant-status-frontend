@@ -140,6 +140,16 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
           ))}
         </select>
       )}
+
+      <select
+        value={filters.filtro || ''}
+        onChange={e => onChange({ ...filters, filtro: e.target.value })}
+        className={selectCls}
+      >
+        <option value="">Filtros especiais</option>
+        <option value="sem_status">Sem status recente</option>
+        <option value="sem_golive">Sem go-live definido</option>
+      </select>
     </div>
   )
 }

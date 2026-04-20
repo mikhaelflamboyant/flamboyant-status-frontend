@@ -1,8 +1,8 @@
 import api from './api'
 
 export const projectsService = {
-  list: () => api.get('/projects'),
-  listArchived: () => api.get('/projects/archived'),
+  list: (queryString) => api.get(queryString ? `/projects?${queryString}` : '/projects'),
+  listArchived: (queryString) => api.get(queryString ? `/projects/archived?${queryString}` : '/projects/archived'),
   getById: (id) => api.get(`/projects/${id}`),
   create: (data) => api.post('/projects', data),
   update: (id, data) => api.patch(`/projects/${id}`, data),
