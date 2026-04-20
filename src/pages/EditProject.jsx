@@ -68,8 +68,12 @@ export default function EditProject() {
         })) || [])
         setCosts(p.costs?.map(c => ({
           name: c.name,
-          budget_planned: c.budget_planned,
-          budget_actual: c.budget_actual || '',
+          budget_planned: c.budget_planned != null
+            ? c.budget_planned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : '',
+          budget_actual: c.budget_actual != null
+            ? c.budget_actual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : '',
         })) || [])
         console.log('COSTS:', p.costs)
       } catch (err) {
