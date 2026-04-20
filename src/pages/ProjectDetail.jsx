@@ -129,7 +129,7 @@ export default function ProjectDetail() {
   const [tasks, setTasks] = useState([])
   const [taskTab, setTaskTab] = useState('pendentes')
   const [showTaskForm, setShowTaskForm] = useState(false)
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', assignee_id: '', due_date: '' })
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', assignee_id: '', start_date: '', end_date: '' })
   const [taskLoading, setTaskLoading] = useState(false)
   const [users, setUsers] = useState([])
   const [toast, setToast] = useState('')
@@ -246,7 +246,11 @@ export default function ProjectDetail() {
     if (!taskForm.title) return
     setTaskLoading(true)
     try {
-      await tasksService.create(id, { ...taskForm, phase: project?.current_phase || null })
+      await tasksService.create(id, {
+        ...taskForm,
+        phase: project?.current_phase || null,
+        due_date: taskForm.end_date || null,
+      })
       setTaskForm({ title: '', description: '', assignee_id: '', due_date: '' })
       setShowTaskForm(false)
       fetchProject()
@@ -679,7 +683,7 @@ export default function ProjectDetail() {
                   rows={2}
                   className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
                 />
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-4 gap-3">
                   <div className="flex flex-col gap-1">
                     <p className="text-xs text-gray-400">Responsável</p>
                     <select
@@ -700,9 +704,16 @@ export default function ProjectDetail() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <p className="text-xs text-gray-400">Prazo</p>
-                    <input type="date" value={taskForm.due_date}
-                      onChange={e => setTaskForm({ ...taskForm, due_date: e.target.value })}
+                    <p className="text-xs text-gray-400">Data de início</p>
+                    <input type="date" value={taskForm.start_date}
+                      onChange={e => setTaskForm({ ...taskForm, start_date: e.target.value })}
+                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">Data de conclusão</p>
+                    <input type="date" value={taskForm.end_date}
+                      onChange={e => setTaskForm({ ...taskForm, end_date: e.target.value })}
                       className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                     />
                   </div>
@@ -753,9 +764,20 @@ export default function ProjectDetail() {
                           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                             {task.assignee && <span className="text-xs text-gray-400">→ {task.assignee.name}</span>}
                             {task.phase && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{task.phase}</span>}
-                            {task.due_date && (
-                              <span className={`text-xs ${new Date(task.due_date) < new Date() && !task.completed ? 'text-red-500' : 'text-gray-400'}`}>
-                                {new Date(task.due_date).toLocaleDateString('pt-BR')}
+                            {task.start_date && (
+                              <span className="text-xs text-gray-400">
+                                {new Date(task.start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                              </span>
+                            )}
+                            {task.start_date && task.end_date && <span className="text-xs text-gray-300">→</span>}
+                            {task.end_date && (
+                              <span className={`text-xs ${new Date(task.end_date) < new Date() && !task.completed ? 'text-red-500' : 'text-gray-400'}`}>
+                                {new Date(task.end_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                              </span>
+                            )}
+                            {task.start_date && task.end_date && (
+                              <span className="text-xs text-gray-300">
+                                ({Math.ceil((new Date(task.end_date) - new Date(task.start_date)) / (1000 * 60 * 60 * 24))} dias)
                               </span>
                             )}
                             <span className="text-xs text-gray-300">por {task.author.name}</span>
