@@ -425,12 +425,7 @@ export class PDFRenderer {
         const nsH = nextSteps[i] ? this._textH(nextSteps[i], itemW, FONTS.body) + 3 : 0
         gridH += Math.max(hlH, nsH, FONTS.body * 0.4 + 3)
       }
-      blocks.push({
-        type: 'grid_full',
-        highlights,
-        nextSteps,
-        height: gridH,
-      })
+      blocks.push({ type: 'grid_full', highlights, nextSteps, height: gridH })
     }
 
     if (risks.length > 0) {
@@ -443,7 +438,16 @@ export class PDFRenderer {
       }
     }
 
+    const closeCard = (cardStartY) => {
+      const cardH = this.y - cardStartY + 4
+      this.doc.setDrawColor(...hexToRgb(COLORS.border))
+      this.doc.setLineWidth(0.4)
+      this.doc.roundedRect(x, cardStartY, w, cardH, 3, 3, 'S')
+      this.y += 4
+    }
+
     let cardOpen = false
+    let cardStartY = 0
     let continuation = false
 
     for (let bi = 0; bi < blocks.length; bi++) {
@@ -451,8 +455,9 @@ export class PDFRenderer {
       const extra = cardOpen ? 0 : 8
       const needed = block.height + extra
 
-      if (this.needsSpace(needed + 6)) {
-        if (cardOpen) this.y += 2
+      const minSpace = block.type === 'grid_full' ? 20 : needed + 6
+      if (this.needsSpace(minSpace)) {
+        if (cardOpen) closeCard(cardStartY)
         this.addPage()
         continuation = true
         cardOpen = false
@@ -468,23 +473,19 @@ export class PDFRenderer {
           this.doc.text(contText, x + 4, this.y + 4)
           this.y += 8
         }
-
-        this.doc.setDrawColor(...hexToRgb(COLORS.borderLight))
-        this.doc.setLineWidth(0.3)
-        this.doc.line(x, this.y, x + innerW + pad * 2, this.y)
+        cardStartY = this.y
         this.y += 3
         cardOpen = true
+        this._gridCardStartY = cardStartY
       }
 
       if (block.type === 'meta_desc') this._renderMetaDesc(block, x, pad, innerW)
-      else if (block.type === 'grid_full') this._renderGrid(block.highlights, block.nextSteps, 0, 0, true, x, pad, innerW, meta)
+      else if (block.type === 'grid_full') this._renderGrid(block.highlights, block.nextSteps, 0, 0, true, x, pad, innerW, meta, closeCard, () => { cardStartY = this.y; this.y += 3; cardOpen = true })
       else if (block.type === 'risk_header') this._renderRiskHeader(x, pad, innerW)
       else if (block.type === 'risk_item') this._renderRiskItem(block, x, pad, innerW)
     }
 
-    if (cardOpen) {
-      this.y += 4
-    }
+    if (cardOpen) closeCard(cardStartY)
     this.y += 4
   }
 
@@ -507,7 +508,7 @@ export class PDFRenderer {
     this.y += 4
   }
 
-  _renderGrid(hl, ns, hlStart, nsStart, isFirst, x, pad, innerW, meta) {
+  _renderGrid(hl, ns, hlStart, nsStart, isFirst, x, pad, innerW, meta, closeCard, openCard) {
     const halfW = (innerW - 6) / 2
     const leftX = x + pad
     const rightX = x + pad + halfW + 6
@@ -534,6 +535,7 @@ export class PDFRenderer {
 
       if (this.needsSpace(rowH + 6)) {
         this.y += 2
+        if (this._gridCardStartY > 0) closeCard(this._gridCardStartY)
         this.addPage()
 
         this.doc.setFillColor(...hexToRgb(COLORS.contBg))
@@ -544,10 +546,8 @@ export class PDFRenderer {
         this.doc.text(contText, x + 4, this.y + 4)
         this.y += 8
 
-        this.doc.setDrawColor(...hexToRgb(COLORS.borderLight))
-        this.doc.setLineWidth(0.3)
-        this.doc.line(x, this.y, x + innerW + pad * 2, this.y)
-        this.y += 3
+        openCard()
+        this._gridCardStartY = this.y - 3
 
         drawHeaders(true)
       }

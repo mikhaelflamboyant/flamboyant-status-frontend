@@ -41,7 +41,6 @@ export function PDFExportGeral({ allProjects }) {
   const handleGenerate = async () => {
     setGenerating(true)
     try {
-      // 1. Carregar dados completos dos projetos selecionados
       setLoadingProjects(true)
       const responses = await Promise.all(
         selectedIds.map(id => api.get(`/projects/${id}`))
@@ -49,17 +48,16 @@ export function PDFExportGeral({ allProjects }) {
       const fullProjects = responses.map(r => r.data)
       setLoadingProjects(false)
 
-      // 2. Criar renderer
       const renderer = new PDFRenderer()
       const origin = window.location.origin
 
-      // 3. Páginas estáticas iniciais
+      renderer.logoImageData = await renderer._loadImage(`${origin}/logo_fundo_vermelho.png`)
+
       await renderer.drawStaticPage(`${origin}/pagina1.png`)
 
       renderer.doc.addPage()
       renderer.pageIndex++
       await renderer.drawStaticPage(`${origin}/pagina2.png`)
-      // Sobrepor data na página 2
       renderer.doc.setFontSize(16)
       renderer.doc.setFont('helvetica', 'normal')
       renderer.doc.setTextColor(220, 180, 180)
@@ -75,7 +73,6 @@ export function PDFExportGeral({ allProjects }) {
       renderer.pageIndex++
       await renderer.drawStaticPage(`${origin}/pagina3.png`)
 
-      // 4. Para cada unidade de negócio com projetos selecionados
       const unitKeys = Object.keys(projectsByUnit).filter(unit =>
         projectsByUnit[unit].some(p => selectedIds.includes(p.id))
       )
@@ -85,32 +82,27 @@ export function PDFExportGeral({ allProjects }) {
           selectedIds.includes(p.id)
         )
 
-        // Página separadora da unidade
         const imgPath = SEPARATOR_IMAGES[unit]
           ? `${origin}${SEPARATOR_IMAGES[unit]}`
           : null
         await renderer.drawSeparatorPage(unit, imgPath)
 
-        // Projetos da unidade
         for (const proj of unitProjects) {
           const fullProject = fullProjects.find(p => p.id === proj.id)
           if (!fullProject) continue
 
           const statusUpdates = fullProject.status_updates || []
 
-          // Nova página para cada projeto
           renderer.startNewProject()
           renderer.drawFullProject(fullProject, statusUpdates)
         }
       }
 
-      // 5. Página final (contra-capa)
       renderer._drawFooter()
       renderer.doc.addPage()
       renderer.pageIndex++
       await renderer.drawStaticPage(`${origin}/ultima_pagina.png`)
 
-      // 6. Preencher números de página e salvar
       renderer._fillPageNumbers()
       const filename = `status-report-geral-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`
       renderer.doc.save(filename)
