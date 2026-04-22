@@ -16,6 +16,7 @@ export class PDFRenderer {
     this.pageNumberPositions = []
     this.headerDrawn = false
     this.logoImageData = null
+    this._noFooterPages = new Set()
   }
 
   get spaceLeft() {
@@ -89,6 +90,8 @@ export class PDFRenderer {
   }
 
   _drawFooter() {
+    if (this._noFooterPages.has(this.pageIndex)) return
+
     const doc = this.doc
     const x = PAGE.marginLeft
     const w = PAGE.contentWidth
@@ -642,10 +645,12 @@ export class PDFRenderer {
 
   async drawSeparatorPage(unitName, imgPath) {
     if (this.headerDrawn) {
-      this._drawFooter()
+      if (!this._isSeparatorPage) this._drawFooter()
       this.doc.addPage()
       this.pageIndex++
+      this._noFooterPages.add(this.pageIndex)
     }
+    this._isSeparatorPage = true
 
     if (imgPath) {
       try {
@@ -677,6 +682,7 @@ export class PDFRenderer {
   }
 
   async drawStaticPage(imgPath) {
+    this._noFooterPages.add(this.pageIndex)
     try {
       const img = await this._loadImage(imgPath)
       if (img) this.doc.addImage(img, 'PNG', 0, 0, PAGE.width, PAGE.height)
@@ -692,5 +698,6 @@ export class PDFRenderer {
     this.y = PAGE.marginTop
     this._drawHeader()
     this.headerDrawn = true
+    this._isSeparatorPage = false
   }
 }

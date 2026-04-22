@@ -58,6 +58,9 @@ export function PDFExportGeral({ allProjects }) {
       renderer.doc.addPage()
       renderer.pageIndex++
       await renderer.drawStaticPage(`${origin}/pagina2.png`)
+      renderer.headerDrawn = true
+      renderer.pageNumberPositions = []
+
       renderer.doc.setFontSize(16)
       renderer.doc.setFont('helvetica', 'normal')
       renderer.doc.setTextColor(220, 180, 180)
@@ -69,10 +72,6 @@ export function PDFExportGeral({ allProjects }) {
         { align: 'center' }
       )
 
-      renderer.doc.addPage()
-      renderer.pageIndex++
-      await renderer.drawStaticPage(`${origin}/pagina3.png`)
-
       const unitKeys = Object.keys(projectsByUnit).filter(unit =>
         projectsByUnit[unit].some(p => selectedIds.includes(p.id))
       )
@@ -82,9 +81,12 @@ export function PDFExportGeral({ allProjects }) {
           selectedIds.includes(p.id)
         )
 
-        const imgPath = SEPARATOR_IMAGES[unit]
-          ? `${origin}${SEPARATOR_IMAGES[unit]}`
-          : null
+        let imgPath
+        if (unit === 'Corporativo') {
+          imgPath = `${origin}/pagina3.png`
+        } else {
+          imgPath = SEPARATOR_IMAGES[unit] ? `${origin}${SEPARATOR_IMAGES[unit]}` : null
+        }
         await renderer.drawSeparatorPage(unit, imgPath)
 
         for (const proj of unitProjects) {
