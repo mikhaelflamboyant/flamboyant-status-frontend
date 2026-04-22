@@ -90,13 +90,14 @@ export function useProjects() {
   }, [filteredProjects, page])
 
   const metrics = useMemo(() => {
+    const base = filteredProjects
     return {
-      total: projects.length,
-      green: projects.filter(p => p.traffic_light === 'VERDE').length,
-      amber: projects.filter(p => p.traffic_light === 'AMARELO').length,
-      red: projects.filter(p => p.traffic_light === 'VERMELHO').length,
+      total: base.length,
+      green: base.filter(p => p.traffic_light === 'VERDE').length,
+      amber: base.filter(p => p.traffic_light === 'AMARELO').length,
+      red: base.filter(p => p.traffic_light === 'VERMELHO').length,
     }
-  }, [projects])
+  }, [filteredProjects])
 
   return {
     projects: paginatedProjects,
