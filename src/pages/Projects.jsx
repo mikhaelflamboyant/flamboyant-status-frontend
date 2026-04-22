@@ -52,6 +52,14 @@ export default function Projects() {
             {isTI && (
               <PDFExportGeral allProjects={projects} />
             )}
+            {['ANALISTA_MASTER', 'COORDENADOR', 'GERENTE', 'SUPERINTENDENTE'].includes(user?.role) && (
+              <button
+                onClick={() => navigate('/freshservice')}
+                className="text-xs font-medium px-4 h-8 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
+              >
+                Solicitações FreshService
+              </button>
+            )}
             {canCreateProject() && (
               <button
                 onClick={() => navigate('/projetos/novo')}

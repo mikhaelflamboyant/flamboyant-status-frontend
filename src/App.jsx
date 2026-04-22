@@ -15,6 +15,7 @@ import ApiDocs from './pages/ApiDocs'
 import SamlSuccess from './pages/SamlSuccess'
 import EditProject from './pages/EditProject'
 import Management from './pages/Management'
+import FreshServiceRequests from './pages/FreshServiceRequests'
 
 function App() {
   return (
@@ -83,6 +84,12 @@ function App() {
         <Route path="/api" element={
           <ProtectedRoute>
             <ApiDocs />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/freshservice" element={
+          <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'COORDENADOR', 'GERENTE', 'SUPERINTENDENTE']}>
+            <FreshServiceRequests />
           </ProtectedRoute>
         } />
 

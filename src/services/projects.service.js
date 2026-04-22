@@ -8,4 +8,7 @@ export const projectsService = {
   update: (id, data) => api.patch(`/projects/${id}`, data),
   delete: (id) => api.delete(`/projects/${id}`),
   assignMember: (id, user_id) => api.post(`/projects/${id}/members`, { user_id }),
+  getFreshserviceRequests: () => api.get('/projects/freshservice-requests'),
+  approveFreshservice: (id, data) => api.patch(`/projects/${id}/approve-freshservice`, data),
+  rejectFreshservice: (id) => api.delete(`/projects/${id}/reject-freshservice`),
 }
