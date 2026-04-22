@@ -324,7 +324,7 @@ export class PDFRenderer {
     this._setFont(FONTS.body, 'bold', COLORS.text)
     this.doc.text(PHASE_LABELS[project.current_phase] || project.current_phase || '—', rx + pad, cy + 6)
 
-    this.y += row2H + 8
+    this.y += row2H + 6
   }
 
   drawCosts(project) {
@@ -355,7 +355,7 @@ export class PDFRenderer {
       }
       cy += 6
     }
-    this.y += blockH + 4
+    this.y += blockH + 6
   }
 
   drawProgressBar(project) {
@@ -379,7 +379,7 @@ export class PDFRenderer {
     this.doc.setFillColor(...hexToRgb(farol.color))
     this.doc.roundedRect(x, this.y, fillW, 3, 1.5, 1.5, 'F')
 
-    this.y += 10
+    this.y += 6
   }
 
   drawStatusReports(statusUpdates) {
@@ -418,50 +418,19 @@ export class PDFRenderer {
 
     const maxItems = Math.max(highlights.length, nextSteps.length)
     if (maxItems > 0) {
-      const halfInner = (innerW - 6) / 2
-      const itemW = halfInner - 9
-
-      let totalGridH = 7
+      const itemW = (innerW - 6) / 2 - 9
+      let gridH = 7
       for (let i = 0; i < maxItems; i++) {
-        const hlText = highlights[i] || ''
-        const nsText = nextSteps[i] || ''
-        const hlH = hlText ? Math.max(this._textH(hlText, itemW, FONTS.body), FONTS.body * 0.4) + 3 : 0
-        const nsH = nsText ? Math.max(this._textH(nsText, itemW, FONTS.body), FONTS.body * 0.4) + 3 : 0
-        totalGridH += Math.max(hlH, nsH)
+        const hlH = highlights[i] ? this._textH(highlights[i], itemW, FONTS.body) + 3 : 0
+        const nsH = nextSteps[i] ? this._textH(nextSteps[i], itemW, FONTS.body) + 3 : 0
+        gridH += Math.max(hlH, nsH, FONTS.body * 0.4 + 3)
       }
-
-      if (totalGridH < this.spaceLeft - 20) {
-        blocks.push({
-          type: 'grid_full',
-          highlights,
-          nextSteps,
-          height: totalGridH,
-        })
-      } else {
-        const CHUNK = 4
-        for (let i = 0; i < maxItems; i += CHUNK) {
-          const hlSlice = highlights.slice(i, i + CHUNK)
-          const nsSlice = nextSteps.slice(i, i + CHUNK)
-          let chunkH = i === 0 ? 7 : 5
-          const sliceMax = Math.max(hlSlice.length, nsSlice.length)
-          for (let j = 0; j < sliceMax; j++) {
-            const hlT = hlSlice[j] || ''
-            const nsT = nsSlice[j] || ''
-            const hlH = hlT ? Math.max(this._textH(hlT, itemW, FONTS.body), FONTS.body * 0.4) + 3 : 0
-            const nsH = nsT ? Math.max(this._textH(nsT, itemW, FONTS.body), FONTS.body * 0.4) + 3 : 0
-            chunkH += Math.max(hlH, nsH)
-          }
-          blocks.push({
-            type: 'grid_chunk',
-            highlights: hlSlice,
-            nextSteps: nsSlice,
-            hlStart: i,
-            nsStart: i,
-            isFirst: i === 0,
-            height: chunkH,
-          })
-        }
-      }
+      blocks.push({
+        type: 'grid_full',
+        highlights,
+        nextSteps,
+        height: gridH,
+      })
     }
 
     if (risks.length > 0) {
@@ -500,17 +469,15 @@ export class PDFRenderer {
           this.y += 8
         }
 
-        this._roundedRect(x, this.y, w, 0.01, 0, null, COLORS.border)
-        this.doc.setDrawColor(...hexToRgb(COLORS.border))
-        this.doc.setLineWidth(0.4)
-        this.doc.roundedRect(x, this.y, w, Math.min(this.spaceLeft - 4, 200), 3, 3, 'S')
+        this.doc.setDrawColor(...hexToRgb(COLORS.borderLight))
+        this.doc.setLineWidth(0.3)
+        this.doc.line(x, this.y, x + innerW + pad * 2, this.y)
         this.y += 3
         cardOpen = true
       }
 
       if (block.type === 'meta_desc') this._renderMetaDesc(block, x, pad, innerW)
-      else if (block.type === 'grid_full') this._renderGrid(block.highlights, block.nextSteps, 0, 0, true, x, pad, innerW)
-      else if (block.type === 'grid_chunk') this._renderGrid(block.highlights, block.nextSteps, block.hlStart, block.nsStart, block.isFirst, x, pad, innerW)
+      else if (block.type === 'grid_full') this._renderGrid(block.highlights, block.nextSteps, 0, 0, true, x, pad, innerW, meta)
       else if (block.type === 'risk_header') this._renderRiskHeader(x, pad, innerW)
       else if (block.type === 'risk_item') this._renderRiskItem(block, x, pad, innerW)
     }
@@ -540,36 +507,62 @@ export class PDFRenderer {
     this.y += 4
   }
 
-  _renderGrid(hl, ns, hlStart, nsStart, isFirst, x, pad, innerW) {
+  _renderGrid(hl, ns, hlStart, nsStart, isFirst, x, pad, innerW, meta) {
     const halfW = (innerW - 6) / 2
     const leftX = x + pad
     const rightX = x + pad + halfW + 6
     const itemW = halfW - 9
 
-    if (isFirst) {
+    const drawHeaders = (isCont) => {
       this._setFont(FONTS.label, 'bold', COLORS.textMuted)
-      this.doc.text('DESTAQUES DO PERÍODO', leftX, this.y)
-      this.doc.text('PRÓXIMOS PASSOS', rightX, this.y)
-    } else {
-      this._setFont(FONTS.label, 'bold', COLORS.textMuted)
-      this.doc.text('DESTAQUES DO PERÍODO (cont.)', leftX, this.y)
-      this.doc.text('PRÓXIMOS PASSOS (cont.)', rightX, this.y)
-    }
-    this.y += 5
-
-    const startY = this.y
-
-    let leftY = startY
-    for (let i = 0; i < hl.length; i++) {
-      leftY = this._numberedItem(leftX, leftY, hlStart + i + 1, hl[i], itemW)
+      this.doc.text(isCont ? 'DESTAQUES DO PERÍODO (cont.)' : 'DESTAQUES DO PERÍODO', leftX, this.y)
+      this.doc.text(isCont ? 'PRÓXIMOS PASSOS (cont.)' : 'PRÓXIMOS PASSOS', rightX, this.y)
+      this.y += 5
     }
 
-    let rightY = startY
-    for (let i = 0; i < ns.length; i++) {
-      rightY = this._numberedItem(rightX, rightY, nsStart + i + 1, ns[i], itemW)
+    drawHeaders(!isFirst)
+
+    const maxItems = Math.max(hl.length, ns.length)
+
+    for (let i = 0; i < maxItems; i++) {
+      const hlText = hl[i] || ''
+      const nsText = ns[i] || ''
+
+      const hlH = hlText ? this._textH(hlText, itemW, FONTS.body) + 3 : 0
+      const nsH = nsText ? this._textH(nsText, itemW, FONTS.body) + 3 : 0
+      const rowH = Math.max(hlH, nsH, FONTS.body * 0.4 + 3)
+
+      if (this.needsSpace(rowH + 6)) {
+        this.y += 2
+        this.addPage()
+
+        this.doc.setFillColor(...hexToRgb(COLORS.contBg))
+        const contText = `continuação — ${meta}`
+        this._setFont(FONTS.tiny, 'bold', COLORS.contText)
+        const contW = this.doc.getTextWidth(contText) + 8
+        this.doc.roundedRect(x, this.y, contW, 5.5, 1.5, 1.5, 'F')
+        this.doc.text(contText, x + 4, this.y + 4)
+        this.y += 8
+
+        this.doc.setDrawColor(...hexToRgb(COLORS.borderLight))
+        this.doc.setLineWidth(0.3)
+        this.doc.line(x, this.y, x + innerW + pad * 2, this.y)
+        this.y += 3
+
+        drawHeaders(true)
+      }
+
+      const rowStartY = this.y
+      let leftY = rowStartY
+      let rightY = rowStartY
+
+      if (hlText) leftY = this._numberedItem(leftX, rowStartY, hlStart + i + 1, hlText, itemW)
+      if (nsText) rightY = this._numberedItem(rightX, rowStartY, nsStart + i + 1, nsText, itemW)
+
+      this.y = Math.max(leftY, rightY)
     }
 
-    this.y = Math.max(leftY, rightY) + 3
+    this.y += 3
   }
 
   _numberedItem(colX, itemY, num, text, maxW) {

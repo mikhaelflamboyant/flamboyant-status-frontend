@@ -614,6 +614,7 @@ export default function ProjectDetail() {
                   value={statusForm.description}
                   onChange={e => setStatusForm({ ...statusForm, description: e.target.value })}
                   rows={2}
+                  maxLength={1000}
                   placeholder="Como está o projeto essa semana?"
                   className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
                   required
@@ -626,6 +627,7 @@ export default function ProjectDetail() {
                     <div key={i} className="flex items-center gap-1 mb-1">
                       <input
                         value={item}
+                        maxLength={300}
                         onChange={e => {
                           const arr = [...statusForm.highlights]
                           arr[i] = e.target.value
@@ -655,6 +657,7 @@ export default function ProjectDetail() {
                     <div key={i} className="flex items-center gap-1 mb-1">
                       <input
                         value={item}
+                        maxLength={300}
                         onChange={e => {
                           const arr = [...statusForm.next_steps]
                           arr[i] = e.target.value
