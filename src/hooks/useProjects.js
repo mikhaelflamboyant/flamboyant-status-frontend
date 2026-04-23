@@ -14,14 +14,18 @@ export function useProjects() {
   const initialFarol = searchParams.get('farol') || ''
   const initialFiltro = searchParams.get('filtro') || ''
 
+  const savedFilters = (() => {
+    try { return JSON.parse(sessionStorage.getItem('projectFilters')) } catch { return null }
+  })()
+
   const [filters, setFilters] = useState({
-    search: '',
-    traffic_light: initialFarol,
-    phase: '',
-    area: '',
-    priority: '',
-    user_id: '',
-    filtro: initialFiltro,
+    search: savedFilters?.search || '',
+    traffic_light: initialFarol || savedFilters?.traffic_light || '',
+    phase: savedFilters?.phase || '',
+    area: savedFilters?.area || '',
+    priority: savedFilters?.priority || '',
+    user_id: savedFilters?.user_id || '',
+    filtro: initialFiltro || savedFilters?.filtro || '',
   })
 
   const fetchProjects = async () => {
@@ -45,6 +49,7 @@ export function useProjects() {
 
   useEffect(() => {
     setPage(1)
+    sessionStorage.setItem('projectFilters', JSON.stringify(filters))
   }, [filters])
 
   const filteredProjects = useMemo(() => {
