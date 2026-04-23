@@ -155,10 +155,6 @@ export default function Login() {
           */}
         </div>
 
-        <p className="text-center text-2xs text-gray-300 mt-6">
-          Acesso liberado automaticamente para usuários do Active Directory do Grupo Flamboyant.
-        </p>
-
       </div>
     </div>
   )
