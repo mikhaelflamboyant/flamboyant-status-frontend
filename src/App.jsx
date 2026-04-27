@@ -15,6 +15,7 @@ import ApiDocs from './pages/ApiDocs'
 import SamlSuccess from './pages/SamlSuccess'
 import EditProject from './pages/EditProject'
 import Management from './pages/Management'
+import GoLiveProjects from './pages/GoLiveProjects'
 import FreshServiceRequests from './pages/FreshServiceRequests'
 
 function App() {
@@ -39,6 +40,12 @@ function App() {
         <Route path="/projetos/novo" element={
           <ProtectedRoute>
             <NewProject />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/projetos/go-live" element={
+          <ProtectedRoute>
+            <GoLiveProjects />
           </ProtectedRoute>
         } />
 

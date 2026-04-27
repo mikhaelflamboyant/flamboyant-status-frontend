@@ -32,13 +32,29 @@ const FAROL_COLOR = {
   VERMELHO: 'red',
 }
 
-function ControlPanel({ project, onSave }) {
+function ControlPanel({ project, scopeItems = [], onSave }) {
   const [form, setForm] = useState({
     traffic_light: project.traffic_light,
     current_phase: project.current_phase,
     completion_pct: project.completion_pct,
   })
   const [saving, setSaving] = useState(false)
+
+  const stageComplete = (stageKey) => {
+    const approved = scopeItems.filter(s => s.status === 'APROVADO')
+    const items = approved.filter(s => s.stage === stageKey)
+    if (items.length === 0) return true
+    return items.every(s => s.completion_date !== null)
+  }
+
+  const phaseBlocked = (phase) => {
+    const rules = {
+      DESENVOLVIMENTO: !stageComplete('PLANEJAMENTO'),
+      ENTREGUE: !stageComplete('EXECUCAO'),
+      SUPORTE: !stageComplete('GO_LIVE'),
+    }
+    return rules[phase] || false
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -79,10 +95,17 @@ function ControlPanel({ project, onSave }) {
             <option value="ENTREVISTA_SOLICITANTE">Entrevista com o solicitante</option>
             <option value="LEVANTAMENTO_REQUISITOS">Levantamento de requisitos</option>
             <option value="ANALISE_SOLUCAO">Análise da solução</option>
-            <option value="DESENVOLVIMENTO">Desenvolvimento</option>
+            <option value="DESENVOLVIMENTO" disabled={phaseBlocked('DESENVOLVIMENTO')}>
+              Desenvolvimento{phaseBlocked('DESENVOLVIMENTO') ? ' 🔒' : ''}
+            </option>
             <option value="TESTES">Testes</option>
             <option value="VALIDACAO_SOLICITANTE">Validação com o solicitante</option>
-            <option value="ENTREGUE">Entregue</option>
+            <option value="ENTREGUE" disabled={phaseBlocked('ENTREGUE')}>
+              Entregue{phaseBlocked('ENTREGUE') ? ' 🔒' : ''}
+            </option>
+            <option value="SUPORTE" disabled={phaseBlocked('SUPORTE')}>
+              Suporte pós go-live{phaseBlocked('SUPORTE') ? ' 🔒' : ''}
+            </option>
           </select>
         </div>
         <div>
@@ -787,6 +810,7 @@ export default function ProjectDetail() {
           {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) && (
             <ControlPanel
               project={project}
+              scopeItems={scopeItems}
               onSave={async (data) => {
                 await projectsService.update(id, data)
                 if (data.current_phase === 'ENTREGUE' || data.completion_pct === 100) {

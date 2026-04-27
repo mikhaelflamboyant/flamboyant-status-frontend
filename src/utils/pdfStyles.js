@@ -42,6 +42,7 @@ export const PHASE_LABELS = {
   TESTES: 'Testes',
   VALIDACAO_SOLICITANTE: 'Validação com o solicitante',
   ENTREGUE: 'Entregue',
+  SUPORTE: 'Suporte pós go-live',
 }
 
 export const SEPARATOR_IMAGES = {
