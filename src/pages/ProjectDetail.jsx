@@ -41,14 +41,26 @@ function ControlPanel({ project, scopeItems = [], onSave }) {
   const [saving, setSaving] = useState(false)
 
   const stageComplete = (stageKey) => {
-    const approved = scopeItems.filter(s => s.status === 'APROVADO')
-    const items = approved.filter(s => s.stage === stageKey)
-    if (items.length === 0) return true
-    return items.every(s => s.completion_date !== null)
+    const stages = ['PLANEJAMENTO', 'EXECUCAO', 'GO_LIVE', 'SUPORTE']
+    const allStagesHaveApproved = stages.every(s =>
+      scopeItems.some(i => i.stage === s && i.status === 'APROVADO')
+    )
+
+    if (!allStagesHaveApproved) return false
+
+    const hasPendingActions = scopeItems.some(s => s.pending_action)
+    if (hasPendingActions) return false
+
+    const stageItems = scopeItems.filter(s => s.stage === stageKey && s.status === 'APROVADO')
+    if (stageItems.length === 0) return true
+    return stageItems.every(s => s.completion_date !== null)
   }
 
   const phaseBlocked = (phase) => {
     const rules = {
+      ENTREVISTA_SOLICITANTE: !stageComplete('PLANEJAMENTO'),
+      LEVANTAMENTO_REQUISITOS: !stageComplete('PLANEJAMENTO'),
+      ANALISE_SOLUCAO: !stageComplete('PLANEJAMENTO'),
       DESENVOLVIMENTO: !stageComplete('PLANEJAMENTO'),
       TESTES: !stageComplete('PLANEJAMENTO'),
       VALIDACAO_SOLICITANTE: !stageComplete('PLANEJAMENTO'),
@@ -94,14 +106,24 @@ function ControlPanel({ project, scopeItems = [], onSave }) {
             className="w-full h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
           >
             <option value="RECEBIDA">Recebida</option>
-            <option value="ENTREVISTA_SOLICITANTE">Entrevista com o solicitante</option>
-            <option value="LEVANTAMENTO_REQUISITOS">Levantamento de requisitos</option>
-            <option value="ANALISE_SOLUCAO">Análise da solução</option>
+            <option value="ENTREVISTA_SOLICITANTE" disabled={phaseBlocked('ENTREVISTA_SOLICITANTE')}>
+              Entrevista com o solicitante{phaseBlocked('ENTREVISTA_SOLICITANTE') ? ' 🔒' : ''}
+            </option>
+            <option value="LEVANTAMENTO_REQUISITOS" disabled={phaseBlocked('LEVANTAMENTO_REQUISITOS')}>
+              Levantamento de requisitos{phaseBlocked('LEVANTAMENTO_REQUISITOS') ? ' 🔒' : ''}
+            </option>
+            <option value="ANALISE_SOLUCAO" disabled={phaseBlocked('ANALISE_SOLUCAO')}>
+              Análise da solução{phaseBlocked('ANALISE_SOLUCAO') ? ' 🔒' : ''}
+            </option>
             <option value="DESENVOLVIMENTO" disabled={phaseBlocked('DESENVOLVIMENTO')}>
               Desenvolvimento{phaseBlocked('DESENVOLVIMENTO') ? ' 🔒' : ''}
             </option>
-            <option value="TESTES">Testes</option>
-            <option value="VALIDACAO_SOLICITANTE">Validação com o solicitante</option>
+            <option value="TESTES" disabled={phaseBlocked('TESTES')}>
+              Testes{phaseBlocked('TESTES') ? ' 🔒' : ''}
+            </option>
+            <option value="VALIDACAO_SOLICITANTE" disabled={phaseBlocked('VALIDACAO_SOLICITANTE')}>
+              Validação com o solicitante{phaseBlocked('VALIDACAO_SOLICITANTE') ? ' 🔒' : ''}
+            </option>
             <option value="ENTREGUE" disabled={phaseBlocked('ENTREGUE')}>
               Entregue{phaseBlocked('ENTREGUE') ? ' 🔒' : ''}
             </option>
@@ -276,7 +298,13 @@ export default function ProjectDetail() {
     if (!confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) return
     try {
       await projectsService.delete(id)
-      navigate('/projetos')
+      if (project.current_phase === 'ENTREGUE' && !project.archived) {
+        navigate('/projetos/go-live')
+      } else if (project.archived) {
+        navigate('/projetos/arquivados')
+      } else {
+        navigate('/projetos')
+      }
     } catch (err) {
       alert(err.response?.data?.error || 'Erro ao excluir projeto.')
     }
@@ -815,8 +843,10 @@ export default function ProjectDetail() {
               scopeItems={scopeItems}
               onSave={async (data) => {
                 await projectsService.update(id, data)
-                if (data.current_phase === 'ENTREGUE' || data.completion_pct === 100) {
-                  navigate('/projetos')
+                if (data.current_phase === 'ENTREGUE') {
+                  navigate('/projetos/go-live')
+                } else if (data.current_phase === 'SUPORTE') {
+                  navigate('/projetos/arquivados')
                 } else {
                   fetchProject()
                 }
@@ -1324,21 +1354,20 @@ export default function ProjectDetail() {
                                         <div
                                           onClick={e => {
                                             e.stopPropagation()
-                                            if (canEdit && item.status !== 'AGUARDANDO_APROVACAO' && !item.pending_action) {
+                                            const cronogramaAprovado = scopeItems.some(s => s.status === 'APROVADO')
+                                            if (canEdit && cronogramaAprovado && item.status === 'APROVADO' && !item.pending_action) {
                                               const newDate = item.completion_date ? '' : new Date().toISOString().split('T')[0]
                                               scopeService.update(id, item.id, { completion_date: newDate }).then(fetchProject)
                                             }
                                           }}
-                                          className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 cursor-pointer ${
-                                            item.completion_date ? 'bg-teal-500 border-teal-500' : 'border-gray-300 hover:border-teal-400'
+                                          className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
+                                            item.completion_date ? 'bg-teal-500 border-teal-500' : 'border-gray-300'
+                                          } ${
+                                            scopeItems.some(s => s.status === 'APROVADO') && item.status === 'APROVADO'
+                                              ? 'cursor-pointer hover:border-teal-400'
+                                              : 'cursor-not-allowed opacity-40'
                                           }`}
-                                        >
-                                          {item.completion_date && (
-                                            <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                                              <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
-                                            </svg>
-                                          )}
-                                        </div>
+                                        ></div>
                                         <span className="text-xs font-medium text-gray-800">{item.display_title}</span>
                                         {item.showing_pending && <span className="text-xs bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full">Pendente</span>}
                                       </div>

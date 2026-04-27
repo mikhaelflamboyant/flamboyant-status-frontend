@@ -345,7 +345,10 @@ export default function ApiDocs() {
                   { label: 'Abas API e Usuários', desc: 'Visíveis apenas para usuários da área de Tecnologia da Informação.' },
                   { label: 'Gestão de usuários', desc: 'Apenas Analista Master, Analista Testador, Gerente e Coordenador de TI podem visualizar, adicionar e excluir usuários.' },
                   { label: 'Farol automático', desc: 'Quando a data de go-live passa sem o projeto ser entregue, o farol muda automaticamente para vermelho.' },
-                  { label: 'Arquivamento automático', desc: 'Projetos marcados como "Entregue" ou com 100% de conclusão são arquivados automaticamente.' },
+                  { label: 'Fases e cronograma', desc: 'A mudança de fase exige cronograma aprovado por um gestor com todas as 4 etapas preenchidas (Planejamento, Execução, Go-live, Suporte). Desenvolvimento, Testes e Validação exigem Planejamento concluído; Entregue exige Execução concluída; Suporte exige Go-live concluído. Atividades só podem ser marcadas como concluídas após aprovação do gestor.' },
+                  { label: 'Níveis de projeto', desc: 'Projetos podem ser classificados por nível estratégico: A — Estratégico, B — Performance, C — Compliance, D — Inovação. A classificação é opcional e visível no painel de gestão.' },
+                  { label: 'Ciclo de vida', desc: 'Projetos marcados como "Entregue" são movidos para a aba Projetos em go-live e permanecem ativos. Após 30 dias em go-live, o projeto é automaticamente movido para a fase Suporte pós go-live e arquivado em Projetos finalizados.' },
+                  { label: 'Ciclo de vida', desc: 'Projetos marcados como "Entregue" são movidos para a aba Projetos em go-live e permanecem ativos. Após 30 dias em go-live, o projeto é automaticamente movido para a fase Suporte pós go-live e arquivado em Projetos finalizados.' },
                 ].map(r => (
                   <div key={r.label} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
                     <span className="text-xs font-medium text-gray-700 w-40 shrink-0">{r.label}</span>
