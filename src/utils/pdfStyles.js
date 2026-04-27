@@ -74,17 +74,17 @@ export const PAGE = {
 }
 
 export const LEVEL_CONFIG = {
-  A: { label: 'A — Estratégico', bg: '#EEEDFE', text: '#26215C' },
-  B: { label: 'B — Performance (ROI)', bg: '#E6F1FB', text: '#042C53' },
-  C: { label: 'C — Compliance', bg: '#FAEEDA', text: '#412402' },
-  D: { label: 'D — Inovação e transformação digital', bg: '#E1F5EE', text: '#04342C' },
+  A: { label: 'A - Estratégico', bg: '#EEEDFE', text: '#26215C' },
+  B: { label: 'B - Performance (ROI)', bg: '#E6F1FB', text: '#042C53' },
+  C: { label: 'C - Compliance', bg: '#FAEEDA', text: '#412402' },
+  D: { label: 'D - Inovação e transformação digital', bg: '#E1F5EE', text: '#04342C' },
 }
 
 export const LEVEL_OPTIONS = [
-  { value: 'A', label: 'A — Estratégico', description: 'Projetos que contribuem diretamente para os objetivos estratégicos do Grupo Flamboyant.' },
-  { value: 'B', label: 'B — Performance (ROI)', description: 'Projetos com maior potencial de geração de valor, economia de custos ou aumento de receita.' },
-  { value: 'C', label: 'C — Compliance', description: 'Conformidade com exigências legais e regulatórias, considerando riscos de não execução.' },
-  { value: 'D', label: 'D — Inovação e transformação digital', description: 'Iniciativas que promovem inovação, automação e modernização tecnológica.' },
+  { value: 'A', label: 'A - Estratégico', description: 'Projetos que contribuem diretamente para os objetivos estratégicos do Grupo Flamboyant.' },
+  { value: 'B', label: 'B - Performance (ROI)', description: 'Projetos com maior potencial de geração de valor, economia de custos ou aumento de receita.' },
+  { value: 'C', label: 'C - Compliance', description: 'Conformidade com exigências legais e regulatórias, considerando riscos de não execução.' },
+  { value: 'D', label: 'D - Inovação e transformação digital', description: 'Iniciativas que promovem inovação, automação e modernização tecnológica.' },
 ]
 
 export const BUSINESS_UNITS = ['Corporativo', 'Shopping', 'Urbanismo', 'Agropecuária', 'Instituto', 'Sem unidade']
