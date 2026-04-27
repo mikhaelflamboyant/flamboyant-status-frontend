@@ -14,7 +14,10 @@ export function useProjects() {
   const initialFarol = searchParams.get('farol') || ''
   const initialFiltro = searchParams.get('filtro') || ''
 
+  const hasUrlParams = initialFarol || initialFiltro
+
   const savedFilters = (() => {
+    if (hasUrlParams) return null
     try { return JSON.parse(sessionStorage.getItem('projectFilters')) } catch { return null }
   })()
 

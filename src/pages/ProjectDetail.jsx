@@ -15,16 +15,16 @@ import { requirementsService } from '../services/requirements.service'
 import { useAuth } from '../hooks/useAuth'
 import { tasksService } from '../services/tasks.service'
 import { scopeService } from '../services/scope.service'
+import { LEVEL_CONFIG } from '../utils/pdfStyles'
 // import { MarkdownEditor } from '../components/ui/MarkdownEditor'
 // import { MarkdownContent } from '../components/ui/MarkdownContent'
 
-const PRIORITY_CONFIG = {
-  1: { label: 'Prioridade 1', variant: 'green' },
-  2: { label: 'Prioridade 2', variant: 'green' },
-  3: { label: 'Prioridade 3', variant: 'amber' },
-  4: { label: 'Prioridade 4', variant: 'red' },
-  5: { label: 'Prioridade 5', variant: 'red' },
-}
+const STAGES = [
+  { key: 'PLANEJAMENTO', label: '1. Planejamento' },
+  { key: 'EXECUCAO', label: '2. Execução' },
+  { key: 'GO_LIVE', label: '3. Go-live' },
+  { key: 'SUPORTE', label: '4. Suporte pós go-live' },
+]
 
 const FAROL_COLOR = {
   VERDE: 'green',
@@ -134,13 +134,15 @@ export default function ProjectDetail() {
   const [taskLoading, setTaskLoading] = useState(false)
   const [scopeItems, setScopeItems] = useState([])
   const [showScopeForm, setShowScopeForm] = useState(false)
-  const [scopeForm, setScopeForm] = useState({ title: '', description: '', phase: '', start_date: '', end_date: '', completion_pct: 0 })
+  const [scopeForm, setScopeForm] = useState({ title: '', description: '', stage: '', start_date: '', end_date: '', completion_pct: 0, completion_date: '' })
   const [scopeLoading, setScopeLoading] = useState(false)
   const [expandedScope, setExpandedScope] = useState({})
   const [editingScopeItem, setEditingScopeItem] = useState(null)
   const [editScopeForm, setEditScopeForm] = useState({})
   const [users, setUsers] = useState([])
   const [toast, setToast] = useState('')
+  const [showPendingModal, setShowPendingModal] = useState(false)
+  const [selectedPendingIds, setSelectedPendingIds] = useState([])
 
   const fetchProject = async () => {
     try {
@@ -355,6 +357,30 @@ export default function ProjectDetail() {
     }
   }
 
+  const handleApproveItems = async () => {
+    if (selectedPendingIds.length === 0) return
+    try {
+      await scopeService.approveItems(id, selectedPendingIds)
+      setShowPendingModal(false)
+      setSelectedPendingIds([])
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleRejectItems = async () => {
+    if (selectedPendingIds.length === 0) return
+    try {
+      await scopeService.rejectItems(id, selectedPendingIds)
+      setShowPendingModal(false)
+      setSelectedPendingIds([])
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -377,9 +403,164 @@ export default function ProjectDetail() {
     )
   }
 
-  const priority = PRIORITY_CONFIG[project.priority] || PRIORITY_CONFIG[3]
   const progressColor = FAROL_COLOR[project.traffic_light] || 'primary'
   const goLive = project.go_live ? new Date(project.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'
+
+  {showPendingModal && (() => {
+    const pendingItems = scopeItems.filter(s =>
+      s.status === 'AGUARDANDO_APROVACAO' || s.pending_action
+    )
+    const formatDate = (d) => d ? new Date(d).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'
+
+    return (
+      <div
+        className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+        onClick={e => { if (e.target === e.currentTarget) setShowPendingModal(false) }}
+      >
+        <div className="bg-white rounded-xl border border-gray-100 w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div>
+              <h3 className="text-sm font-medium text-gray-900">Pendências do cronograma</h3>
+              <p className="text-xs text-gray-400 mt-0.5">{pendingItems.length} item{pendingItems.length !== 1 ? 's' : ''} aguardando aprovação</p>
+            </div>
+            <button onClick={() => setShowPendingModal(false)} className="text-gray-400 hover:text-gray-600">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <div className="overflow-y-auto flex-1 px-5 py-4 flex flex-col gap-3">
+            {pendingItems.map(item => {
+              const isSelected = selectedPendingIds.includes(item.id)
+              const isNew = item.status === 'AGUARDANDO_APROVACAO' && !item.pending_action
+              const isEdit = item.pending_action === 'EDITAR'
+              const isDelete = item.pending_action === 'EXCLUIR'
+
+              const tagCls = isNew
+                ? 'bg-blue-50 text-blue-600'
+                : isEdit ? 'bg-amber-50 text-amber-600'
+                : 'bg-red-50 text-red-500'
+              const tagLabel = isNew ? 'Novo' : isEdit ? 'Edição' : 'Exclusão'
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setSelectedPendingIds(prev =>
+                    prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id]
+                  )}
+                  className={`w-full text-left flex items-start gap-3 px-4 py-3 rounded-lg border transition-colors ${
+                    isSelected ? 'border-primary-300 bg-primary-50/40' : 'border-gray-100 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 mt-0.5 ${
+                    isSelected ? 'bg-primary-600 border-primary-600' : 'border-gray-300'
+                  }`}>
+                    {isSelected && (
+                      <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                        <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tagCls}`}>{tagLabel}</span>
+                      <span className="text-xs font-medium text-gray-800 truncate">{item.title}</span>
+                    </div>
+
+                    {isNew && (
+                      <div className="grid grid-cols-3 gap-2 text-xs text-gray-500">
+                        <span>Etapa: <span className="text-gray-700">{item.stage || '—'}</span></span>
+                        <span>Início: <span className="text-gray-700">{formatDate(item.start_date)}</span></span>
+                        <span>Fim: <span className="text-gray-700">{formatDate(item.end_date)}</span></span>
+                      </div>
+                    )}
+
+                    {isEdit && (
+                      <div className="flex flex-col gap-1 text-xs">
+                        {item.pending_title && item.pending_title !== item.title && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">Título:</span>
+                            <span className="line-through text-red-400">{item.title}</span>
+                            <span className="text-gray-300">→</span>
+                            <span className="text-teal-600 font-medium">{item.pending_title}</span>
+                          </div>
+                        )}
+                        {item.pending_start_date && formatDate(item.pending_start_date) !== formatDate(item.start_date) && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">Início:</span>
+                            <span className="line-through text-red-400">{formatDate(item.start_date)}</span>
+                            <span className="text-gray-300">→</span>
+                            <span className="text-teal-600 font-medium">{formatDate(item.pending_start_date)}</span>
+                          </div>
+                        )}
+                        {item.pending_end_date && formatDate(item.pending_end_date) !== formatDate(item.end_date) && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">Fim:</span>
+                            <span className="line-through text-red-400">{formatDate(item.end_date)}</span>
+                            <span className="text-gray-300">→</span>
+                            <span className="text-teal-600 font-medium">{formatDate(item.pending_end_date)}</span>
+                          </div>
+                        )}
+                        {item.pending_completion_pct !== null && item.pending_completion_pct !== item.completion_pct && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">%:</span>
+                            <span className="line-through text-red-400">{item.completion_pct}%</span>
+                            <span className="text-gray-300">→</span>
+                            <span className="text-teal-600 font-medium">{item.pending_completion_pct}%</span>
+                          </div>
+                        )}
+                        {item.pending_description && item.pending_description !== item.description && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">Descrição alterada</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {isDelete && (
+                      <p className="text-xs text-red-400">Esta atividade será excluída permanentemente.</p>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
+            <p className="text-xs text-gray-400">
+              {selectedPendingIds.length} de {pendingItems.length} selecionado{selectedPendingIds.length !== 1 ? 's' : ''}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedPendingIds(
+                  selectedPendingIds.length === pendingItems.length ? [] : pendingItems.map(i => i.id)
+                )}
+                className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                {selectedPendingIds.length === pendingItems.length ? 'Desmarcar todos' : 'Selecionar todos'}
+              </button>
+              <button
+                onClick={handleRejectItems}
+                disabled={selectedPendingIds.length === 0}
+                className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg disabled:opacity-40 transition-colors"
+              >
+                Rejeitar selecionados
+              </button>
+              <button
+                onClick={handleApproveItems}
+                disabled={selectedPendingIds.length === 0}
+                className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-40 transition-colors font-medium"
+              >
+                Aprovar selecionados
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  })()}
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -436,7 +617,18 @@ export default function ProjectDetail() {
                 <Badge variant="gray">
                   {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
                 </Badge>
-                <Badge variant={priority.variant}>{priority.label}</Badge>
+                {project.level ? (
+                  <span style={{
+                    background: LEVEL_CONFIG[project.level]?.bg,
+                    color: LEVEL_CONFIG[project.level]?.text,
+                  }} className="text-xs px-2.5 py-1 rounded-full font-medium">
+                    {LEVEL_CONFIG[project.level]?.label}
+                  </span>
+                ) : (
+                  <span className="text-xs bg-gray-100 text-gray-400 px-2.5 py-1 rounded-full">
+                    Não definido
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -797,8 +989,8 @@ export default function ProjectDetail() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <p className="text-xs text-gray-400">Data de conclusão</p>
-                    <input type="date" value={taskForm.end_date}
-                      onChange={e => setTaskForm({ ...taskForm, end_date: e.target.value })}
+                    <input type="date" value={scopeForm.completion_date || ''}
+                      onChange={e => setScopeForm({ ...scopeForm, completion_date: e.target.value })}
                       className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                     />
                   </div>
@@ -888,7 +1080,7 @@ export default function ProjectDetail() {
           <div className="bg-white border border-gray-100 rounded-xl p-6 mb-4">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-4">
-                <h2 className="text-sm font-medium text-gray-900">Escopo do projeto</h2>
+                <h2 className="text-sm font-medium text-gray-900">Cronograma</h2>
                 {scopeItems.length > 0 && (() => {
                   const allApproved = scopeItems.every(s => s.status === 'APROVADO')
                   const anyPending = scopeItems.some(s => s.status === 'AGUARDANDO_APROVACAO')
@@ -900,6 +1092,13 @@ export default function ProjectDetail() {
                 })()}
               </div>
               <div className="flex items-center gap-2">
+                {canApproveScope && scopeItems.some(s => s.status === 'AGUARDANDO_APROVACAO' || s.pending_action) && (
+                  <button
+                    onClick={() => { setShowPendingModal(true); setSelectedPendingIds([]) }}
+                    className="text-xs border border-amber-200 text-amber-600 px-3 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                    Ver pendências
+                  </button>
+                )}
                 {canEdit && scopeItems.some(s => s.status === 'RASCUNHO') && (
                   <button onClick={handleRequestApproval}
                     className="text-xs border border-gray-200 text-gray-500 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
@@ -945,21 +1144,14 @@ export default function ProjectDetail() {
                 />
                 <div className="grid grid-cols-4 gap-3">
                   <div className="flex flex-col gap-1">
-                    <p className="text-xs text-gray-400">Fase vinculada</p>
+                    <p className="text-xs text-gray-400">Etapa *</p>
                     <select
-                      value={scopeForm.phase}
-                      onChange={e => setScopeForm({ ...scopeForm, phase: e.target.value })}
+                      value={scopeForm.stage || ''}
+                      onChange={e => setScopeForm({ ...scopeForm, stage: e.target.value })}
                       className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                     >
                       <option value="">Selecionar</option>
-                      <option value="RECEBIDA">Recebida</option>
-                      <option value="ENTREVISTA_SOLICITANTE">Entrevista com solicitante</option>
-                      <option value="LEVANTAMENTO_REQUISITOS">Levantamento de requisitos</option>
-                      <option value="ANALISE_SOLUCAO">Análise da solução</option>
-                      <option value="DESENVOLVIMENTO">Desenvolvimento</option>
-                      <option value="TESTES">Testes</option>
-                      <option value="VALIDACAO_SOLICITANTE">Validação com solicitante</option>
-                      <option value="ENTREGUE">Entregue</option>
+                      {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
                     </select>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -1000,147 +1192,208 @@ export default function ProjectDetail() {
             {scopeItems.length === 0 ? (
               <p className="text-xs text-gray-400 text-center py-8">Nenhuma atividade cadastrada ainda.</p>
             ) : (
-              <div className="flex flex-col gap-2">
-                {scopeItems.map(item => {
-                  const isExpanded = expandedScope[item.id]
-                  const completedTasks = item.tasks?.filter(t => t.completed).length || 0
-                  const totalTasks = item.tasks?.length || 0
-                  const autoProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : null
-                  const progress = autoProgress ?? item.display_completion_pct
+              <div className="flex flex-col gap-3">
+                {STAGES.map(stage => {
+                  const stageItems = scopeItems.filter(s => s.stage === stage.key)
+                  const allDone = stageItems.length > 0 && stageItems.every(s => s.completion_date)
+                  const hasItems = stageItems.length > 0
+                  const doneCnt = stageItems.filter(s => s.completion_date).length
+                  const isExpanded = expandedScope[`stage_${stage.key}`] !== false
 
                   return (
-                    <div key={item.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                    <div key={stage.key} className="border border-gray-100 rounded-xl overflow-hidden">
                       <div
-                        className="grid gap-0 items-center px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
-                        style={{ gridTemplateColumns: '1fr 160px 95px 95px 55px 90px 28px' }}
-                        onClick={() => setExpandedScope(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                        className="flex items-center gap-3 px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                        onClick={() => setExpandedScope(prev => ({ ...prev, [`stage_${stage.key}`]: !isExpanded }))}
                       >
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">{item.display_title}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {item.showing_pending && (
-                              <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">Alteração pendente</span>
-                            )}
-                            {item.pending_action === 'EXCLUIR' && (
-                              <span className="text-xs bg-red-50 text-red-500 px-2 py-0.5 rounded-full">Exclusão pendente</span>
-                            )}
-                          </div>
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                          allDone ? 'bg-teal-500 border-teal-500' : 'border-gray-300'
+                        }`}>
+                          {allDone && (
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                              <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
+                            </svg>
+                          )}
                         </div>
-                        <span className="text-xs text-gray-400 truncate block">{item.display_phase || '—'}</span>
-                        <span className="text-xs text-gray-400">
-                          {item.display_start_date ? new Date(item.display_start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {item.display_end_date ? new Date(item.display_end_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
-                        </span>
-                        <span className={`text-xs font-medium ${progress === 100 ? 'text-teal-600' : progress > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
-                          {progress}%
-                        </span>
-                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                          <div style={{ width: `${progress}%` }}
-                            className={`h-full rounded-full ${progress === 100 ? 'bg-teal-500' : 'bg-amber-400'}`} />
-                        </div>
-                        <span className="text-xs text-gray-400 text-center">{isExpanded ? '▼' : '▶'}</span>
+                        <span className="text-sm font-medium text-gray-800 flex-1">{stage.label}</span>
+                        {hasItems && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            allDone ? 'bg-teal-50 text-teal-700' :
+                            doneCnt > 0 ? 'bg-amber-50 text-amber-700' :
+                            'bg-gray-100 text-gray-500'
+                          }`}>
+                            {allDone ? 'Concluído' : doneCnt > 0 ? 'Em andamento' : 'Não iniciado'}
+                          </span>
+                        )}
+                        {!hasItems && <span className="text-xs text-gray-300">Sem atividades</span>}
+                        <span className="text-xs text-gray-400">{isExpanded ? '▼' : '▶'}</span>
                       </div>
 
                       {isExpanded && (
-                        <div className="px-4 py-3 border-t border-gray-100 bg-white">
-                          <p className="text-xs font-medium text-gray-500 mb-1">Descrição</p>
-                          <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">
-                            {item.display_description || '—'}
-                          </p>
-                          <p className="text-xs text-gray-400 mb-3">
-                            {totalTasks > 0 ? `${completedTasks} de ${totalTasks} tarefas concluídas` : 'Nenhuma tarefa vinculada'}
-                          </p>
-                          {canEdit && item.status !== 'AGUARDANDO_APROVACAO' && !item.pending_action && (
-                            editingScopeItem === item.id ? (
-                              <div className="flex flex-col gap-2 mt-2">
-                                <input
-                                  value={editScopeForm.title || ''}
-                                  onChange={e => setEditScopeForm({ ...editScopeForm, title: e.target.value })}
-                                  placeholder="Título"
-                                  className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                                />
-                                <textarea
-                                  value={editScopeForm.description || ''}
-                                  onChange={e => setEditScopeForm({ ...editScopeForm, description: e.target.value })}
-                                  rows={2}
-                                  placeholder="Descrição"
-                                  className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
-                                />
-                                <div className="grid grid-cols-4 gap-2">
-                                  <select
-                                    value={editScopeForm.phase || ''}
-                                    onChange={e => setEditScopeForm({ ...editScopeForm, phase: e.target.value })}
-                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                                  >
-                                    <option value="">Fase</option>
-                                    <option value="RECEBIDA">Recebida</option>
-                                    <option value="ENTREVISTA_SOLICITANTE">Entrevista</option>
-                                    <option value="LEVANTAMENTO_REQUISITOS">Levantamento</option>
-                                    <option value="ANALISE_SOLUCAO">Análise</option>
-                                    <option value="DESENVOLVIMENTO">Desenvolvimento</option>
-                                    <option value="TESTES">Testes</option>
-                                    <option value="VALIDACAO_SOLICITANTE">Validação</option>
-                                    <option value="ENTREGUE">Entregue</option>
-                                  </select>
-                                  <input type="date" value={editScopeForm.start_date || ''}
-                                    onChange={e => setEditScopeForm({ ...editScopeForm, start_date: e.target.value })}
-                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                                  />
-                                  <input type="date" value={editScopeForm.end_date || ''}
-                                    onChange={e => setEditScopeForm({ ...editScopeForm, end_date: e.target.value })}
-                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                                  />
-                                  <input type="number" min="0" max="100" value={editScopeForm.completion_pct ?? 0}
-                                    onChange={e => setEditScopeForm({ ...editScopeForm, completion_pct: parseInt(e.target.value) || 0 })}
-                                    placeholder="%"
-                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                                  />
-                                </div>
-                                <div className="flex gap-2">
-                                  <button onClick={handleUpdateScopeItem}
-                                    className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800">
-                                    Salvar
-                                  </button>
-                                  <button onClick={() => { setEditingScopeItem(null); setEditScopeForm({}) }}
-                                    className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
-                                    Cancelar
-                                  </button>
-                                </div>
+                        <div className="px-4 py-3 bg-white flex flex-col gap-2">
+                          {stageItems.length === 0 ? (
+                            <p className="text-xs text-gray-300 text-center py-3">Nenhuma atividade nesta etapa.</p>
+                          ) : (
+                            <>
+                              <div className="grid gap-0 px-2 py-1" style={{ gridTemplateColumns: '1fr 90px 90px 90px 55px 28px' }}>
+                                <span className="text-xs text-gray-400">Atividade</span>
+                                <span className="text-xs text-gray-400">Início</span>
+                                <span className="text-xs text-gray-400">Fim</span>
+                                <span className="text-xs text-gray-400">Conclusão</span>
+                                <span className="text-xs text-gray-400">%</span>
+                                <span></span>
                               </div>
-                            ) : (
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => {
-                                    setEditingScopeItem(item.id)
-                                    setEditScopeForm({
-                                      title: item.display_title,
-                                      description: item.display_description || '',
-                                      phase: item.display_phase || '',
-                                      start_date: item.display_start_date ? new Date(item.display_start_date).toISOString().split('T')[0] : '',
-                                      end_date: item.display_end_date ? new Date(item.display_end_date).toISOString().split('T')[0] : '',
-                                      completion_pct: item.display_completion_pct || 0,
-                                    })
-                                  }}
-                                  className="hover:opacity-70 transition-opacity" title="Editar">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteScopeItem(item.id)}
-                                    className="hover:opacity-70 transition-opacity" title="Excluir">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
-                                    </svg>
-                                  </button>
-                              </div>
-                            )
-                          )}
-                          {item.pending_action === 'EXCLUIR' && (
-                            <p className="text-xs text-red-400">Exclusão aguardando aprovação do gestor</p>
+                              {stageItems.map(item => {
+                                const isItemExpanded = expandedScope[item.id]
+                                const completedTasks = item.tasks?.filter(t => t.completed).length || 0
+                                const totalTasks = item.tasks?.length || 0
+                                const autoProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : null
+                                const progress = autoProgress ?? item.display_completion_pct
+
+                                return (
+                                  <div key={item.id} className="border border-gray-100 rounded-lg overflow-hidden">
+                                    <div
+                                      className="grid items-center px-3 py-2.5 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                                      style={{ gridTemplateColumns: '1fr 90px 90px 90px 55px 28px' }}
+                                      onClick={() => setExpandedScope(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
+                                          item.completion_date ? 'bg-teal-500 border-teal-500' : 'border-gray-300'
+                                        }`}>
+                                          {item.completion_date && (
+                                            <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                                              <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
+                                            </svg>
+                                          )}
+                                        </div>
+                                        <span className="text-xs font-medium text-gray-800">{item.display_title}</span>
+                                        {item.showing_pending && <span className="text-xs bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full">Pendente</span>}
+                                      </div>
+                                      <span className="text-xs text-gray-400">
+                                        {item.display_start_date ? new Date(item.display_start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+                                      </span>
+                                      <span className="text-xs text-gray-400">
+                                        {item.display_end_date ? new Date(item.display_end_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+                                      </span>
+                                      <span className={`text-xs font-medium ${item.completion_date ? 'text-teal-600' : 'text-gray-300'}`}>
+                                        {item.completion_date ? new Date(item.completion_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+                                      </span>
+                                      <span className={`text-xs font-medium ${progress === 100 ? 'text-teal-600' : progress > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                                        {progress}%
+                                      </span>
+                                      <span className="text-xs text-gray-400 text-center">{isItemExpanded ? '▼' : '▶'}</span>
+                                    </div>
+
+                                    {isItemExpanded && (
+                                      <div className="px-4 py-3 border-t border-gray-100 bg-white">
+                                        <p className="text-xs font-medium text-gray-500 mb-1">Descrição</p>
+                                        <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">{item.display_description || '—'}</p>
+                                        <p className="text-xs text-gray-400 mb-3">
+                                          {totalTasks > 0 ? `${completedTasks} de ${totalTasks} tarefas concluídas` : 'Nenhuma tarefa vinculada'}
+                                        </p>
+                                        {canEdit && item.status !== 'AGUARDANDO_APROVACAO' && !item.pending_action && (
+                                          editingScopeItem === item.id ? (
+                                            <div className="flex flex-col gap-2 mt-2">
+                                              <input
+                                                value={editScopeForm.title || ''}
+                                                onChange={e => setEditScopeForm({ ...editScopeForm, title: e.target.value })}
+                                                placeholder="Título"
+                                                className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                              />
+                                              <textarea
+                                                value={editScopeForm.description || ''}
+                                                onChange={e => setEditScopeForm({ ...editScopeForm, description: e.target.value })}
+                                                rows={2}
+                                                placeholder="Descrição"
+                                                className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
+                                              />
+                                              <div className="grid grid-cols-4 gap-2">
+                                                <div className="flex flex-col gap-1">
+                                                  <p className="text-xs text-gray-400">Etapa</p>
+                                                  <select
+                                                    value={editScopeForm.stage || ''}
+                                                    onChange={e => setEditScopeForm({ ...editScopeForm, stage: e.target.value })}
+                                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                                  >
+                                                    <option value="">Selecionar</option>
+                                                    {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                                                  </select>
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                  <p className="text-xs text-gray-400">Início</p>
+                                                  <input type="date" value={editScopeForm.start_date || ''}
+                                                    onChange={e => setEditScopeForm({ ...editScopeForm, start_date: e.target.value })}
+                                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                                  />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                  <p className="text-xs text-gray-400">Fim</p>
+                                                  <input type="date" value={editScopeForm.end_date || ''}
+                                                    onChange={e => setEditScopeForm({ ...editScopeForm, end_date: e.target.value })}
+                                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                                  />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                  <p className="text-xs text-gray-400">Conclusão</p>
+                                                  <input type="date" value={editScopeForm.completion_date || ''}
+                                                    onChange={e => setEditScopeForm({ ...editScopeForm, completion_date: e.target.value })}
+                                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                                  />
+                                                </div>
+                                              </div>
+                                              <div className="flex gap-2">
+                                                <button onClick={handleUpdateScopeItem}
+                                                  className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800">
+                                                  Salvar
+                                                </button>
+                                                <button onClick={() => { setEditingScopeItem(null); setEditScopeForm({}) }}
+                                                  className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
+                                                  Cancelar
+                                                </button>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <div className="flex gap-2">
+                                              <button
+                                                onClick={() => {
+                                                  setEditingScopeItem(item.id)
+                                                  setEditScopeForm({
+                                                    title: item.display_title,
+                                                    description: item.display_description || '',
+                                                    stage: item.stage || '',
+                                                    start_date: item.display_start_date ? new Date(item.display_start_date).toISOString().split('T')[0] : '',
+                                                    end_date: item.display_end_date ? new Date(item.display_end_date).toISOString().split('T')[0] : '',
+                                                    completion_date: item.completion_date ? new Date(item.completion_date).toISOString().split('T')[0] : '',
+                                                    completion_pct: item.display_completion_pct || 0,
+                                                  })
+                                                }}
+                                                className="hover:opacity-70 transition-opacity" title="Editar">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                                </svg>
+                                              </button>
+                                              <button
+                                                onClick={() => handleDeleteScopeItem(item.id)}
+                                                className="hover:opacity-70 transition-opacity" title="Excluir">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                                </svg>
+                                              </button>
+                                            </div>
+                                          )
+                                        )}
+                                        {item.pending_action === 'EXCLUIR' && (
+                                          <p className="text-xs text-red-400">Exclusão aguardando aprovação do gestor</p>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                              <p className="text-xs text-gray-400 px-2 pt-1">{doneCnt} de {stageItems.length} atividades concluídas</p>
+                            </>
                           )}
                         </div>
                       )}
@@ -1152,7 +1405,7 @@ export default function ProjectDetail() {
 
             <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
               <span className="text-xs text-gray-400">
-                {scopeItems.length} atividade{scopeItems.length !== 1 ? 's' : ''} · progresso calculado pelas tarefas vinculadas
+                {scopeItems.length} atividade{scopeItems.length !== 1 ? 's' : ''} · {scopeItems.filter(s => s.completion_date).length} concluída{scopeItems.filter(s => s.completion_date).length !== 1 ? 's' : ''}
               </span>
               {scopeItems.length > 0 && (
                 <span className="text-xs font-medium text-gray-700">

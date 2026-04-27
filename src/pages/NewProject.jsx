@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { Input } from '../components/ui/Input'
+import { LevelSelector } from '../components/project/LevelSelector'
 import { CostSelector } from '../components/project/CostSelector'
 import { PeopleSelector } from '../components/project/PeopleSelector'
 import { projectsService } from '../services/projects.service'
@@ -15,7 +16,7 @@ export default function NewProject() {
     title: '',
     area: '',
     execution_type: 'INTERNA',
-    priority: null,
+    level: '',
     description: '',
     start_date: '',
     go_live: '',
@@ -49,7 +50,7 @@ export default function NewProject() {
     e.preventDefault()
     setError('')
 
-    if (!form.title || !form.description || (!form.go_live && !form.go_live_undefined) || !form.priority || !form.business_unit) {
+    if (!form.title || !form.description || (!form.go_live && !form.go_live_undefined) || !form.level || !form.business_unit) {
       setError('Preencha todos os campos obrigatórios.')
       return
     }
@@ -77,7 +78,7 @@ export default function NewProject() {
         ...form,
         go_live: form.go_live_undefined ? null : form.go_live,
         area,
-        priority: parseInt(form.priority),
+        level: form.level,
         requester_ids: requesters.filter(r => !String(r.user_id).startsWith('manual_')).map(r => r.user_id),
         requester_names: requesters.filter(r => String(r.user_id).startsWith('manual_')).map(r => ({ name: r.name, area: r.area })),
         responsible_ids: responsibles.filter(r => !String(r.user_id).startsWith('manual_')).map(r => r.user_id),
@@ -247,28 +248,8 @@ export default function NewProject() {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-500">
-                  Prioridade <span className="text-red-400">*</span>
-                </label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map(p => {
-                    const isSelected = form.priority === p
-                    const bgs = { 1: '#EAF3DE', 2: '#EAF3DE', 3: '#FAEEDA', 4: '#FCEBEB', 5: '#FCEBEB' }
-                    const colors = { 1: '#27500A', 2: '#27500A', 3: '#633806', 4: '#791F1F', 5: '#791F1F' }
-                    return (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => handleChange('priority', form.priority === p ? null : p)}
-                        style={isSelected ? { backgroundColor: bgs[p], color: colors[p], borderColor: colors[p] } : {}}
-                        className="flex-1 py-2 text-sm rounded-lg border border-gray-200 text-gray-500 hover:border-primary-400 transition-colors"
-                      >
-                        {p}
-                      </button>
-                    )
-                  })}
-                </div>
-                <p className="text-xs text-gray-400 mt-0.5">1 = menor prioridade · 5 = maior prioridade</p>
+                <p className="text-xs font-medium text-gray-500">Nível do projeto <span className="text-red-400">*</span></p>
+                <LevelSelector value={form.level} onChange={(v) => setForm(f => ({...f, level: v}))} />
               </div>
 
               <div className="flex flex-col gap-1">
