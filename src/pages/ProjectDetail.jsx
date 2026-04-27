@@ -33,6 +33,7 @@ const FAROL_COLOR = {
 }
 
 function ControlPanel({ project, scopeItems = [], onSave }) {
+  const isLegacy = project.legacy === true
   const [form, setForm] = useState({
     traffic_light: project.traffic_light,
     current_phase: project.current_phase,
@@ -41,6 +42,7 @@ function ControlPanel({ project, scopeItems = [], onSave }) {
   const [saving, setSaving] = useState(false)
 
   const stageComplete = (stageKey) => {
+    if (isLegacy) return true
     const stages = ['PLANEJAMENTO', 'EXECUCAO', 'GO_LIVE', 'SUPORTE']
     const allStagesHaveApproved = stages.every(s =>
       scopeItems.some(i => i.stage === s && i.status === 'APROVADO')
@@ -1354,8 +1356,8 @@ export default function ProjectDetail() {
                                         <div
                                           onClick={e => {
                                             e.stopPropagation()
-                                            const cronogramaAprovado = scopeItems.some(s => s.status === 'APROVADO')
-                                            if (canEdit && cronogramaAprovado && item.status === 'APROVADO' && !item.pending_action) {
+                                            const cronogramaAprovado = project.legacy || scopeItems.some(s => s.status === 'APROVADO')
+                                            if (canEdit && cronogramaAprovado && (project.legacy || item.status === 'APROVADO') && !item.pending_action) {
                                               const newDate = item.completion_date ? '' : new Date().toISOString().split('T')[0]
                                               scopeService.update(id, item.id, { completion_date: newDate }).then(fetchProject)
                                             }
@@ -1363,7 +1365,7 @@ export default function ProjectDetail() {
                                           className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
                                             item.completion_date ? 'bg-teal-500 border-teal-500' : 'border-gray-300'
                                           } ${
-                                            scopeItems.some(s => s.status === 'APROVADO') && item.status === 'APROVADO'
+                                            project.legacy || (scopeItems.some(s => s.status === 'APROVADO') && item.status === 'APROVADO')
                                               ? 'cursor-pointer hover:border-teal-400'
                                               : 'cursor-not-allowed opacity-40'
                                           }`}
