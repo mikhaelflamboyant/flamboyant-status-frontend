@@ -19,6 +19,7 @@ export default function NewProject() {
     level: '',
     description: '',
     start_date: '',
+    start_date_undefined: false, // ← adicionar
     go_live: '',
     go_live_undefined: false,
     business_unit: '',
@@ -212,12 +213,26 @@ export default function NewProject() {
 
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-500">Data de início</label>
-                  <input
-                    type="date"
-                    value={form.start_date}
-                    onChange={e => handleChange('start_date', e.target.value)}
-                    className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
-                  />
+                  {!form.start_date_undefined && (
+                    <input
+                      type="date"
+                      value={form.start_date}
+                      onChange={e => handleChange('start_date', e.target.value)}
+                      className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
+                    />
+                  )}
+                  <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.start_date_undefined || false}
+                      onChange={e => {
+                        handleChange('start_date_undefined', e.target.checked)
+                        if (e.target.checked) handleChange('start_date', '')
+                      }}
+                      className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
+                    />
+                    <span className="text-xs text-gray-400">Não definida</span>
+                  </label>
                 </div>
 
                 <div className="flex flex-col gap-1">
