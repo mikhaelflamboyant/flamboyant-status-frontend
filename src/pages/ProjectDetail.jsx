@@ -50,6 +50,8 @@ function ControlPanel({ project, scopeItems = [], onSave }) {
   const phaseBlocked = (phase) => {
     const rules = {
       DESENVOLVIMENTO: !stageComplete('PLANEJAMENTO'),
+      TESTES: !stageComplete('PLANEJAMENTO'),
+      VALIDACAO_SOLICITANTE: !stageComplete('PLANEJAMENTO'),
       ENTREGUE: !stageComplete('EXECUCAO'),
       SUPORTE: !stageComplete('GO_LIVE'),
     }
