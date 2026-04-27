@@ -143,6 +143,8 @@ export default function ProjectDetail() {
   const [toast, setToast] = useState('')
   const [showPendingModal, setShowPendingModal] = useState(false)
   const [selectedPendingIds, setSelectedPendingIds] = useState([])
+  const [editingGoLive, setEditingGoLive] = useState(false)
+  const [goLiveValue, setGoLiveValue] = useState('')
 
   const fetchProject = async () => {
     try {
@@ -406,162 +408,6 @@ export default function ProjectDetail() {
   const progressColor = FAROL_COLOR[project.traffic_light] || 'primary'
   const goLive = project.go_live ? new Date(project.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'
 
-  {showPendingModal && (() => {
-    const pendingItems = scopeItems.filter(s =>
-      s.status === 'AGUARDANDO_APROVACAO' || s.pending_action
-    )
-    const formatDate = (d) => d ? new Date(d).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'
-
-    return (
-      <div
-        className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
-        onClick={e => { if (e.target === e.currentTarget) setShowPendingModal(false) }}
-      >
-        <div className="bg-white rounded-xl border border-gray-100 w-full max-w-2xl max-h-[80vh] flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <div>
-              <h3 className="text-sm font-medium text-gray-900">Pendências do cronograma</h3>
-              <p className="text-xs text-gray-400 mt-0.5">{pendingItems.length} item{pendingItems.length !== 1 ? 's' : ''} aguardando aprovação</p>
-            </div>
-            <button onClick={() => setShowPendingModal(false)} className="text-gray-400 hover:text-gray-600">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          </div>
-
-          <div className="overflow-y-auto flex-1 px-5 py-4 flex flex-col gap-3">
-            {pendingItems.map(item => {
-              const isSelected = selectedPendingIds.includes(item.id)
-              const isNew = item.status === 'AGUARDANDO_APROVACAO' && !item.pending_action
-              const isEdit = item.pending_action === 'EDITAR'
-              const isDelete = item.pending_action === 'EXCLUIR'
-
-              const tagCls = isNew
-                ? 'bg-blue-50 text-blue-600'
-                : isEdit ? 'bg-amber-50 text-amber-600'
-                : 'bg-red-50 text-red-500'
-              const tagLabel = isNew ? 'Novo' : isEdit ? 'Edição' : 'Exclusão'
-
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setSelectedPendingIds(prev =>
-                    prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id]
-                  )}
-                  className={`w-full text-left flex items-start gap-3 px-4 py-3 rounded-lg border transition-colors ${
-                    isSelected ? 'border-primary-300 bg-primary-50/40' : 'border-gray-100 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 mt-0.5 ${
-                    isSelected ? 'bg-primary-600 border-primary-600' : 'border-gray-300'
-                  }`}>
-                    {isSelected && (
-                      <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
-                        <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tagCls}`}>{tagLabel}</span>
-                      <span className="text-xs font-medium text-gray-800 truncate">{item.title}</span>
-                    </div>
-
-                    {isNew && (
-                      <div className="grid grid-cols-3 gap-2 text-xs text-gray-500">
-                        <span>Etapa: <span className="text-gray-700">{item.stage || '—'}</span></span>
-                        <span>Início: <span className="text-gray-700">{formatDate(item.start_date)}</span></span>
-                        <span>Fim: <span className="text-gray-700">{formatDate(item.end_date)}</span></span>
-                      </div>
-                    )}
-
-                    {isEdit && (
-                      <div className="flex flex-col gap-1 text-xs">
-                        {item.pending_title && item.pending_title !== item.title && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400">Título:</span>
-                            <span className="line-through text-red-400">{item.title}</span>
-                            <span className="text-gray-300">→</span>
-                            <span className="text-teal-600 font-medium">{item.pending_title}</span>
-                          </div>
-                        )}
-                        {item.pending_start_date && formatDate(item.pending_start_date) !== formatDate(item.start_date) && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400">Início:</span>
-                            <span className="line-through text-red-400">{formatDate(item.start_date)}</span>
-                            <span className="text-gray-300">→</span>
-                            <span className="text-teal-600 font-medium">{formatDate(item.pending_start_date)}</span>
-                          </div>
-                        )}
-                        {item.pending_end_date && formatDate(item.pending_end_date) !== formatDate(item.end_date) && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400">Fim:</span>
-                            <span className="line-through text-red-400">{formatDate(item.end_date)}</span>
-                            <span className="text-gray-300">→</span>
-                            <span className="text-teal-600 font-medium">{formatDate(item.pending_end_date)}</span>
-                          </div>
-                        )}
-                        {item.pending_completion_pct !== null && item.pending_completion_pct !== item.completion_pct && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400">%:</span>
-                            <span className="line-through text-red-400">{item.completion_pct}%</span>
-                            <span className="text-gray-300">→</span>
-                            <span className="text-teal-600 font-medium">{item.pending_completion_pct}%</span>
-                          </div>
-                        )}
-                        {item.pending_description && item.pending_description !== item.description && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400">Descrição alterada</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {isDelete && (
-                      <p className="text-xs text-red-400">Esta atividade será excluída permanentemente.</p>
-                    )}
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
-            <p className="text-xs text-gray-400">
-              {selectedPendingIds.length} de {pendingItems.length} selecionado{selectedPendingIds.length !== 1 ? 's' : ''}
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSelectedPendingIds(
-                  selectedPendingIds.length === pendingItems.length ? [] : pendingItems.map(i => i.id)
-                )}
-                className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors"
-              >
-                {selectedPendingIds.length === pendingItems.length ? 'Desmarcar todos' : 'Selecionar todos'}
-              </button>
-              <button
-                onClick={handleRejectItems}
-                disabled={selectedPendingIds.length === 0}
-                className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg disabled:opacity-40 transition-colors"
-              >
-                Rejeitar selecionados
-              </button>
-              <button
-                onClick={handleApproveItems}
-                disabled={selectedPendingIds.length === 0}
-                className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-40 transition-colors font-medium"
-              >
-                Aprovar selecionados
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  })()}
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -573,6 +419,162 @@ export default function ProjectDetail() {
           <span className="text-gray-400">Redirecionando...</span>
         </div>
       )}
+
+      {showPendingModal && (() => {
+        const pendingItems = scopeItems.filter(s =>
+          s.status === 'AGUARDANDO_APROVACAO' || s.pending_action
+        )
+        const formatDate = (d) => d ? new Date(d).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'
+
+        return (
+          <div
+            className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+            onClick={e => { if (e.target === e.currentTarget) setShowPendingModal(false) }}
+          >
+            <div className="bg-white rounded-xl border border-gray-100 w-full max-w-2xl max-h-[80vh] flex flex-col">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Pendências do cronograma</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">{pendingItems.length} item{pendingItems.length !== 1 ? 's' : ''} aguardando aprovação</p>
+                </div>
+                <button onClick={() => setShowPendingModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div className="overflow-y-auto flex-1 px-5 py-4 flex flex-col gap-3">
+                {pendingItems.map(item => {
+                  const isSelected = selectedPendingIds.includes(item.id)
+                  const isNew = item.status === 'AGUARDANDO_APROVACAO' && !item.pending_action
+                  const isEdit = item.pending_action === 'EDITAR'
+                  const isDelete = item.pending_action === 'EXCLUIR'
+
+                  const tagCls = isNew
+                    ? 'bg-blue-50 text-blue-600'
+                    : isEdit ? 'bg-amber-50 text-amber-600'
+                    : 'bg-red-50 text-red-500'
+                  const tagLabel = isNew ? 'Novo' : isEdit ? 'Edição' : 'Exclusão'
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setSelectedPendingIds(prev =>
+                        prev.includes(item.id) ? prev.filter(x => x !== item.id) : [...prev, item.id]
+                      )}
+                      className={`w-full text-left flex items-start gap-3 px-4 py-3 rounded-lg border transition-colors ${
+                        isSelected ? 'border-primary-300 bg-primary-50/40' : 'border-gray-100 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 mt-0.5 ${
+                        isSelected ? 'bg-primary-600 border-primary-600' : 'border-gray-300'
+                      }`}>
+                        {isSelected && (
+                          <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                            <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${tagCls}`}>{tagLabel}</span>
+                          <span className="text-xs font-medium text-gray-800 truncate">{item.title}</span>
+                        </div>
+
+                        {isNew && (
+                          <div className="grid grid-cols-3 gap-2 text-xs text-gray-500">
+                            <span>Etapa: <span className="text-gray-700">{item.stage || '—'}</span></span>
+                            <span>Início: <span className="text-gray-700">{formatDate(item.start_date)}</span></span>
+                            <span>Fim: <span className="text-gray-700">{formatDate(item.end_date)}</span></span>
+                          </div>
+                        )}
+
+                        {isEdit && (
+                          <div className="flex flex-col gap-1 text-xs">
+                            {item.pending_title && item.pending_title !== item.title && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400">Título:</span>
+                                <span className="line-through text-red-400">{item.title}</span>
+                                <span className="text-gray-300">→</span>
+                                <span className="text-teal-600 font-medium">{item.pending_title}</span>
+                              </div>
+                            )}
+                            {item.pending_start_date && formatDate(item.pending_start_date) !== formatDate(item.start_date) && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400">Início:</span>
+                                <span className="line-through text-red-400">{formatDate(item.start_date)}</span>
+                                <span className="text-gray-300">→</span>
+                                <span className="text-teal-600 font-medium">{formatDate(item.pending_start_date)}</span>
+                              </div>
+                            )}
+                            {item.pending_end_date && formatDate(item.pending_end_date) !== formatDate(item.end_date) && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400">Fim:</span>
+                                <span className="line-through text-red-400">{formatDate(item.end_date)}</span>
+                                <span className="text-gray-300">→</span>
+                                <span className="text-teal-600 font-medium">{formatDate(item.pending_end_date)}</span>
+                              </div>
+                            )}
+                            {item.pending_completion_pct !== null && item.pending_completion_pct !== item.completion_pct && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400">%:</span>
+                                <span className="line-through text-red-400">{item.completion_pct}%</span>
+                                <span className="text-gray-300">→</span>
+                                <span className="text-teal-600 font-medium">{item.pending_completion_pct}%</span>
+                              </div>
+                            )}
+                            {item.pending_description && item.pending_description !== item.description && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400">Descrição alterada</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {isDelete && (
+                          <p className="text-xs text-red-400">Esta atividade será excluída permanentemente.</p>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
+                <p className="text-xs text-gray-400">
+                  {selectedPendingIds.length} de {pendingItems.length} selecionado{selectedPendingIds.length !== 1 ? 's' : ''}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedPendingIds(
+                      selectedPendingIds.length === pendingItems.length ? [] : pendingItems.map(i => i.id)
+                    )}
+                    className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    {selectedPendingIds.length === pendingItems.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                  </button>
+                  <button
+                    onClick={handleRejectItems}
+                    disabled={selectedPendingIds.length === 0}
+                    className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg disabled:opacity-40 transition-colors"
+                  >
+                    Rejeitar selecionados
+                  </button>
+                  <button
+                    onClick={handleApproveItems}
+                    disabled={selectedPendingIds.length === 0}
+                    className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-40 transition-colors font-medium"
+                  >
+                    Aprovar selecionados
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       <div className="max-w-6xl mx-auto px-6 py-6">
 
@@ -680,8 +682,43 @@ export default function ProjectDetail() {
             </div>
 
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-400 mb-1">Go-live</p>
-              <p className="text-sm font-medium text-gray-800">{goLive}</p>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs text-gray-400">Go-live</p>
+                {canEdit && !editingGoLive && (
+                  <button
+                    onClick={() => { setEditingGoLive(true); setGoLiveValue(project.go_live ? project.go_live.split('T')[0] : '') }}
+                    className="hover:opacity-70 transition-opacity"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {editingGoLive ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="date"
+                    value={goLiveValue}
+                    onChange={e => setGoLiveValue(e.target.value)}
+                    className="h-7 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white flex-1"
+                  />
+                  <button
+                    onClick={async () => {
+                      await projectsService.update(id, { go_live: goLiveValue || null })
+                      setEditingGoLive(false)
+                      fetchProject()
+                    }}
+                    className="text-xs bg-primary-600 text-white px-2 py-1 rounded-lg hover:bg-primary-800"
+                  >
+                    Salvar
+                  </button>
+                  <button onClick={() => setEditingGoLive(false)} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
+                </div>
+              ) : (
+                <p className="text-sm font-medium text-gray-800">{goLive}</p>
+              )}
               {project.go_live_history?.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-gray-100">
                   <p className="text-xs text-gray-400 mb-1.5">Histórico de alterações</p>
@@ -989,8 +1026,8 @@ export default function ProjectDetail() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <p className="text-xs text-gray-400">Data de conclusão</p>
-                    <input type="date" value={scopeForm.completion_date || ''}
-                      onChange={e => setScopeForm({ ...scopeForm, completion_date: e.target.value })}
+                    <input type="date" value={taskForm.end_date || ''}
+                      onChange={e => setTaskForm({ ...taskForm, end_date: e.target.value })}
                       className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                     />
                   </div>

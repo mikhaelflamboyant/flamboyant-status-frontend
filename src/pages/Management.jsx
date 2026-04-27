@@ -35,6 +35,49 @@ function MetricCard({ label, value, color, textColor, sub, onClick }) {
   )
 }
 
+function GoLiveChart({ data }) {
+  const months = []
+  const today = new Date()
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth() + i, 1)
+    const key = d.toISOString().slice(0, 7)
+    const label = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+    months.push({ key, label, count: data[key] || 0 })
+  }
+  const max = Math.max(...months.map(m => m.count), 3)
+
+  return (
+    <div className="flex items-end gap-3 h-32">
+      {months.map(m => {
+        const pct = m.count > 0 ? Math.max((m.count / max) * 100, 8) : 0
+        const isPeak = m.count >= 3
+        return (
+          <div key={m.key} className="flex-1 flex flex-col items-center gap-1">
+            {m.count > 0 && (
+              <span className={`text-xs font-medium ${isPeak ? 'text-red-500' : 'text-gray-600'}`}>
+                {m.count}
+              </span>
+            )}
+            <div className="w-full flex items-end" style={{ height: '80px' }}>
+              <div
+                style={{
+                  width: '100%',
+                  height: `${pct}%`,
+                  background: isPeak ? '#E24B4A' : '#534AB7',
+                  borderRadius: '4px 4px 0 0',
+                  minHeight: m.count > 0 ? '6px' : '0',
+                  transition: 'height 0.3s ease'
+                }}
+              />
+            </div>
+            <span className="text-xs text-gray-400 text-center">{m.label}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function Management() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -170,6 +213,115 @@ export default function Management() {
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="bg-white border border-gray-100 rounded-xl p-4 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium text-gray-500">Indicador PDTI - Projetos no prazo</p>
+            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+              dashboard.totals.active > 0 && (dashboard.by_farol.VERDE / dashboard.totals.active) >= 0.8
+                ? 'bg-teal-50 text-teal-700'
+                : 'bg-red-50 text-red-600'
+            }`}>
+              Meta: 80%
+            </span>
+          </div>
+          <div className="flex items-end gap-3 mb-2">
+            <p className="text-2xl font-medium text-gray-900">
+              {dashboard.totals.active > 0
+                ? Math.round((dashboard.by_farol.VERDE / dashboard.totals.active) * 100)
+                : 0}%
+            </p>
+            <p className="text-xs text-gray-400 mb-1">
+              {dashboard.by_farol.VERDE} de {dashboard.totals.active} projetos no prazo
+            </p>
+          </div>
+          <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              style={{ width: `${dashboard.totals.active > 0 ? Math.round((dashboard.by_farol.VERDE / dashboard.totals.active) * 100) : 0}%` }}
+              className={`h-full rounded-full transition-all ${
+                dashboard.totals.active > 0 && (dashboard.by_farol.VERDE / dashboard.totals.active) >= 0.8
+                  ? 'bg-teal-500'
+                  : 'bg-red-400'
+              }`}
+            />
+            <div className="absolute top-0 h-full" style={{ left: '80%' }}>
+              <div className="w-px h-full bg-gray-400 opacity-50" />
+            </div>
+          </div>
+          <div className="flex justify-end mt-0.5">
+            <span className="text-xs text-gray-400" style={{ marginRight: '18%' }}>80%</span>
+          </div>
+        </div>
+
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3 mt-8">Análise da carteira de projetos</p>
+
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="bg-white border border-gray-100 rounded-xl p-4">
+            <p className="text-xs font-medium text-gray-500 mb-3">Distribuição por nível estratégico</p>
+            {(() => {
+              const levels = [
+                { key: 'A', label: 'A — Estratégico', bg: '#EEEDFE', text: '#26215C', bar: '#534AB7' },
+                { key: 'B', label: 'B — Performance', bg: '#E6F1FB', text: '#042C53', bar: '#185FA5' },
+                { key: 'C', label: 'C — Compliance', bg: '#FAEEDA', text: '#412402', bar: '#EF9F27' },
+                { key: 'D', label: 'D — Inovação', bg: '#E1F5EE', text: '#04342C', bar: '#1D9E75' },
+                { key: 'null', label: 'Não definido', bg: '#F1EFE8', text: '#444441', bar: '#B4B2A9' },
+              ]
+              const total = Object.values(dashboard.by_level).reduce((a, b) => a + b, 0)
+              return (
+                <div className="flex flex-col gap-2">
+                  {levels.map(l => {
+                    const count = dashboard.by_level[l.key] || 0
+                    const pct = total > 0 ? Math.round((count / total) * 100) : 0
+                    return (
+                      <div key={l.key} className="flex items-center gap-2">
+                        <span style={{ background: l.bg, color: l.text }} className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0" title={l.label}>
+                          {l.label.split(' — ')[0]}
+                        </span>
+                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div style={{ width: `${pct}%`, background: l.bar }} className="h-full rounded-full transition-all" />
+                        </div>
+                        <span className="text-xs font-medium text-gray-700 min-w-[16px] text-right">{count}</span>
+                      </div>
+                    )
+                  })}
+                  <p className="text-xs text-gray-400 mt-1">{total} projetos ativos no total</p>
+                </div>
+              )
+            })()}
+          </div>
+
+          <div className="bg-white border border-gray-100 rounded-xl p-4">
+            <p className="text-xs font-medium text-gray-500 mb-3">
+              Tempo médio de entrega
+              {dashboard.avg_delivery_global && (
+                <span className="text-gray-400 font-normal"> · média geral: {dashboard.avg_delivery_global} dias</span>
+              )}
+            </p>
+            {Object.keys(dashboard.avg_delivery_by_unit).length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-4">Nenhum projeto entregue ainda.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {Object.entries(dashboard.avg_delivery_by_unit)
+                  .sort(([, a], [, b]) => a - b)
+                  .map(([unit, days]) => (
+                    <div key={unit} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
+                      <span className="text-xs text-gray-700">{unit}</span>
+                      <span className="text-xs font-medium text-gray-900">{days} dias</span>
+                    </div>
+                  ))
+                }
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-100 rounded-xl p-4 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-xs font-medium text-gray-500">Linha do tempo - go-lives nos próximos 6 meses</p>
+            <span className="text-xs text-gray-400">{Object.values(dashboard.go_live_timeline).reduce((a, b) => a + b, 0)} projetos com go-live definido</span>
+          </div>
+          <GoLiveChart data={dashboard.go_live_timeline} />
         </div>
 
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Funcionários por unidade de negócio</p>
