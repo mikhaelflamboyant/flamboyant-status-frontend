@@ -1295,9 +1295,18 @@ export default function ProjectDetail() {
                                       onClick={() => setExpandedScope(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
                                     >
                                       <div className="flex items-center gap-2">
-                                        <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
-                                          item.completion_date ? 'bg-teal-500 border-teal-500' : 'border-gray-300'
-                                        }`}>
+                                        <div
+                                          onClick={e => {
+                                            e.stopPropagation()
+                                            if (canEdit && item.status !== 'AGUARDANDO_APROVACAO' && !item.pending_action) {
+                                              const newDate = item.completion_date ? '' : new Date().toISOString().split('T')[0]
+                                              scopeService.update(id, item.id, { completion_date: newDate }).then(fetchProject)
+                                            }
+                                          }}
+                                          className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 cursor-pointer ${
+                                            item.completion_date ? 'bg-teal-500 border-teal-500' : 'border-gray-300 hover:border-teal-400'
+                                          }`}
+                                        >
                                           {item.completion_date && (
                                             <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
                                               <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
