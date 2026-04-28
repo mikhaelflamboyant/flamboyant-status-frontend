@@ -1196,7 +1196,7 @@ export default function ProjectDetail() {
                 )}
                 {canEdit && scopeItems.some(s => s.status === 'RASCUNHO') && (
                   <button onClick={handleRequestApproval}
-                    className="text-xs border border-gray-200 text-gray-500 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                    className="text-xs bg-amber-400 text-white px-3 py-1.5 rounded-lg hover:bg-amber-500 transition-colors font-medium">
                     Solicitar aprovação
                   </button>
                 )}
@@ -1237,7 +1237,7 @@ export default function ProjectDetail() {
                   rows={2}
                   className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
                 />
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div className="flex flex-col gap-1">
                     <p className="text-xs text-gray-400">Etapa *</p>
                     <select
@@ -1263,13 +1263,6 @@ export default function ProjectDetail() {
                       className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xs text-gray-400">% inicial</p>
-                    <input type="number" min="0" max="100" value={scopeForm.completion_pct}
-                      onChange={e => setScopeForm({ ...scopeForm, completion_pct: parseInt(e.target.value) || 0 })}
-                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                    />
-                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={handleCreateScopeItem} disabled={scopeLoading}
@@ -1284,227 +1277,216 @@ export default function ProjectDetail() {
               </div>
             )}
 
-            {scopeItems.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-8">Nenhuma atividade cadastrada ainda.</p>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {STAGES.map(stage => {
-                  const stageItems = scopeItems.filter(s => s.stage === stage.key)
-                  const allDone = stageItems.length > 0 && stageItems.every(s => s.completion_date)
-                  const hasItems = stageItems.length > 0
-                  const doneCnt = stageItems.filter(s => s.completion_date).length
-                  const isExpanded = expandedScope[`stage_${stage.key}`] !== false
+            <div className="flex flex-col gap-3">
+              {STAGES.map(stage => {
+                const stageItems = scopeItems.filter(s => s.stage === stage.key)
+                const allDone = stageItems.length > 0 && stageItems.every(s => s.completion_date)
+                const hasItems = stageItems.length > 0
+                const doneCnt = stageItems.filter(s => s.completion_date).length
+                const isExpanded = expandedScope[`stage_${stage.key}`] !== false
 
-                  return (
-                    <div key={stage.key} className="border border-gray-100 rounded-xl overflow-hidden">
-                      <div
-                        className="flex items-center gap-3 px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
-                        onClick={() => setExpandedScope(prev => ({ ...prev, [`stage_${stage.key}`]: !isExpanded }))}
-                      >
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                          allDone ? 'bg-teal-500 border-teal-500' : 'border-gray-300'
+                return (
+                  <div key={stage.key} className="border border-gray-100 rounded-xl overflow-hidden">
+                    <div
+                      className="flex items-center gap-3 px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => setExpandedScope(prev => ({ ...prev, [`stage_${stage.key}`]: !isExpanded }))}
+                    >
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${
+                        allDone ? 'bg-teal-500' : doneCnt > 0 ? 'bg-amber-400' : 'bg-gray-300'
+                      }`} />
+                      <span className="text-sm font-medium text-gray-800 flex-1">{stage.label}</span>
+                      {hasItems && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          allDone ? 'bg-teal-50 text-teal-700' :
+                          doneCnt > 0 ? 'bg-amber-50 text-amber-700' :
+                          'bg-gray-100 text-gray-500'
                         }`}>
-                          {allDone && (
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                              <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
-                            </svg>
-                          )}
-                        </div>
-                        <span className="text-sm font-medium text-gray-800 flex-1">{stage.label}</span>
-                        {hasItems && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            allDone ? 'bg-teal-50 text-teal-700' :
-                            doneCnt > 0 ? 'bg-amber-50 text-amber-700' :
-                            'bg-gray-100 text-gray-500'
-                          }`}>
-                            {allDone ? 'Concluído' : doneCnt > 0 ? 'Em andamento' : 'Não iniciado'}
-                          </span>
-                        )}
-                        {!hasItems && <span className="text-xs text-gray-300">Sem atividades</span>}
-                        <span className="text-xs text-gray-400">{isExpanded ? '▼' : '▶'}</span>
-                      </div>
-
-                      {isExpanded && (
-                        <div className="px-4 py-3 bg-white flex flex-col gap-2">
-                          {stageItems.length === 0 ? (
-                            <p className="text-xs text-gray-300 text-center py-3">Nenhuma atividade nesta etapa.</p>
-                          ) : (
-                            <>
-                              <div className="grid gap-0 px-2 py-1" style={{ gridTemplateColumns: '1fr 90px 90px 90px 55px 28px' }}>
-                                <span className="text-xs text-gray-400">Atividade</span>
-                                <span className="text-xs text-gray-400">Início</span>
-                                <span className="text-xs text-gray-400">Fim</span>
-                                <span className="text-xs text-gray-400">Conclusão</span>
-                                <span className="text-xs text-gray-400">%</span>
-                                <span></span>
-                              </div>
-                              {stageItems.map(item => {
-                                const isItemExpanded = expandedScope[item.id]
-                                const completedTasks = item.tasks?.filter(t => t.completed).length || 0
-                                const totalTasks = item.tasks?.length || 0
-                                const autoProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : null
-                                const progress = autoProgress ?? item.display_completion_pct
-
-                                return (
-                                  <div key={item.id} className="border border-gray-100 rounded-lg overflow-hidden">
-                                    <div
-                                      className="grid items-center px-3 py-2.5 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
-                                      style={{ gridTemplateColumns: '1fr 90px 90px 90px 55px 28px' }}
-                                      onClick={() => setExpandedScope(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          onClick={e => {
-                                            e.stopPropagation()
-                                            const cronogramaAprovado = project.legacy || scopeItems.some(s => s.status === 'APROVADO')
-                                            if (canEdit && cronogramaAprovado && (project.legacy || item.status === 'APROVADO') && !item.pending_action) {
-                                              const newDate = item.completion_date ? '' : new Date().toISOString().split('T')[0]
-                                              scopeService.update(id, item.id, { completion_date: newDate }).then(fetchProject)
-                                            }
-                                          }}
-                                          className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${
-                                            item.completion_date ? 'bg-teal-500 border-teal-500' : 'border-gray-300'
-                                          } ${
-                                            project.legacy || (scopeItems.some(s => s.status === 'APROVADO') && item.status === 'APROVADO')
-                                              ? 'cursor-pointer hover:border-teal-400'
-                                              : 'cursor-not-allowed opacity-40'
-                                          }`}
-                                        ></div>
-                                        <span className="text-xs font-medium text-gray-800">{item.display_title}</span>
-                                        {item.showing_pending && <span className="text-xs bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full">Pendente</span>}
-                                      </div>
-                                      <span className="text-xs text-gray-400">
-                                        {item.display_start_date ? new Date(item.display_start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
-                                      </span>
-                                      <span className="text-xs text-gray-400">
-                                        {item.display_end_date ? new Date(item.display_end_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
-                                      </span>
-                                      <span className={`text-xs font-medium ${item.completion_date ? 'text-teal-600' : 'text-gray-300'}`}>
-                                        {item.completion_date ? new Date(item.completion_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
-                                      </span>
-                                      <span className={`text-xs font-medium ${progress === 100 ? 'text-teal-600' : progress > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
-                                        {progress}%
-                                      </span>
-                                      <span className="text-xs text-gray-400 text-center">{isItemExpanded ? '▼' : '▶'}</span>
-                                    </div>
-
-                                    {isItemExpanded && (
-                                      <div className="px-4 py-3 border-t border-gray-100 bg-white">
-                                        <p className="text-xs font-medium text-gray-500 mb-1">Descrição</p>
-                                        <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">{item.display_description || '—'}</p>
-                                        <p className="text-xs text-gray-400 mb-3">
-                                          {totalTasks > 0 ? `${completedTasks} de ${totalTasks} tarefas concluídas` : 'Nenhuma tarefa vinculada'}
-                                        </p>
-                                        {canEdit && item.status !== 'AGUARDANDO_APROVACAO' && !item.pending_action && (
-                                          editingScopeItem === item.id ? (
-                                            <div className="flex flex-col gap-2 mt-2">
-                                              <input
-                                                value={editScopeForm.title || ''}
-                                                onChange={e => setEditScopeForm({ ...editScopeForm, title: e.target.value })}
-                                                placeholder="Título"
-                                                className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                                              />
-                                              <textarea
-                                                value={editScopeForm.description || ''}
-                                                onChange={e => setEditScopeForm({ ...editScopeForm, description: e.target.value })}
-                                                rows={2}
-                                                placeholder="Descrição"
-                                                className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
-                                              />
-                                              <div className="grid grid-cols-4 gap-2">
-                                                <div className="flex flex-col gap-1">
-                                                  <p className="text-xs text-gray-400">Etapa</p>
-                                                  <select
-                                                    value={editScopeForm.stage || ''}
-                                                    onChange={e => setEditScopeForm({ ...editScopeForm, stage: e.target.value })}
-                                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                                                  >
-                                                    <option value="">Selecionar</option>
-                                                    {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                                                  </select>
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                  <p className="text-xs text-gray-400">Início</p>
-                                                  <input type="date" value={editScopeForm.start_date || ''}
-                                                    onChange={e => setEditScopeForm({ ...editScopeForm, start_date: e.target.value })}
-                                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                                                  />
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                  <p className="text-xs text-gray-400">Fim</p>
-                                                  <input type="date" value={editScopeForm.end_date || ''}
-                                                    onChange={e => setEditScopeForm({ ...editScopeForm, end_date: e.target.value })}
-                                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                                                  />
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                  <p className="text-xs text-gray-400">Conclusão</p>
-                                                  <input type="date" value={editScopeForm.completion_date || ''}
-                                                    onChange={e => setEditScopeForm({ ...editScopeForm, completion_date: e.target.value })}
-                                                    className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                                                  />
-                                                </div>
-                                              </div>
-                                              <div className="flex gap-2">
-                                                <button onClick={handleUpdateScopeItem}
-                                                  className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800">
-                                                  Salvar
-                                                </button>
-                                                <button onClick={() => { setEditingScopeItem(null); setEditScopeForm({}) }}
-                                                  className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
-                                                  Cancelar
-                                                </button>
-                                              </div>
-                                            </div>
-                                          ) : (
-                                            <div className="flex gap-2">
-                                              <button
-                                                onClick={() => {
-                                                  setEditingScopeItem(item.id)
-                                                  setEditScopeForm({
-                                                    title: item.display_title,
-                                                    description: item.display_description || '',
-                                                    stage: item.stage || '',
-                                                    start_date: item.display_start_date ? new Date(item.display_start_date).toISOString().split('T')[0] : '',
-                                                    end_date: item.display_end_date ? new Date(item.display_end_date).toISOString().split('T')[0] : '',
-                                                    completion_date: item.completion_date ? new Date(item.completion_date).toISOString().split('T')[0] : '',
-                                                    completion_pct: item.display_completion_pct || 0,
-                                                  })
-                                                }}
-                                                className="hover:opacity-70 transition-opacity" title="Editar">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                                </svg>
-                                              </button>
-                                              <button
-                                                onClick={() => handleDeleteScopeItem(item.id)}
-                                                className="hover:opacity-70 transition-opacity" title="Excluir">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
-                                                </svg>
-                                              </button>
-                                            </div>
-                                          )
-                                        )}
-                                        {item.pending_action === 'EXCLUIR' && (
-                                          <p className="text-xs text-red-400">Exclusão aguardando aprovação do gestor</p>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                )
-                              })}
-                              <p className="text-xs text-gray-400 px-2 pt-1">{doneCnt} de {stageItems.length} atividades concluídas</p>
-                            </>
-                          )}
-                        </div>
+                          {allDone ? 'Concluído' : doneCnt > 0 ? 'Em andamento' : 'Não iniciado'}
+                        </span>
                       )}
+                      {!hasItems && <span className="text-xs text-gray-300">Sem atividades</span>}
+                      <span className="text-xs text-gray-400">{isExpanded ? '▼' : '▶'}</span>
                     </div>
-                  )
-                })}
-              </div>
-            )}
+
+                    {isExpanded && (
+                      <div className="px-4 py-3 bg-white flex flex-col gap-2">
+                        {stageItems.length === 0 ? (
+                          <p className="text-xs text-gray-300 text-center py-3">Nenhuma atividade nesta etapa.</p>
+                        ) : (
+                          <>
+                            <div className="grid gap-0 px-2 py-1" style={{ gridTemplateColumns: '1fr 90px 90px 90px 55px 28px' }}>
+                              <span className="text-xs text-gray-400">Atividade</span>
+                              <span className="text-xs text-gray-400">Início</span>
+                              <span className="text-xs text-gray-400">Fim</span>
+                              <span className="text-xs text-gray-400">Conclusão</span>
+                              <span className="text-xs text-gray-400">%</span>
+                              <span></span>
+                            </div>
+                            {stageItems.map(item => {
+                              const isItemExpanded = expandedScope[item.id]
+                              const completedTasks = item.tasks?.filter(t => t.completed).length || 0
+                              const totalTasks = item.tasks?.length || 0
+                              const autoProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : null
+                              const progress = autoProgress ?? item.display_completion_pct
+
+                              return (
+                                <div key={item.id} className="border border-gray-100 rounded-lg overflow-hidden">
+                                  <div
+                                    className="grid items-center px-3 py-2.5 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                                    style={{ gridTemplateColumns: '1fr 90px 90px 90px 55px 28px' }}
+                                    onClick={() => setExpandedScope(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-2 h-2 rounded-full shrink-0 ${
+                                        item.completion_date ? 'bg-teal-500' : 'bg-gray-300'
+                                      }`} />
+                                      <span className="text-xs font-medium text-gray-800">{item.display_title}</span>
+                                      {item.showing_pending && <span className="text-xs bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full">Pendente</span>}
+                                    </div>
+                                    <span className="text-xs text-gray-400">
+                                      {item.display_start_date ? new Date(item.display_start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+                                    </span>
+                                    <span className="text-xs text-gray-400">
+                                      {item.display_end_date ? new Date(item.display_end_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+                                    </span>
+                                    <span className={`text-xs font-medium ${item.completion_date ? 'text-teal-600' : 'text-gray-300'}`}>
+                                      {item.completion_date ? new Date(item.completion_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+                                    </span>
+                                    <span className={`text-xs font-medium ${progress === 100 ? 'text-teal-600' : progress > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                                      {progress}%
+                                    </span>
+                                    <span className="text-xs text-gray-400 text-center">{isItemExpanded ? '▼' : '▶'}</span>
+                                  </div>
+
+                                  {isItemExpanded && (
+                                    <div className="px-4 py-3 border-t border-gray-100 bg-white">
+                                      <p className="text-xs font-medium text-gray-500 mb-1">Descrição</p>
+                                      <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">{item.display_description || '—'}</p>
+                                      <p className="text-xs text-gray-400 mb-3">
+                                        {totalTasks > 0 ? `${completedTasks} de ${totalTasks} tarefas concluídas` : 'Nenhuma tarefa vinculada'}
+                                      </p>
+                                      {canEdit && (
+                                        editingScopeItem === item.id ? (
+                                          <div className="flex flex-col gap-2 mt-2">
+                                            <input
+                                              value={editScopeForm.title || ''}
+                                              onChange={e => setEditScopeForm({ ...editScopeForm, title: e.target.value })}
+                                              placeholder="Título"
+                                              className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                            />
+                                            <textarea
+                                              value={editScopeForm.description || ''}
+                                              onChange={e => setEditScopeForm({ ...editScopeForm, description: e.target.value })}
+                                              rows={2}
+                                              placeholder="Descrição"
+                                              className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
+                                            />
+                                            <div className="grid grid-cols-5 gap-2">
+                                              <div className="flex flex-col gap-1">
+                                                <p className="text-xs text-gray-400">Etapa</p>
+                                                <select
+                                                  value={editScopeForm.stage || ''}
+                                                  onChange={e => setEditScopeForm({ ...editScopeForm, stage: e.target.value })}
+                                                  className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                                >
+                                                  <option value="">Selecionar</option>
+                                                  {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                                                </select>
+                                              </div>
+                                              <div className="flex flex-col gap-1">
+                                                <p className="text-xs text-gray-400">Início</p>
+                                                <input type="date" value={editScopeForm.start_date || ''}
+                                                  onChange={e => setEditScopeForm({ ...editScopeForm, start_date: e.target.value })}
+                                                  className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                                />
+                                              </div>
+                                              <div className="flex flex-col gap-1">
+                                                <p className="text-xs text-gray-400">Fim</p>
+                                                <input type="date" value={editScopeForm.end_date || ''}
+                                                  onChange={e => setEditScopeForm({ ...editScopeForm, end_date: e.target.value })}
+                                                  className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                                />
+                                              </div>
+                                              <div className="flex flex-col gap-1">
+                                                <p className="text-xs text-gray-400">Conclusão</p>
+                                                <input type="date" value={editScopeForm.completion_date || ''}
+                                                  onChange={e => setEditScopeForm({
+                                                    ...editScopeForm,
+                                                    completion_date: e.target.value,
+                                                    completion_pct: e.target.value ? 100 : editScopeForm.completion_pct
+                                                  })}
+                                                  className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                                                />
+                                              </div>
+                                              <div className="flex flex-col gap-1">
+                                                <p className="text-xs text-gray-400">%</p>
+                                                <input type="number" min="0" max="100"
+                                                  value={editScopeForm.completion_pct ?? 0}
+                                                  disabled={!!editScopeForm.completion_date}
+                                                  onChange={e => setEditScopeForm({ ...editScopeForm, completion_pct: e.target.value === '' ? '' : parseInt(e.target.value) || 0 })}
+                                                  className={`h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white ${!!editScopeForm.completion_date ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                />
+                                              </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                              <button onClick={handleUpdateScopeItem}
+                                                className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800">
+                                                Salvar
+                                              </button>
+                                              <button onClick={() => { setEditingScopeItem(null); setEditScopeForm({}) }}
+                                                className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
+                                                Cancelar
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="flex gap-2">
+                                            <button
+                                              onClick={() => {
+                                                setEditingScopeItem(item.id)
+                                                setEditScopeForm({
+                                                  title: item.display_title,
+                                                  description: item.display_description || '',
+                                                  stage: item.stage || '',
+                                                  start_date: item.display_start_date ? new Date(item.display_start_date).toISOString().split('T')[0] : '',
+                                                  end_date: item.display_end_date ? new Date(item.display_end_date).toISOString().split('T')[0] : '',
+                                                  completion_date: item.completion_date ? new Date(item.completion_date).toISOString().split('T')[0] : '',
+                                                  completion_pct: item.display_completion_pct || 0,
+                                                })
+                                              }}
+                                              className="hover:opacity-70 transition-opacity" title="Editar">
+                                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                              </svg>
+                                            </button>
+                                            <button
+                                              onClick={() => handleDeleteScopeItem(item.id)}
+                                              className="hover:opacity-70 transition-opacity" title="Excluir">
+                                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                              </svg>
+                                            </button>
+                                          </div>
+                                        )
+                                      )}
+                                      {item.pending_action === 'EXCLUIR' && (
+                                        <p className="text-xs text-red-400">Exclusão aguardando aprovação do gestor</p>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })}
+                            <p className="text-xs text-gray-400 px-2 pt-1">{doneCnt} de {stageItems.length} atividades concluídas</p>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
 
             <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
               <span className="text-xs text-gray-400">
