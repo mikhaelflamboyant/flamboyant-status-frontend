@@ -13,6 +13,7 @@ const PHASE_LABELS = {
   TESTES: 'Testes',
   VALIDACAO_SOLICITANTE: 'Validação',
   ENTREGUE: 'Entregue',
+  SUPORTE: 'Suporte pós go-live',
 }
 
 const FAROL_COLORS = {

@@ -42,6 +42,7 @@ const PHASES = [
   { key: 'TESTES', label: 'Testes' },
   { key: 'VALIDACAO_SOLICITANTE', label: 'Validação' },
   { key: 'ENTREGUE', label: 'Entregue' },
+  { key: 'SUPORTE', label: 'Suporte pós go-live' },
 ]
 
 const selectCls = 'h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 outline-none focus:border-primary-600 transition-colors cursor-pointer'

@@ -22,9 +22,11 @@ export default function EditProject() {
     level: '',
     description: '',
     start_date: '',
+    start_date_undefined: false,
     go_live: '',
     go_live_undefined: false,
     business_unit: '',
+    legacy: false,
   })
   const [requesters, setRequesters] = useState([])
   const [responsibles, setResponsibles] = useState([])
@@ -46,9 +48,11 @@ export default function EditProject() {
           level: p.level || '',
           description: p.description || '',
           start_date: p.start_date ? p.start_date.split('T')[0] : '',
+          start_date_undefined: !p.start_date,
           go_live: p.go_live ? p.go_live.split('T')[0] : '',
           go_live_undefined: !p.go_live,
           business_unit: p.business_unit || '',
+          legacy: p.legacy || false,
         })
         setRequesters(p.requesters
           ?.filter(r => r.type === 'SOLICITANTE')
@@ -258,12 +262,26 @@ export default function EditProject() {
 
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-500">Data de início</label>
-                  <input
-                    type="date"
-                    value={form.start_date}
-                    onChange={e => handleChange('start_date', e.target.value)}
-                    className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
-                  />
+                  {!form.start_date_undefined && (
+                    <input
+                      type="date"
+                      value={form.start_date}
+                      onChange={e => handleChange('start_date', e.target.value)}
+                      className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
+                    />
+                  )}
+                  <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.start_date_undefined || false}
+                      onChange={e => {
+                        handleChange('start_date_undefined', e.target.checked)
+                        if (e.target.checked) handleChange('start_date', '')
+                      }}
+                      className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
+                    />
+                    <span className="text-xs text-gray-400">Não definida</span>
+                  </label>
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -325,6 +343,19 @@ export default function EditProject() {
                 <p className="text-xs text-red-500">{error}</p>
               </div>
             )}
+
+            <div className="flex items-center gap-2 px-1">
+              <input
+                type="checkbox"
+                id="legacy-edit"
+                checked={form.legacy}
+                onChange={e => handleChange('legacy', e.target.checked)}
+                className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
+              />
+              <label htmlFor="legacy-edit" className="text-xs text-gray-500 cursor-pointer">
+                Projeto legado — importação de histórico (isento de cronograma e bloqueio de fases)
+              </label>
+            </div>
 
             <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
               <button
