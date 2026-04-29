@@ -181,6 +181,8 @@ export default function ProjectDetail() {
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [taskForm, setTaskForm] = useState({ title: '', description: '', assignee_id: '', start_date: '', end_date: '', scope_item_id: null })
   const [taskLoading, setTaskLoading] = useState(false)
+  const [editingTaskId, setEditingTaskId] = useState(null)
+  const [editTaskForm, setEditTaskForm] = useState({})
   const [scopeItems, setScopeItems] = useState([])
   const [showScopeForm, setShowScopeForm] = useState(false)
   const [scopeForm, setScopeForm] = useState({ title: '', description: '', stage: '', start_date: '', end_date: '', completion_pct: 0, completion_date: '' })
@@ -344,6 +346,24 @@ export default function ProjectDetail() {
     if (!confirm('Excluir esta tarefa?')) return
     try {
       await tasksService.delete(id, taskId)
+      fetchProject()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleUpdateTask = async () => {
+    if (!editTaskForm.title) return
+    try {
+      await tasksService.update(id, editingTaskId, {
+        title: editTaskForm.title,
+        description: editTaskForm.description,
+        assignee_id: editTaskForm.assignee_id || null,
+        start_date: editTaskForm.start_date || null,
+        end_date: editTaskForm.end_date || null,
+      })
+      setEditingTaskId(null)
+      setEditTaskForm({})
       fetchProject()
     } catch (err) {
       console.error(err)
@@ -1111,59 +1131,137 @@ export default function ProjectDetail() {
               ) : (
                 tasks.filter(t => taskTab === 'pendentes' ? !t.completed : t.completed).map(task => (
                   <div key={task.id} className={`border rounded-xl p-4 ${task.completed ? 'border-teal-100 bg-teal-50/30' : 'border-gray-100 bg-white'}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-start gap-3 flex-1">
-                        <button
-                          onClick={() => handleCompleteTask(task.id)}
-                          disabled={task.author_id !== user?.id}
-                          className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                            task.completed ? 'bg-teal-500 border-teal-500' : 'border-gray-300 hover:border-primary-400'
-                          } disabled:opacity-40 disabled:cursor-not-allowed`}
-                        >
-                          {task.completed && (
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                              <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                          )}
-                        </button>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium ${task.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
-                            {task.title}
-                          </p>
-                          {task.description && (
-                            <p className="text-xs text-gray-400 mt-0.5 whitespace-pre-wrap">{task.description}</p>
-                          )}
-                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                            {task.assignee && <span className="text-xs text-gray-400">→ {task.assignee.name}</span>}
-                            {task.phase && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{task.phase}</span>}
-                            {task.start_date && (
-                              <span className="text-xs text-gray-400">
-                                {new Date(task.start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-                              </span>
-                            )}
-                            {task.start_date && task.end_date && <span className="text-xs text-gray-300">→</span>}
-                            {task.end_date && (
-                              <span className={`text-xs ${new Date(task.end_date) < new Date() && !task.completed ? 'text-red-500' : 'text-gray-400'}`}>
-                                {new Date(task.end_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-                              </span>
-                            )}
-                            {task.start_date && task.end_date && (
-                              <span className="text-xs text-gray-300">
-                                ({Math.ceil((new Date(task.end_date) - new Date(task.start_date)) / (1000 * 60 * 60 * 24))} dias)
-                              </span>
-                            )}
-                            <span className="text-xs text-gray-300">por {task.author.name}</span>
+                    {editingTaskId === task.id ? (
+                      <div className="flex flex-col gap-2">
+                        <input
+                          value={editTaskForm.title || ''}
+                          onChange={e => setEditTaskForm({ ...editTaskForm, title: e.target.value })}
+                          placeholder="Título *"
+                          className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                        />
+                        <textarea
+                          value={editTaskForm.description || ''}
+                          onChange={e => setEditTaskForm({ ...editTaskForm, description: e.target.value })}
+                          rows={2}
+                          placeholder="Descrição (opcional)"
+                          className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
+                        />
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="flex flex-col gap-1">
+                            <p className="text-xs text-gray-400">Responsável</p>
+                            <select
+                              value={editTaskForm.assignee_id || ''}
+                              onChange={e => setEditTaskForm({ ...editTaskForm, assignee_id: e.target.value })}
+                              className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                            >
+                              <option value="">Nenhum</option>
+                              {project?.requesters?.filter(r => r.type === 'RESPONSAVEL' && r.user_id).map(r => (
+                                <option key={r.user_id} value={r.user_id}>{r.user?.name || r.manual_name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <p className="text-xs text-gray-400">Data de início</p>
+                            <input type="date" value={editTaskForm.start_date || ''}
+                              onChange={e => setEditTaskForm({ ...editTaskForm, start_date: e.target.value })}
+                              className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <p className="text-xs text-gray-400">Data de conclusão</p>
+                            <input type="date" value={editTaskForm.end_date || ''}
+                              onChange={e => setEditTaskForm({ ...editTaskForm, end_date: e.target.value })}
+                              className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                            />
                           </div>
                         </div>
+                        <div className="flex gap-2">
+                          <button onClick={handleUpdateTask}
+                            className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800">
+                            Salvar
+                          </button>
+                          <button onClick={() => { setEditingTaskId(null); setEditTaskForm({}) }}
+                            className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
+                            Cancelar
+                          </button>
+                        </div>
                       </div>
-                      {canManageTasks && (
-                        <button onClick={() => handleDeleteTask(task.id)} className="hover:opacity-70 transition-opacity shrink-0">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
-                          </svg>
-                        </button>
-                      )}
-                    </div>
+                    ) : (
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-3 flex-1">
+                          <button
+                            onClick={() => handleCompleteTask(task.id)}
+                            disabled={task.author_id !== user?.id}
+                            className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                              task.completed ? 'bg-teal-500 border-teal-500' : 'border-gray-300 hover:border-primary-400'
+                            } disabled:opacity-40 disabled:cursor-not-allowed`}
+                          >
+                            {task.completed && (
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                            )}
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-medium ${task.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                              {task.title}
+                            </p>
+                            {task.description && (
+                              <p className="text-xs text-gray-400 mt-0.5 whitespace-pre-wrap">{task.description}</p>
+                            )}
+                            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                              {task.assignee && <span className="text-xs text-gray-400">→ {task.assignee.name}</span>}
+                              {task.phase && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{task.phase}</span>}
+                              {task.start_date && (
+                                <span className="text-xs text-gray-400">
+                                  {new Date(task.start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                                </span>
+                              )}
+                              {task.start_date && task.end_date && <span className="text-xs text-gray-300">→</span>}
+                              {task.end_date && (
+                                <span className={`text-xs ${new Date(task.end_date) < new Date() && !task.completed ? 'text-red-500' : 'text-gray-400'}`}>
+                                  {new Date(task.end_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                                </span>
+                              )}
+                              {task.start_date && task.end_date && (
+                                <span className="text-xs text-gray-300">
+                                  ({Math.ceil((new Date(task.end_date) - new Date(task.start_date)) / (1000 * 60 * 60 * 24))} dias)
+                                </span>
+                              )}
+                              <span className="text-xs text-gray-300">por {task.author.name}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isResponsible && task.assignee_id === user?.id && !task.completed && (
+                            <button
+                              onClick={() => {
+                                setEditingTaskId(task.id)
+                                setEditTaskForm({
+                                  title: task.title,
+                                  description: task.description || '',
+                                  assignee_id: task.assignee_id || '',
+                                  start_date: task.start_date ? new Date(task.start_date).toISOString().split('T')[0] : '',
+                                  end_date: task.end_date ? new Date(task.end_date).toISOString().split('T')[0] : '',
+                                })
+                              }}
+                              className="hover:opacity-70 transition-opacity" title="Editar">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                              </svg>
+                            </button>
+                          )}
+                          {canManageTasks && (
+                            <button onClick={() => handleDeleteTask(task.id)} className="hover:opacity-70 transition-opacity">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
