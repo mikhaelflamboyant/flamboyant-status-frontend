@@ -859,7 +859,10 @@ export default function ProjectDetail() {
 
           <PhaseStrip currentPhase={project.current_phase} />
 
-          {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) && (
+          {(
+            ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) ||
+            (isFromTI && isResponsible)
+          ) && (
             <ControlPanel
               project={project}
               scopeItems={scopeItems}
