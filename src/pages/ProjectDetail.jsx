@@ -1610,7 +1610,7 @@ export default function ProjectDetail() {
           <div className="bg-white border border-gray-100 rounded-xl p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-4">
-                <h2 className="text-sm font-medium text-gray-900">Requisitos de software</h2>
+                <h2 className="text-sm font-medium text-gray-900">Requisitos do projeto</h2>
                 <div className="flex gap-1">
                   <button onClick={() => setReqTab('conteudo')}
                     className={`text-xs px-3 py-1 rounded-lg transition-colors ${reqTab === 'conteudo' ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-600'}`}>
