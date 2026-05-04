@@ -17,6 +17,7 @@ import EditProject from './pages/EditProject'
 import Management from './pages/Management'
 import GoLiveProjects from './pages/GoLiveProjects'
 import FreshServiceRequests from './pages/FreshServiceRequests'
+import BacklogProjects from './pages/BacklogProjects'
 
 function App() {
   return (
@@ -97,6 +98,12 @@ function App() {
         <Route path="/freshservice" element={
           <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'COORDENADOR', 'GERENTE', 'SUPERINTENDENTE']}>
             <FreshServiceRequests />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/projetos/backlog" element={
+          <ProtectedRoute>
+            <BacklogProjects />
           </ProtectedRoute>
         } />
 
