@@ -44,15 +44,15 @@ export default function FreshServiceRequests() {
   }, [])
 
   const handleApprove = async (id) => {
-    if (!form.area || !form.business_unit || !form.priority) {
-      alert('Preencha área, unidade de negócio e prioridade.')
+    if (!form.area || !form.business_unit || !form.level) {
+      alert('Preencha área, unidade de negócio e nível do projeto.')
       return
     }
     setSaving(true)
     try {
       await projectsService.approveFreshservice(id, form)
       setApprovingId(null)
-      setForm({ area: '', business_unit: '', priority: 3, go_live: '', go_live_undefined: false, responsible_id: '', execution_type: 'INTERNA' })
+      setForm({ area: '', business_unit: '', level: '', go_live: '', go_live_undefined: false, responsible_id: '', execution_type: 'INTERNA' })
       fetchRequests()
     } catch (err) {
       alert('Erro ao aprovar.')
@@ -169,9 +169,13 @@ export default function FreshServiceRequests() {
                       </select>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400 mb-1">Prioridade <span className="text-red-400">*</span></p>
-                      <select value={form.priority} onChange={e => setForm(f => ({...f, priority: parseInt(e.target.value)}))} className={selectCls}>
-                        {[1,2,3,4,5].map(p => <option key={p} value={p}>Prioridade {p}</option>)}
+                      <p className="text-xs text-gray-400 mb-1">Nível do projeto <span className="text-red-400">*</span></p>
+                      <select value={form.level} onChange={e => setForm(f => ({...f, level: e.target.value}))} className={selectCls}>
+                        <option value="">Selecionar</option>
+                        <option value="A">A - Estratégico</option>
+                        <option value="B">B - Performance (ROI)</option>
+                        <option value="C">C - Compliance</option>
+                        <option value="D">D - Inovação e transformação digital</option>
                       </select>
                     </div>
                     <div>
