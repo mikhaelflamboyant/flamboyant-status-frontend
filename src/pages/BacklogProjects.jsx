@@ -73,6 +73,14 @@ export default function BacklogProjects() {
               Projetos aprovados aguardando atribuição de responsável
             </p>
           </div>
+          {canApprove && (
+            <button
+              onClick={() => navigate('/freshservice')}
+              className="text-xs font-medium px-4 h-8 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Solicitações FreshService
+            </button>
+          )}
         </div>
 
         {loading && <p className="text-sm text-gray-400 text-center py-16">Carregando...</p>}
