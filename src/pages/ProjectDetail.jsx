@@ -43,12 +43,6 @@ function ControlPanel({ project, scopeItems = [], onSave }) {
 
   const stageComplete = (stageKey) => {
     if (isLegacy) return true
-    const stages = ['PLANEJAMENTO', 'EXECUCAO', 'GO_LIVE', 'SUPORTE']
-    const allStagesHaveApproved = stages.every(s =>
-      scopeItems.some(i => i.stage === s && i.status === 'APROVADO')
-    )
-
-    if (!allStagesHaveApproved) return false
 
     const hasPendingActions = scopeItems.some(s => s.pending_action)
     if (hasPendingActions) return false
