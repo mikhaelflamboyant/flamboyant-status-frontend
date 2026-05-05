@@ -22,8 +22,9 @@ export default function FreshServiceRequests() {
   const [users, setUsers] = useState([])
   const [approvingId, setApprovingId] = useState(null)
   const [form, setForm] = useState({
-    area: '', business_unit: '', priority: 3, go_live: '',
+    area: '', business_unit: '', level: '', go_live: '',
     go_live_undefined: false, responsible_id: '', execution_type: 'INTERNA',
+    requester_name: '', description: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -127,7 +128,14 @@ export default function FreshServiceRequests() {
                   {approvingId !== req.id && (
                     <>
                       <button
-                        onClick={() => setApprovingId(req.id)}
+                        onClick={() => {
+                          setApprovingId(req.id)
+                          setForm(f => ({
+                            ...f,
+                            requester_name: req.requester_name || req.requesters?.find(r => r.type === 'SOLICITANTE')?.user?.name || req.requesters?.find(r => r.type === 'SOLICITANTE')?.manual_name || '',
+                            description: req.description || '',
+                          }))
+                        }}
                         className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors font-medium"
                       >
                         Aprovar
@@ -194,6 +202,27 @@ export default function FreshServiceRequests() {
                         <option value="">Selecionar</option>
                         {users.map(u => <option key={u.id} value={u.id}>{u.name} — {u.area}</option>)}
                       </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">Nome do solicitante</p>
+                      <input
+                        value={form.requester_name}
+                        onChange={e => setForm(f => ({...f, requester_name: e.target.value}))}
+                        placeholder="Nome do solicitante"
+                        className={selectCls}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">Descrição do projeto</p>
+                      <textarea
+                        value={form.description}
+                        onChange={e => setForm(f => ({...f, description: e.target.value}))}
+                        rows={2}
+                        placeholder="Descreva o projeto..."
+                        className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
+                      />
                     </div>
                   </div>
                   <div className="flex gap-2">
