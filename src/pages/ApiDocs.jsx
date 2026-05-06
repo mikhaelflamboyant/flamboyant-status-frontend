@@ -3,7 +3,7 @@ import { Navbar } from '../components/layout/Navbar'
 import { apitokenService } from '../services/apitoken.service'
 import { useAuth } from '../hooks/useAuth'
 
-const BASE_URL = 'http://10.0.0.93:4000'
+const BASE_URL = 'https://statusreport.flamboyant.com.br:4443/api'
 
 const CodeBlock = ({ code }) => (
   <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
@@ -311,7 +311,7 @@ export default function ApiDocs() {
                 O <strong>Status Report</strong> é um sistema interno do Grupo Flamboyant desenvolvido pela equipe de Tecnologia da Informação para gerenciar e acompanhar projetos de TI. Ele centraliza informações sobre andamento, prazos, riscos e requisitos de cada projeto, permitindo que diferentes perfis da organização acompanhem o desenvolvimento de forma transparente.
               </p>
               <p className="text-xs text-gray-500 leading-relaxed">
-                O sistema foi desenvolvido com backend em <strong>Node.js + Express + Prisma</strong>, banco de dados <strong>PostgreSQL</strong> hospedado internamente no servidor 10.0.0.93, e frontend em <strong>React + Vite + Tailwind CSS</strong>.
+                O sistema foi desenvolvido com backend em <strong>Node.js + Express + Prisma</strong>, banco de dados <strong>PostgreSQL</strong> hospedado internamente no servidor 10.0.0.96, e frontend em <strong>React + Vite + Tailwind CSS</strong>.
               </p>
             </Section>
 
@@ -325,7 +325,7 @@ export default function ApiDocs() {
                   { role: 'Gerente', color: 'bg-primary-50 text-primary-800', desc: 'Gerentes de TI veem todos os projetos de todas as áreas e acessam as abas de Usuários e API. Gerentes de outras áreas veem apenas projetos da sua área.' },
                   { role: 'Coordenador', color: 'bg-blue-50 text-blue-800', desc: 'Coordenadores de TI veem todos os projetos de todas as áreas e acessam as abas de Usuários e API. Coordenadores de outras áreas veem apenas projetos da sua área.' },
                   { role: 'Supervisor', color: 'bg-teal-50 text-teal-800', desc: 'Vê projetos da sua área. Não acessa abas de API ou Usuários.' },
-                  { role: 'Analista', color: 'bg-gray-100 text-gray-600', desc: 'Analistas de TI veem apenas projetos nos quais estão vinculados como solicitante, responsável ou outro envolvido. Analistas de outras áreas veem apenas projetos vinculados à sua área.' },
+                  { role: 'Analista', color: 'bg-gray-100 text-gray-600', desc: 'Analistas de TI veem apenas projetos nos quais estão vinculados como solicitante ou responsável. Analistas de outras áreas veem apenas projetos vinculados à sua área.' },
                 ].map(p => (
                   <div key={p.role} className="flex items-start gap-3">
                     <span className={`text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${p.color}`}>{p.role}</span>
@@ -348,7 +348,7 @@ export default function ApiDocs() {
                   { label: 'Fases e cronograma', desc: 'A mudança de fase exige cronograma aprovado por um gestor com todas as 4 etapas preenchidas (Planejamento, Execução, Go-live, Suporte). Desenvolvimento, Testes e Validação exigem Planejamento concluído; Entregue exige Execução concluída; Suporte exige Go-live concluído. Atividades só podem ser marcadas como concluídas após aprovação do gestor.' },
                   { label: 'Níveis de projeto', desc: 'Projetos podem ser classificados por nível estratégico: A - Estratégico, B - Performance, C - Compliance, D - Inovação. A classificação é opcional e visível no painel de gestão.' },
                   { label: 'Ciclo de vida', desc: 'Projetos marcados como "Entregue" são movidos para a aba Projetos em go-live e permanecem ativos. Após 30 dias em go-live, o projeto é automaticamente movido para a fase Suporte pós go-live e arquivado em Projetos finalizados.' },
-                  { label: 'Ciclo de vida', desc: 'Projetos marcados como "Entregue" são movidos para a aba Projetos em go-live e permanecem ativos. Após 30 dias em go-live, o projeto é automaticamente movido para a fase Suporte pós go-live e arquivado em Projetos finalizados.' },
+                  { label: 'Backlog', desc: 'Projetos criados via FreshService entram no Backlog com status de solicitação pendente. Gerente, Coordenador, Analista Master e Analista Testador podem aprovar ou rejeitar a solicitação. Após aprovação, o projeto aguarda atribuição de um responsável. Ao vincular um responsável, o projeto entra em Projetos ativos na fase Recebida.' }
                 ].map(r => (
                   <div key={r.label} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
                     <span className="text-xs font-medium text-gray-700 w-40 shrink-0">{r.label}</span>
@@ -390,7 +390,7 @@ export default function ApiDocs() {
               </div>
             </Section>
 
-            <Section title="Requisitos de software">
+            <Section title="Requisitos do projeto">
               <p className="text-xs text-gray-500 leading-relaxed mb-3">Os requisitos ficam dentro do detalhe de cada projeto e são visíveis apenas para usuários da Tecnologia da Informação.</p>
               <div className="flex flex-col gap-2">
                 {[
@@ -409,8 +409,8 @@ export default function ApiDocs() {
               <div className="flex flex-col gap-2">
                 {[
                   { label: 'Windows AD (LDAP)', desc: 'Login com conta corporativa do Windows AD (@grupoflamboyant.com.br). Usuários do grupo "projetos" no AD podem entrar diretamente na plataforma.' },
-                  { label: 'FreshService', desc: 'Chamados aprovados no FreshService criam projetos automaticamente via webhook. A integração fica ativa após configuração no painel do FreshService.' },
-                  { label: 'Azure AD (SSO)', desc: 'Login com conta Microsoft (@flamboyant.com.br). Configurado no Entra ID. Pendente de configuração de SSL/HTTPS no servidor para ativação completa.' },
+                  { label: 'FreshService', desc: 'Chamados criados no FreshService chegam automaticamente via webhook como solicitações no Backlog. Gerente, Coordenador, Analista Master e Analista Testador podem aprovar ou rejeitar. Após aprovação e atribuição de responsável, o projeto entra na esteira ativa.' },
+                  { label: 'Azure AD (SSO)', desc: 'Login com conta Microsoft (@flamboyant.com.br). Configurado no Entra ID com SSL/HTTPS ativo.' },
                   { label: 'API pública', desc: 'Endpoints de leitura disponíveis para sistemas externos (Power BI, scripts, etc.) mediante token de acesso gerado nesta página.' },
                 ].map(i => (
                   <div key={i.label} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
@@ -426,7 +426,7 @@ export default function ApiDocs() {
                 {[
                   { label: 'Backend', desc: 'Node.js + Express + Prisma ORM. Roda na porta 4000. Autenticação via JWT com expiração de 7 dias.' },
                   { label: 'Frontend', desc: 'React + Vite + Tailwind CSS v4. Roda na porta 5173 em desenvolvimento.' },
-                  { label: 'Banco de dados', desc: 'PostgreSQL interno hospedado no servidor 10.0.0.93. Gerenciado via Prisma Migrate.' },
+                  { label: 'Banco de dados', desc: 'PostgreSQL interno hospedado no servidor 10.0.0.96. Gerenciado via Prisma Migrate.' },
                   { label: 'Repositórios', desc: 'Backend e frontend em repositórios separados no GitHub da organização Flamboyant.' },
                 ].map(a => (
                   <div key={a.label} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
