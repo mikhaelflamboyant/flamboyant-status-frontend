@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { projectsService } from '../services/projects.service'
 import { useAuth } from '../hooks/useAuth'
+import { PeopleSelector } from '../components/project/PeopleSelector'
+import { CostSelector } from '../components/project/CostSelector'
 import api from '../services/api'
 
 export default function BacklogProjects() {
@@ -14,6 +16,14 @@ export default function BacklogProjects() {
   const [assigningId, setAssigningId] = useState(null)
   const [selectedUserId, setSelectedUserId] = useState('')
   const [saving, setSaving] = useState(false)
+  const [assignForm, setAssignForm] = useState({
+    description: '', execution_type: 'INTERNA',
+    start_date: '', start_date_undefined: false,
+    go_live: '', go_live_undefined: false,
+  })
+  const [responsibles, setResponsibles] = useState([])
+  const [members, setMembers] = useState([])
+  const [costs, setCosts] = useState([])
 
   const canAssignOthers = ['GERENTE', 'COORDENADOR', 'ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
   const canApprove = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
@@ -38,13 +48,44 @@ export default function BacklogProjects() {
     }
   }, [])
 
-  const handleAssign = async (projectId, userId) => {
+  const handleAssign = async (projectId) => {
+    if (responsibles.length === 0) {
+      alert('Adicione pelo menos um responsável.')
+      return
+    }
+    if (!assignForm.description) {
+      alert('Preencha a descrição do projeto.')
+      return
+    }
+    if (assignForm.execution_type === 'FORNECEDOR_EXTERNO' && costs.length === 0) {
+      alert('Projetos com fornecedor externo precisam ter pelo menos um custo.')
+      return
+    }
     setSaving(true)
     try {
-      await projectsService.assignResponsible(projectId, userId)
+      await projectsService.assignResponsible(projectId, {
+        user_id: responsibles.find(r => !String(r.user_id).startsWith('manual_'))?.user_id || null,
+        responsible_name: responsibles.find(r => String(r.user_id).startsWith('manual_'))?.name || null,
+        responsible_area: responsibles.find(r => String(r.user_id).startsWith('manual_'))?.area || null,
+        description: assignForm.description,
+        execution_type: assignForm.execution_type,
+        start_date: assignForm.start_date_undefined ? null : (assignForm.start_date || null),
+        go_live: assignForm.go_live_undefined ? null : (assignForm.go_live || null),
+        go_live_undefined: assignForm.go_live_undefined,
+        member_ids: members.filter(m => !String(m.user_id).startsWith('manual_')).map(m => m.user_id),
+        member_names: members.filter(m => String(m.user_id).startsWith('manual_')).map(m => ({ name: m.name, area: m.area })),
+        costs: costs.map(c => ({
+          name: c.name,
+          budget_planned: parseFloat(String(c.budget_planned).replace(',', '.')),
+          budget_actual: c.budget_actual ? parseFloat(String(c.budget_actual).replace(',', '.')) : null,
+        })),
+      })
       fetchProjects()
       setAssigningId(null)
-      setSelectedUserId('')
+      setResponsibles([])
+      setMembers([])
+      setCosts([])
+      setAssignForm({ description: '', execution_type: 'INTERNA', start_date: '', start_date_undefined: false, go_live: '', go_live_undefined: false })
     } catch (err) {
       alert(err.response?.data?.error || 'Erro ao atribuir responsável.')
     } finally {
@@ -122,7 +163,15 @@ export default function BacklogProjects() {
                       <button
                         onClick={() => {
                           setAssigningId(project.id)
-                          setSelectedUserId(canAssignOthers ? '' : user.id)
+                          setAssignForm(f => ({
+                            ...f,
+                            description: project.description || '',
+                            execution_type: project.execution_type || 'INTERNA',
+                            start_date: project.start_date ? new Date(project.start_date).toISOString().split('T')[0] : '',
+                            start_date_undefined: !project.start_date,
+                            go_live: project.go_live ? new Date(project.go_live).toISOString().split('T')[0] : '',
+                            go_live_undefined: !project.go_live,
+                          }))
                         }}
                         className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors font-medium"
                       >
@@ -142,39 +191,110 @@ export default function BacklogProjects() {
               </div>
 
               {assigningId === project.id && (
-                <div className="border-t border-gray-100 pt-4 mt-3 flex items-end gap-3">
-                  {canAssignOthers ? (
-                    <div className="flex flex-col gap-1 flex-1 max-w-xs">
-                      <p className="text-xs text-gray-400">Responsável</p>
+                <div className="border-t border-gray-100 pt-4 mt-3 flex flex-col gap-3">
+                  <p className="text-xs font-medium text-gray-600">Preencha as informações para vincular</p>
+
+                  <PeopleSelector
+                    label="Responsável *"
+                    users={users}
+                    selected={responsibles}
+                    onChange={setResponsibles}
+                    buttonLabel="+ Adicionar responsável"
+                    excluded={members}
+                  />
+
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400 mb-1">Descrição <span className="text-red-400">*</span></p>
+                    <textarea
+                      value={assignForm.description}
+                      onChange={e => setAssignForm(f => ({...f, description: e.target.value}))}
+                      rows={3}
+                      placeholder="Descreva o contexto, escopo e objetivos do projeto..."
+                      className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs text-gray-400">Tipo de execução <span className="text-red-400">*</span></p>
                       <select
-                        value={selectedUserId}
-                        onChange={e => setSelectedUserId(e.target.value)}
+                        value={assignForm.execution_type}
+                        onChange={e => setAssignForm(f => ({...f, execution_type: e.target.value}))}
                         className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                       >
-                        <option value="">Selecionar</option>
-                        {users.map(u => (
-                          <option key={u.id} value={u.id}>{u.name} — {u.area}</option>
-                        ))}
+                        <option value="INTERNA">Interna</option>
+                        <option value="FORNECEDOR_EXTERNO">Fornecedor externo</option>
                       </select>
                     </div>
-                  ) : (
-                    <p className="text-xs text-gray-500">
-                      Você será atribuído como responsável por este projeto.
-                    </p>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs text-gray-400">Data de início</p>
+                      {!assignForm.start_date_undefined && (
+                        <input type="date" value={assignForm.start_date}
+                          onChange={e => setAssignForm(f => ({...f, start_date: e.target.value}))}
+                          className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                        />
+                      )}
+                      <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                        <input type="checkbox" checked={assignForm.start_date_undefined}
+                          onChange={e => setAssignForm(f => ({...f, start_date_undefined: e.target.checked, start_date: ''}))}
+                          className="w-3 h-3 accent-primary-600"
+                        />
+                        <span className="text-xs text-gray-400">Não definida</span>
+                      </label>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs text-gray-400">Go-live</p>
+                      {!assignForm.go_live_undefined && (
+                        <input type="date" value={assignForm.go_live}
+                          onChange={e => setAssignForm(f => ({...f, go_live: e.target.value}))}
+                          className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                        />
+                      )}
+                      <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                        <input type="checkbox" checked={assignForm.go_live_undefined}
+                          onChange={e => setAssignForm(f => ({...f, go_live_undefined: e.target.checked, go_live: ''}))}
+                          className="w-3 h-3 accent-primary-600"
+                        />
+                        <span className="text-xs text-gray-400">Sem previsão</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {assignForm.execution_type === 'FORNECEDOR_EXTERNO' && (
+                    <CostSelector costs={costs} onChange={setCosts} />
                   )}
-                  <button
-                    onClick={() => handleAssign(project.id, canAssignOthers ? selectedUserId : user.id)}
-                    disabled={saving || (canAssignOthers && !selectedUserId)}
-                    className="text-xs bg-primary-600 text-white px-4 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50 font-medium"
-                  >
-                    {saving ? 'Salvando...' : 'Confirmar'}
-                  </button>
-                  <button
-                    onClick={() => { setAssigningId(null); setSelectedUserId('') }}
-                    className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5"
-                  >
-                    Cancelar
-                  </button>
+
+                  <PeopleSelector
+                    label="Outros envolvidos"
+                    users={users}
+                    selected={members}
+                    onChange={setMembers}
+                    buttonLabel="+ Adicionar envolvido"
+                    allowEmptyStart
+                    excluded={responsibles}
+                  />
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleAssign(project.id)}
+                      disabled={saving}
+                      className="text-xs bg-primary-600 text-white px-4 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50 font-medium"
+                    >
+                      {saving ? 'Salvando...' : 'Confirmar'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAssigningId(null)
+                        setResponsibles([])
+                        setMembers([])
+                        setCosts([])
+                        setAssignForm({ description: '', execution_type: 'INTERNA', start_date: '', start_date_undefined: false, go_live: '', go_live_undefined: false })
+                      }}
+                      className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

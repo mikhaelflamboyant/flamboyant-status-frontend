@@ -5,6 +5,7 @@ import { projectsService } from '../services/projects.service'
 import { useAuth } from '../hooks/useAuth'
 import { PeopleSelector } from '../components/project/PeopleSelector'
 import { LevelSelector } from '../components/project/LevelSelector'
+import { CostSelector } from '../components/project/CostSelector'
 import api from '../services/api'
 
 const AREAS = [
@@ -24,10 +25,12 @@ export default function FreshServiceRequests() {
   const [users, setUsers] = useState([])
   const [requesters, setRequesters] = useState([])
   const [approvingId, setApprovingId] = useState(null)
+  const [members, setMembers] = useState([])
+  const [costs, setCosts] = useState([])
   const [form, setForm] = useState({
-    area: '', business_unit: '', level: '', go_live: '',
-    go_live_undefined: false, responsible_id: '', execution_type: 'INTERNA',
-    requester_name: '', description: '',
+    title: '', area: '', business_unit: '', level: '', go_live: '',
+    go_live_undefined: false, start_date: '', start_date_undefined: false,
+    execution_type: 'INTERNA', description: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -48,8 +51,8 @@ export default function FreshServiceRequests() {
   }, [])
 
   const handleApprove = async (id) => {
-    if (!form.area || !form.business_unit || !form.level) {
-      alert('Preencha área, unidade de negócio e nível do projeto.')
+    if (!form.title || !form.business_unit || !form.level) {
+      alert('Preencha título, unidade de negócio e nível do projeto.')
       return
     }
     setSaving(true)
@@ -58,10 +61,19 @@ export default function FreshServiceRequests() {
         ...form,
         requester_ids: requesters.filter(r => !String(r.user_id).startsWith('manual_')).map(r => r.user_id),
         requester_names: requesters.filter(r => String(r.user_id).startsWith('manual_')).map(r => ({ name: r.name, area: r.area })),
+        member_ids: members.filter(m => !String(m.user_id).startsWith('manual_')).map(m => m.user_id),
+        member_names: members.filter(m => String(m.user_id).startsWith('manual_')).map(m => ({ name: m.name, area: m.area })),
+        costs: costs.map(c => ({
+          name: c.name,
+          budget_planned: parseFloat(String(c.budget_planned).replace(',', '.')),
+          budget_actual: c.budget_actual ? parseFloat(String(c.budget_actual).replace(',', '.')) : null,
+        })),
       })
       setApprovingId(null)
       setRequesters([])
-      setForm({ area: '', business_unit: '', level: '', go_live: '', go_live_undefined: false, responsible_id: '', execution_type: 'INTERNA', description: '' })
+      setMembers([])
+      setCosts([])
+      setForm({ title: '', area: '', business_unit: '', level: '', go_live: '', go_live_undefined: false, start_date: '', start_date_undefined: false, execution_type: 'INTERNA', description: '' })
       fetchRequests()
     } catch (err) {
       alert('Erro ao aprovar.')
@@ -140,7 +152,7 @@ export default function FreshServiceRequests() {
                           setApprovingId(req.id)
                           setForm(f => ({
                             ...f,
-                            requester_name: req.requester_name || req.requesters?.find(r => r.type === 'SOLICITANTE')?.user?.name || req.requesters?.find(r => r.type === 'SOLICITANTE')?.manual_name || '',
+                            title: req.title || '',
                             description: req.description || '',
                           }))
                         }}
@@ -162,14 +174,16 @@ export default function FreshServiceRequests() {
               {approvingId === req.id && (
                 <div className="border-t border-gray-100 pt-4 mt-2">
                   <p className="text-xs font-medium text-gray-600 mb-3">Preencha as informações para aprovar</p>
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-400 mb-1">Título do projeto <span className="text-red-400">*</span></p>
+                    <input
+                      value={form.title}
+                      onChange={e => setForm(f => ({...f, title: e.target.value}))}
+                      placeholder="Título do projeto"
+                      className={selectCls}
+                    />
+                  </div>
                   <div className="grid grid-cols-3 gap-3 mb-3">
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Área <span className="text-red-400">*</span></p>
-                      <select value={form.area} onChange={e => setForm(f => ({...f, area: e.target.value}))} className={selectCls}>
-                        <option value="">Selecionar</option>
-                        {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
-                      </select>
-                    </div>
                     <div>
                       <p className="text-xs text-gray-400 mb-1">Unidade de negócio <span className="text-red-400">*</span></p>
                       <select value={form.business_unit} onChange={e => setForm(f => ({...f, business_unit: e.target.value}))} className={selectCls}>
@@ -195,34 +209,48 @@ export default function FreshServiceRequests() {
                       </select>
                     </div>
                     <div>
+                      <p className="text-xs text-gray-400 mb-1">Data de início</p>
+                      {!form.start_date_undefined && (
+                        <input type="date" value={form.start_date || ''} onChange={e => setForm(f => ({...f, start_date: e.target.value}))} className={selectCls} />
+                      )}
+                      <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                        <input type="checkbox" checked={form.start_date_undefined || false}
+                          onChange={e => setForm(f => ({...f, start_date_undefined: e.target.checked, start_date: ''}))}
+                          className="w-3 h-3 accent-primary-600" />
+                        <span className="text-xs text-gray-400">Não definida</span>
+                      </label>
+                    </div>
+                    <div>
                       <p className="text-xs text-gray-400 mb-1">Go-live</p>
                       {!form.go_live_undefined && (
                         <input type="date" value={form.go_live} onChange={e => setForm(f => ({...f, go_live: e.target.value}))} className={selectCls} />
                       )}
                       <label className="flex items-center gap-2 mt-1 cursor-pointer">
-                        <input type="checkbox" checked={form.go_live_undefined} onChange={e => setForm(f => ({...f, go_live_undefined: e.target.checked, go_live: ''}))} className="w-3 h-3 accent-primary-600" />
+                        <input type="checkbox" checked={form.go_live_undefined}
+                          onChange={e => setForm(f => ({...f, go_live_undefined: e.target.checked, go_live: ''}))}
+                          className="w-3 h-3 accent-primary-600" />
                         <span className="text-xs text-gray-400">Sem previsão</span>
                       </label>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Responsável</p>
-                      <select value={form.responsible_id} onChange={e => setForm(f => ({...f, responsible_id: e.target.value}))} className={selectCls}>
-                        <option value="">Selecionar</option>
-                        {users.map(u => <option key={u.id} value={u.id}>{u.name} — {u.area}</option>)}
-                      </select>
-                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div className="col-span-3">
-                      <PeopleSelector
-                        label="Solicitante(s)"
-                        users={users}
-                        selected={requesters}
-                        onChange={setRequesters}
-                        buttonLabel="+ Adicionar solicitante"
-                        allowEmptyStart
-                      />
-                    </div>
+                  <div className="flex flex-col gap-3 mb-3">
+                    <PeopleSelector
+                      label="Solicitante(s)"
+                      users={users}
+                      selected={requesters}
+                      onChange={setRequesters}
+                      buttonLabel="+ Adicionar solicitante"
+                      allowEmptyStart
+                    />
+                    <PeopleSelector
+                      label="Outros envolvidos"
+                      users={users}
+                      selected={members}
+                      onChange={setMembers}
+                      buttonLabel="+ Adicionar envolvido"
+                      allowEmptyStart
+                      excluded={requesters}
+                    />
                     <div>
                       <p className="text-xs text-gray-400 mb-1">Descrição do projeto</p>
                       <textarea
@@ -233,6 +261,9 @@ export default function FreshServiceRequests() {
                         className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
                       />
                     </div>
+                    {form.execution_type === 'FORNECEDOR_EXTERNO' && (
+                      <CostSelector costs={costs} onChange={setCosts} />
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button
