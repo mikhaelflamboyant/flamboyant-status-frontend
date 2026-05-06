@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { projectsService } from '../services/projects.service'
 import { useAuth } from '../hooks/useAuth'
+import { PeopleSelector } from '../components/project/PeopleSelector'
+import { LevelSelector } from '../components/project/LevelSelector'
 import api from '../services/api'
 
 const AREAS = [
@@ -20,6 +22,7 @@ export default function FreshServiceRequests() {
   const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState([])
+  const [requesters, setRequesters] = useState([])
   const [approvingId, setApprovingId] = useState(null)
   const [form, setForm] = useState({
     area: '', business_unit: '', level: '', go_live: '',
@@ -51,9 +54,14 @@ export default function FreshServiceRequests() {
     }
     setSaving(true)
     try {
-      await projectsService.approveFreshservice(id, form)
+      await projectsService.approveFreshservice(id, {
+        ...form,
+        requester_ids: requesters.filter(r => !String(r.user_id).startsWith('manual_')).map(r => r.user_id),
+        requester_names: requesters.filter(r => String(r.user_id).startsWith('manual_')).map(r => ({ name: r.name, area: r.area })),
+      })
       setApprovingId(null)
-      setForm({ area: '', business_unit: '', level: '', go_live: '', go_live_undefined: false, responsible_id: '', execution_type: 'INTERNA' })
+      setRequesters([])
+      setForm({ area: '', business_unit: '', level: '', go_live: '', go_live_undefined: false, responsible_id: '', execution_type: 'INTERNA', description: '' })
       fetchRequests()
     } catch (err) {
       alert('Erro ao aprovar.')
@@ -205,13 +213,14 @@ export default function FreshServiceRequests() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Nome do solicitante</p>
-                      <input
-                        value={form.requester_name}
-                        onChange={e => setForm(f => ({...f, requester_name: e.target.value}))}
-                        placeholder="Nome do solicitante"
-                        className={selectCls}
+                    <div className="col-span-3">
+                      <PeopleSelector
+                        label="Solicitante(s)"
+                        users={users}
+                        selected={requesters}
+                        onChange={setRequesters}
+                        buttonLabel="+ Adicionar solicitante"
+                        allowEmptyStart
                       />
                     </div>
                     <div>
