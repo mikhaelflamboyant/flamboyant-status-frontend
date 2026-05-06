@@ -50,6 +50,7 @@ const selectCls = 'h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white t
 export function ProjectFilters({ filters, onChange, hidePhase }) {
   const { user } = useAuth()
   const [users, setUsers] = useState([])
+  const [requesters, setRequesters] = useState([])
 
   const canSeeAllAreas = ['SUPERINTENDENTE', 'ANALISTA_MASTER'].includes(user?.role)
   const isManagerLevel = ['GERENTE', 'COORDENADOR'].includes(user?.role)
@@ -73,6 +74,24 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
       fetchUsers()
     }
   }, [filters.area, user])
+
+  useEffect(() => {
+    const fetchRequesters = async () => {
+      try {
+        const response = await api.get('/projects')
+        const allRequesters = response.data.flatMap(p =>
+          p.requesters?.filter(r => r.type === 'SOLICITANTE' && r.user_id) || []
+        )
+        const unique = Array.from(
+          new Map(allRequesters.map(r => [r.user_id, { id: r.user_id, name: r.user?.name || r.manual_name }])).values()
+        ).sort((a, b) => a.name.localeCompare(b.name))
+        setRequesters(unique)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    fetchRequesters()
+  }, [])
 
   const showUserFilter = canSeeAllAreas || isManagerLevel
 
@@ -130,16 +149,31 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
       </select>
 
       {showUserFilter && (
-        <select
-          value={filters.user_id}
-          onChange={e => onChange({ ...filters, user_id: e.target.value })}
-          className={selectCls}
-        >
-          <option value="">Todos os usuários</option>
-          {users.map(u => (
-            <option key={u.id} value={u.id}>{u.name}</option>
-          ))}
-        </select>
+        <>
+          <select
+            value={filters.responsible_id || ''}
+            onChange={e => onChange({ ...filters, responsible_id: e.target.value })}
+            className={selectCls}
+          >
+            <option value="">Todos os responsáveis</option>
+            {users
+              .filter(u => u.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(u.role))
+              .map(u => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+          </select>
+
+          <select
+            value={filters.requester_id || ''}
+            onChange={e => onChange({ ...filters, requester_id: e.target.value })}
+            className={selectCls}
+          >
+            <option value="">Todos os solicitantes</option>
+            {requesters.map(u => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ))}
+          </select>
+        </>
       )}
 
       <select

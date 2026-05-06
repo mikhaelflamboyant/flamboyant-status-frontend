@@ -29,6 +29,8 @@ export function useProjects() {
     priority: savedFilters?.priority || '',
     user_id: savedFilters?.user_id || '',
     filtro: initialFiltro || savedFilters?.filtro || '',
+    responsible_id: savedFilters?.responsible_id || '',
+    requester_id: savedFilters?.requester_id || '',
   })
 
   const fetchProjects = async () => {
@@ -80,10 +82,18 @@ export function useProjects() {
         return false
       }
 
-      if (filters.user_id) {
-        const isRequester = project.requesters?.some(r => r.user_id === filters.user_id)
-        const isMember = project.members?.some(m => m.user_id === filters.user_id)
-        if (!isRequester && !isMember) return false
+      if (filters.responsible_id) {
+        const isResponsible = project.requesters?.some(
+          r => r.user_id === filters.responsible_id && r.type === 'RESPONSAVEL'
+        )
+        if (!isResponsible) return false
+      }
+
+      if (filters.requester_id) {
+        const isRequester = project.requesters?.some(
+          r => r.user_id === filters.requester_id && r.type === 'SOLICITANTE'
+        )
+        if (!isRequester) return false
       }
 
       return true
