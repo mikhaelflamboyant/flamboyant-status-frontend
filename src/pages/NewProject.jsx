@@ -296,19 +296,6 @@ export default function NewProject() {
               </div>
             )}
 
-            <div className="flex items-center gap-2 px-1">
-              <input
-                type="checkbox"
-                id="legacy"
-                checked={form.legacy}
-                onChange={e => handleChange('legacy', e.target.checked)}
-                className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
-              />
-              <label htmlFor="legacy" className="text-xs text-gray-500 cursor-pointer">
-                Projeto legado - importação de histórico (isento de cronograma e bloqueio de fases)
-              </label>
-            </div>
-
             <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
               <button
                 type="button"
