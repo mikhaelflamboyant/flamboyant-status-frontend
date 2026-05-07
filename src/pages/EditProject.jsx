@@ -26,7 +26,6 @@ export default function EditProject() {
     go_live: '',
     go_live_undefined: false,
     business_unit: '',
-    legacy: false,
   })
   const [requesters, setRequesters] = useState([])
   const [responsibles, setResponsibles] = useState([])
@@ -52,7 +51,6 @@ export default function EditProject() {
           go_live: p.go_live ? p.go_live.split('T')[0] : '',
           go_live_undefined: !p.go_live,
           business_unit: p.business_unit || '',
-          legacy: p.legacy || false,
         })
         setRequesters(p.requesters
           ?.filter(r => r.type === 'SOLICITANTE')
@@ -343,19 +341,6 @@ export default function EditProject() {
                 <p className="text-xs text-red-500">{error}</p>
               </div>
             )}
-
-            <div className="flex items-center gap-2 px-1">
-              <input
-                type="checkbox"
-                id="legacy-edit"
-                checked={form.legacy}
-                onChange={e => handleChange('legacy', e.target.checked)}
-                className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
-              />
-              <label htmlFor="legacy-edit" className="text-xs text-gray-500 cursor-pointer">
-                Projeto legado — importação de histórico (isento de cronograma e bloqueio de fases)
-              </label>
-            </div>
 
             <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
               <button
