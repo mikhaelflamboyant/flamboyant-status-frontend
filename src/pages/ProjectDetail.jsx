@@ -16,6 +16,7 @@ import { useAuth } from '../hooks/useAuth'
 import { tasksService } from '../services/tasks.service'
 import { scopeService } from '../services/scope.service'
 import { LEVEL_CONFIG } from '../utils/pdfStyles'
+import { LinkifiedText } from '../components/ui/LinkifiedText'
 // import { MarkdownEditor } from '../components/ui/MarkdownEditor'
 // import { MarkdownContent } from '../components/ui/MarkdownContent'
 
@@ -1661,7 +1662,10 @@ export default function ProjectDetail() {
                   <div>
                     {requirement ? (
                       <>
-                        <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{requirement.content}</div>
+                        <LinkifiedText
+                          content={requirement.content}
+                          className="text-sm text-gray-700 leading-relaxed"
+                        />
                         <p className="text-xs text-gray-300 mt-4">
                           Última edição: {new Date(requirement.updated_at).toLocaleDateString('pt-BR')} · {requirement.author?.name}
                         </p>
