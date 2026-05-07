@@ -9,7 +9,7 @@ import { useProjects } from '../hooks/useProjects'
 import { useAuth } from '../hooks/useAuth'
 
 export default function Projects() {
-  const { projects, loading, error, filters, setFilters, metrics, totalProjects, page, setPage, totalPages, refetch } = useProjects()
+  const { projects, allFilteredProjects, loading, error, filters, setFilters, metrics, totalProjects, page, setPage, totalPages, refetch } = useProjects()
   const navigate = useNavigate()
   const { user, canCreateProject } = useAuth()
   const [view, setView] = useState(() => localStorage.getItem('projectsView') || 'list')
@@ -50,7 +50,7 @@ export default function Projects() {
               </div>
             )}
             {isTI && (
-              <PDFExportGeral allProjects={projects} />
+              <PDFExportGeral allProjects={allFilteredProjects} />
             )}
             {canCreateProject() && (
               <button

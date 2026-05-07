@@ -119,6 +119,7 @@ export function useProjects() {
 
   return {
     projects: paginatedProjects,
+    allFilteredProjects: filteredProjects,
     totalProjects: filteredProjects.length,
     loading,
     error,
