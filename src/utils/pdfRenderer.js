@@ -43,7 +43,6 @@ export class PDFRenderer {
 
   async startDocument() {
     this.pageIndex = 0
-    this.logoImageData = await this._loadImage(`${window.location.origin}/logo_fundo_vermelho.png`)
     this._drawHeader()
     this.headerDrawn = true
   }
@@ -63,18 +62,7 @@ export class PDFRenderer {
     const x = PAGE.marginLeft
     const w = PAGE.contentWidth
 
-    if (this.logoImageData) {
-      doc.addImage(this.logoImageData, 'PNG', 0, 0, PAGE.width, 34)
-    } else {
-      doc.setFillColor(...hexToRgb(COLORS.brand))
-      doc.rect(0, 0, PAGE.width, 22, 'F')
-      doc.setFontSize(16)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(...hexToRgb(COLORS.brandLight))
-      doc.text('FLAMBOYANT', x + 4, 14)
-    }
-
-    this.y = 38
+    this.y = PAGE.marginTop
     doc.setDrawColor(...hexToRgb(COLORS.borderLight))
     doc.setLineWidth(0.3)
     doc.line(x, this.y, x + w, this.y)

@@ -50,9 +50,7 @@ export function PDFExportGeral({ allProjects }) {
 
       const renderer = new PDFRenderer()
       const origin = window.location.origin
-
-      renderer.logoImageData = await renderer._loadImage(`${origin}/logo_fundo_vermelho.png`)
-
+      
       await renderer.drawStaticPage(`${origin}/pagina1.png`)
 
       renderer.doc.addPage()
