@@ -1081,7 +1081,7 @@ export default function ProjectDetail() {
                     </select>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <p className="text-xs text-gray-400">Atividade do escopo</p>
+                    <p className="text-xs text-gray-400">Atividade do cronograma</p>
                     <select
                       value={taskForm.scope_item_id || ''}
                       onChange={e => setTaskForm({ ...taskForm, scope_item_id: e.target.value || null })}
