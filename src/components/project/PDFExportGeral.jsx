@@ -91,7 +91,7 @@ export function PDFExportGeral({ allProjects }) {
           const fullProject = fullProjects.find(p => p.id === proj.id)
           if (!fullProject) continue
 
-          const statusUpdates = fullProject.status_updates || []
+          const statusUpdates = fullProject.status_updates?.slice(0, 1) || []
 
           renderer.startNewProject()
           renderer.drawFullProject(fullProject, statusUpdates)

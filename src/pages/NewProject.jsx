@@ -327,7 +327,7 @@ export default function NewProject() {
                   className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
                 />
                 <label htmlFor="save_as_backlog" className="text-xs text-gray-500 cursor-pointer">
-                  Salvar como backlog — projeto sem responsável definido ainda
+                  Salvar como backlog - projeto sem responsável definido ainda
                 </label>
               </div>
             )}
