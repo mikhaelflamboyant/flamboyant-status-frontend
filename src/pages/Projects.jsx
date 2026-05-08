@@ -108,7 +108,7 @@ export default function Projects() {
         {!loading && !error && projects.length > 0 && (
           <>
             {view === 'kanban' && isTI ? (
-              <ProjectKanban projects={projects} onProjectUpdate={refetch} />
+              <ProjectKanban projects={allFilteredProjects} onProjectUpdate={refetch} />
             ) : (
               <>
                 <div className="flex flex-col gap-2.5">

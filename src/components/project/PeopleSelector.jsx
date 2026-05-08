@@ -160,7 +160,7 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
 }
 
 export function PeopleSelector({ label, required = false, users = [], selected = [], onChange, buttonLabel, allowEmptyStart = false, excluded = [] }) {
-  const [rows, setRows] = useState(allowEmptyStart ? [] : [Date.now()])
+  const [rows, setRows] = useState(allowEmptyStart ? [] : (selected.length > 0 ? [] : [Date.now()]))
 
   const handleAdd = (person) => {
     onChange([...selected, person])
