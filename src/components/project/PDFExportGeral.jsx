@@ -15,6 +15,7 @@ export function PDFExportGeral({ allProjects }) {
   const [selectedIds, setSelectedIds] = useState([])
   const [generating, setGenerating] = useState(false)
   const [loadingProjects, setLoadingProjects] = useState(false)
+  const [goLiveProjects, setGoLiveProjects] = useState([])
 
   const toggleProject = (id) => {
     setSelectedIds(prev =>
@@ -22,19 +23,31 @@ export function PDFExportGeral({ allProjects }) {
     )
   }
 
-  const selectAll = () => setSelectedIds(allProjects.map(p => p.id))
+  const selectAll = () => setSelectedIds([...allProjects, ...goLiveProjects].map(p => p.id))
   const deselectAll = () => setSelectedIds([])
 
+  const allCombinedProjects = [...allProjects, ...goLiveProjects].filter(
+    (p, index, self) => self.findIndex(x => x.id === p.id) === index
+  )
+
   const projectsByUnit = BUSINESS_UNITS.reduce((acc, unit) => {
-    const list = allProjects.filter(p =>
+    const list = allCombinedProjects.filter(p =>
       unit === 'Sem unidade' ? !p.business_unit : p.business_unit === unit
     )
     if (list.length > 0) acc[unit] = list
     return acc
   }, {})
 
-  const handleOpen = () => {
-    setSelectedIds(allProjects.map(p => p.id))
+  const handleOpen = async () => {
+    try {
+      const res = await api.get('/projects/go-live')
+      setGoLiveProjects(res.data)
+      const allIds = [...allProjects, ...res.data].map(p => p.id)
+      setSelectedIds(allIds)
+    } catch (err) {
+      console.error(err)
+      setSelectedIds(allProjects.map(p => p.id))
+    }
     setShowModal(true)
   }
 
