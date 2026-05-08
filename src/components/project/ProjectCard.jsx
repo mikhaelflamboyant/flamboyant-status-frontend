@@ -46,9 +46,23 @@ export function ProjectCard({ project }) {
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Farol value={project.traffic_light} hideLabel />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate group-hover:text-primary-700 transition-colors">
-              {project.title}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-medium text-gray-900 truncate group-hover:text-primary-700 transition-colors">
+                {project.title}
+              </p>
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); window.open(`/projetos/${project.id}`, '_blank') }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-gray-400 hover:text-primary-600"
+                title="Abrir em nova aba"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+              </button>
+            </div>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               <span className="text-xs text-gray-400">{project.area}</span>
               <span className="text-gray-200">·</span>

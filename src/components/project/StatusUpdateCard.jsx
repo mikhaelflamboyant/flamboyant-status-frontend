@@ -17,7 +17,7 @@ const EditIcon = () => (
   </svg>
 )
 
-export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk, onUpdateStatus, onDeleteStatus, canEdit }) {
+export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk, onUpdateStatus, onDeleteStatus, canEdit, onDuplicate }) {
   const [showRiskForm, setShowRiskForm] = useState(false)
   const [riskForm, setRiskForm] = useState({ title: '', description: '', mitigation: '' })
   const [loading, setLoading] = useState(false)
@@ -83,6 +83,14 @@ export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk
           </span>
           {canEdit && !editing && (
             <>
+              {onDuplicate && (
+                <button onClick={() => onDuplicate(update)} className="hover:opacity-70 transition-opacity" title="Duplicar status">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+              )}
               <button onClick={() => setEditing(true)} className="hover:opacity-70 transition-opacity" title="Editar">
                 <EditIcon />
               </button>

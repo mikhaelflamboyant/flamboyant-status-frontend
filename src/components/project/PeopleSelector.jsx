@@ -117,6 +117,14 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
                 autoFocus={manualMode}
                 className={selectCls}
               />
+              <button
+                type="button"
+                onClick={handleManualAdd}
+                disabled={!manualName.trim()}
+                className="text-xs text-white bg-primary-600 hover:bg-primary-800 disabled:opacity-40 transition-colors shrink-0 px-3 h-9 rounded-lg font-medium"
+              >
+                Adicionar
+              </button>
               {manualMode && !noUsersFound && (
                 <button
                   type="button"

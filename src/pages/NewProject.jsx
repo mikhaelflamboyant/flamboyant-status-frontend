@@ -8,6 +8,7 @@ import { PeopleSelector } from '../components/project/PeopleSelector'
 import { projectsService } from '../services/projects.service'
 // import { MarkdownEditor } from '../components/ui/MarkdownEditor'
 import api from '../services/api'
+import { useAuth } from '../hooks/useAuth'
 
 export default function NewProject() {
   const navigate = useNavigate()
@@ -17,13 +18,15 @@ export default function NewProject() {
     area: '',
     execution_type: 'INTERNA',
     level: '',
+    complexity: '',
     description: '',
     start_date: '',
-    start_date_undefined: false, // ← adicionar
+    start_date_undefined: false,
     go_live: '',
     go_live_undefined: false,
     business_unit: '',
     legacy: false,
+    save_as_backlog: false,
   })
   const [requesters, setRequesters] = useState([])
   const [responsibles, setResponsibles] = useState([])
@@ -31,6 +34,8 @@ export default function NewProject() {
   const [costs, setCosts] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { user } = useAuth()
+  const canCreateBacklog = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -62,7 +67,7 @@ export default function NewProject() {
       return
     }
 
-    if (responsibles.length === 0) {
+    if (responsibles.length === 0 && !form.save_as_backlog) {
       setError('Adicione pelo menos um responsável.')
       return
     }
@@ -79,6 +84,8 @@ export default function NewProject() {
       const data = {
         ...form,
         go_live: form.go_live_undefined ? null : form.go_live,
+        current_phase: form.save_as_backlog ? 'BACKLOG' : 'RECEBIDA',
+        origin: 'NORMAL',
         area,
         level: form.level,
         requester_ids: requesters.filter(r => !String(r.user_id).startsWith('manual_')).map(r => r.user_id),
@@ -129,7 +136,6 @@ export default function NewProject() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-            {/* IDENTIFICAÇÃO */}
             <div className="flex flex-col gap-3">
               <hr className="border-gray-100" />
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Identificação</p>
@@ -193,7 +199,6 @@ export default function NewProject() {
 
             <hr className="border-gray-100" />
 
-            {/* DESCRIÇÃO */}
             <div className="flex flex-col gap-3">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Descrição</p>
 
@@ -270,6 +275,22 @@ export default function NewProject() {
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-gray-500">
+                  Complexidade do projeto
+                </label>
+                <select
+                  value={form.complexity}
+                  onChange={e => handleChange('complexity', e.target.value)}
+                  className={selectCls}
+                >
+                  <option value="">Selecionar complexidade</option>
+                  <option value="Alta">Alta</option>
+                  <option value="Média">Média</option>
+                  <option value="Baixa">Baixa</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">
                   Descrição <span className="text-red-400">*</span>
                 </label>
                 <textarea
@@ -296,6 +317,21 @@ export default function NewProject() {
               </div>
             )}
 
+            {canCreateBacklog && (
+              <div className="flex items-center gap-2 px-1">
+                <input
+                  type="checkbox"
+                  id="save_as_backlog"
+                  checked={form.save_as_backlog}
+                  onChange={e => handleChange('save_as_backlog', e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
+                />
+                <label htmlFor="save_as_backlog" className="text-xs text-gray-500 cursor-pointer">
+                  Salvar como backlog — projeto sem responsável definido ainda
+                </label>
+              </div>
+            )}
+
             <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
               <button
                 type="button"
@@ -311,7 +347,7 @@ export default function NewProject() {
                 style={{ minWidth: '120px' }}
                 className="text-xs font-medium bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors text-center flex items-center justify-center"
               >
-                {loading ? 'Criando...' : 'Criar projeto'}
+                {loading ? 'Criando...' : form.save_as_backlog ? 'Salvar em backlog' : 'Criar projeto'}
               </button>
             </div>
 

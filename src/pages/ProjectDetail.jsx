@@ -166,6 +166,18 @@ export default function ProjectDetail() {
   const [error, setError] = useState('')
   const [showStatusForm, setShowStatusForm] = useState(false)
   const [statusForm, setStatusForm] = useState({ description: '', highlights: [''], next_steps: [''], reported_by_name: '' })
+  const handleDuplicateStatus = (update) => {
+  setStatusForm({
+    description: update.description || '',
+    highlights: (update.highlights || '').split('\n').filter(Boolean),
+    next_steps: (update.next_steps || '').split('\n').filter(Boolean),
+    reported_by_name: '',
+  })
+  setShowStatusForm(true)
+  setTimeout(() => {
+    document.querySelector('.status-form-anchor')?.scrollIntoView({ behavior: 'smooth' })
+  }, 100)
+}
   const [statusLoading, setStatusLoading] = useState(false)
   const [editingReq, setEditingReq] = useState(false)
   const [reqContent, setReqContent] = useState('')
@@ -701,6 +713,11 @@ export default function ProjectDetail() {
                     Não definido
                   </span>
                 )}
+                {project.complexity && (
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-medium">
+                    Complexidade: {project.complexity}
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -889,7 +906,7 @@ export default function ProjectDetail() {
           </div>
 
           {showStatusForm && (
-            <form onSubmit={handleCreateStatus} className="border border-gray-100 rounded-xl p-4 mb-5 bg-gray-50 flex flex-col gap-3">
+            <form onSubmit={handleCreateStatus} className="status-form-anchor border border-gray-100 rounded-xl p-4 mb-5 bg-gray-50 flex flex-col gap-3">
               <p className="text-xs font-medium text-gray-600">Nova atualização</p>
               <div>
                 <p className="text-xs text-gray-400 mb-1">
@@ -1013,6 +1030,7 @@ export default function ProjectDetail() {
                 onAddRisk={handleAddRisk}
                 onUpdateRisk={handleUpdateRisk}
                 onDeleteRisk={handleDeleteRisk}
+                onDuplicate={canEdit ? handleDuplicateStatus : null}
                 onUpdateStatus={async (statusId, data) => {
                   await statusService.update(id, statusId, data)
                   fetchProject()

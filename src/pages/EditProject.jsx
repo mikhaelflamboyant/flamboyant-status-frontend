@@ -316,6 +316,22 @@ export default function EditProject() {
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-gray-500">
+                  Complexidade do projeto
+                </label>
+                <select
+                  value={form.complexity}
+                  onChange={e => handleChange('complexity', e.target.value)}
+                  className={selectCls}
+                >
+                  <option value="">Selecionar complexidade</option>
+                  <option value="Alta">Alta</option>
+                  <option value="Média">Média</option>
+                  <option value="Baixa">Baixa</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">
                   Descrição <span className="text-red-400">*</span>
                 </label>
                 <textarea
