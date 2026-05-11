@@ -23,10 +23,10 @@ export function useProjects() {
 
   const [filters, setFilters] = useState({
     search: savedFilters?.search || '',
-    traffic_light: initialFarol || savedFilters?.traffic_light || '',
-    phase: savedFilters?.phase || '',
-    area: savedFilters?.area || '',
-    priority: savedFilters?.priority || '',
+    traffic_light: initialFarol ? [initialFarol] : (savedFilters?.traffic_light || []),
+    phases: savedFilters?.phases || [],
+    areas: savedFilters?.areas || [],
+    priorities: savedFilters?.priorities || [],
     user_id: savedFilters?.user_id || '',
     filtro: initialFiltro || savedFilters?.filtro || '',
     responsible_id: savedFilters?.responsible_id || '',
@@ -66,19 +66,19 @@ export function useProjects() {
         return false
       }
 
-      if (filters.traffic_light && project.traffic_light !== filters.traffic_light) {
+      if (filters.traffic_light?.length > 0 && !filters.traffic_light.includes(project.traffic_light)) {
         return false
       }
 
-      if (filters.phase && project.current_phase !== filters.phase) {
+      if (filters.phases?.length > 0 && !filters.phases.includes(project.current_phase)) {
         return false
       }
 
-      if (filters.area && project.area !== filters.area) {
+      if (filters.areas?.length > 0 && !filters.areas.includes(project.area)) {
         return false
       }
 
-      if (filters.priority && project.priority !== parseInt(filters.priority)) {
+      if (filters.priorities?.length > 0 && !filters.priorities.includes(String(project.priority))) {
         return false
       }
 

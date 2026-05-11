@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { Input } from '../components/ui/Input'
 import { LevelSelector } from '../components/project/LevelSelector'
@@ -12,6 +12,8 @@ import { useAuth } from '../hooks/useAuth'
 
 export default function NewProject() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isBacklog = location.state?.backlog === true
   const [users, setUsers] = useState([])
   const [form, setForm] = useState({
     title: '',
@@ -57,7 +59,7 @@ export default function NewProject() {
     e.preventDefault()
     setError('')
 
-    if (!form.title || !form.description || (!form.go_live && !form.go_live_undefined) || !form.level || !form.business_unit) {
+    if (!form.title || !form.description || (!isBacklog && !form.go_live && !form.go_live_undefined) || !form.level || !form.business_unit) {
       setError('Preencha todos os campos obrigatórios.')
       return
     }
@@ -67,13 +69,8 @@ export default function NewProject() {
       return
     }
 
-    if (responsibles.length === 0 && !form.save_as_backlog) {
+    if (responsibles.length === 0 && !isBacklog && !form.save_as_backlog) {
       setError('Adicione pelo menos um responsável.')
-      return
-    }
-
-    if (form.execution_type === 'FORNECEDOR_EXTERNO' && costs.length === 0) {
-      setError('Projetos com fornecedor externo precisam ter pelo menos um custo cadastrado.')
       return
     }
 
@@ -84,7 +81,7 @@ export default function NewProject() {
       const data = {
         ...form,
         go_live: form.go_live_undefined ? null : form.go_live,
-        current_phase: form.save_as_backlog ? 'BACKLOG' : 'RECEBIDA',
+        current_phase: isBacklog || form.save_as_backlog ? 'BACKLOG' : 'RECEBIDA',
         origin: 'NORMAL',
         area,
         level: form.level,
@@ -119,13 +116,15 @@ export default function NewProject() {
       <div className="max-w-6xl mx-auto px-6 py-6">
 
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-base font-medium text-gray-900">Novo projeto</h1>
+          <h1 className="text-base font-medium text-gray-900">
+            {isBacklog ? 'Novo projeto em backlog' : 'Novo projeto'}
+          </h1>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/projetos')}
+              onClick={() => navigate(isBacklog ? '/projetos/backlog' : '/projetos')}
               className="text-xs text-primary-600 hover:text-primary-800 transition-colors"
             >
-              ← Projetos
+              {isBacklog ? '← Backlog' : '← Projetos'}
             </button>
             <span className="text-xs text-gray-300">/</span>
             <span className="text-xs text-gray-500">Novo projeto</span>
@@ -158,15 +157,17 @@ export default function NewProject() {
                 excluded={[...responsibles, ...members]}
               />
 
-              <PeopleSelector
-                label="Responsável"
-                required
-                users={users}
-                selected={responsibles}
-                onChange={setResponsibles}
-                buttonLabel="+ Adicionar responsável"
-                excluded={[...requesters, ...members]}
-              />
+              {!isBacklog && (
+                <PeopleSelector
+                  label="Responsável"
+                  required
+                  users={users}
+                  selected={responsibles}
+                  onChange={setResponsibles}
+                  buttonLabel="+ Adicionar responsável"
+                  excluded={[...requesters, ...members]}
+                />
+              )}
 
               <PeopleSelector
                 label="Outros envolvidos"
@@ -202,7 +203,7 @@ export default function NewProject() {
             <div className="flex flex-col gap-3">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Descrição</p>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className={`grid gap-3 ${isBacklog ? 'grid-cols-1' : 'grid-cols-3'}`}>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-500">
                     Tipo de execução <span className="text-red-400">*</span>
@@ -217,55 +218,59 @@ export default function NewProject() {
                   </select>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-500">Data de início</label>
-                  {!form.start_date_undefined && (
-                    <input
-                      type="date"
-                      value={form.start_date}
-                      onChange={e => handleChange('start_date', e.target.value)}
-                      className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
-                    />
-                  )}
-                  <label className="flex items-center gap-2 mt-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.start_date_undefined || false}
-                      onChange={e => {
-                        handleChange('start_date_undefined', e.target.checked)
-                        if (e.target.checked) handleChange('start_date', '')
-                      }}
-                      className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
-                    />
-                    <span className="text-xs text-gray-400">Não definida</span>
-                  </label>
-                </div>
+                {!isBacklog && (
+                  <>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-medium text-gray-500">Data de início</label>
+                      {!form.start_date_undefined && (
+                        <input
+                          type="date"
+                          value={form.start_date}
+                          onChange={e => handleChange('start_date', e.target.value)}
+                          className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
+                        />
+                      )}
+                      <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.start_date_undefined || false}
+                          onChange={e => {
+                            handleChange('start_date_undefined', e.target.checked)
+                            if (e.target.checked) handleChange('start_date', '')
+                          }}
+                          className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
+                        />
+                        <span className="text-xs text-gray-400">Não definida</span>
+                      </label>
+                    </div>
 
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-500">
-                    Go-live (prazo de entrega) {!form.go_live_undefined && <span className="text-red-400">*</span>}
-                  </label>
-                  {!form.go_live_undefined && (
-                    <input
-                      type="date"
-                      value={form.go_live}
-                      onChange={e => handleChange('go_live', e.target.value)}
-                      className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
-                    />
-                  )}
-                  <label className="flex items-center gap-2 mt-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.go_live_undefined}
-                      onChange={e => {
-                        handleChange('go_live_undefined', e.target.checked)
-                        if (e.target.checked) handleChange('go_live', '')
-                      }}
-                      className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
-                    />
-                    <span className="text-xs text-gray-400">Sem previsão</span>
-                  </label>
-                </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-medium text-gray-500">
+                        Go-live (prazo de entrega) {!form.go_live_undefined && <span className="text-red-400">*</span>}
+                      </label>
+                      {!form.go_live_undefined && (
+                        <input
+                          type="date"
+                          value={form.go_live}
+                          onChange={e => handleChange('go_live', e.target.value)}
+                          className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
+                        />
+                      )}
+                      <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.go_live_undefined}
+                          onChange={e => {
+                            handleChange('go_live_undefined', e.target.checked)
+                            if (e.target.checked) handleChange('go_live', '')
+                          }}
+                          className="w-3.5 h-3.5 rounded border-gray-300 accent-primary-600"
+                        />
+                        <span className="text-xs text-gray-400">Sem previsão</span>
+                      </label>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="flex flex-col gap-1">
@@ -317,7 +322,7 @@ export default function NewProject() {
               </div>
             )}
 
-            {canCreateBacklog && (
+            {canCreateBacklog && !isBacklog && (
               <div className="flex items-center gap-2 px-1">
                 <input
                   type="checkbox"
@@ -335,7 +340,7 @@ export default function NewProject() {
             <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
               <button
                 type="button"
-                onClick={() => navigate('/projetos')}
+                onClick={() => navigate(isBacklog ? '/projetos/backlog' : '/projetos')}
                 style={{ minWidth: '120px' }}
                 className="text-xs font-medium text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 py-2 rounded-lg transition-colors text-center flex items-center justify-center"
               >
@@ -347,7 +352,7 @@ export default function NewProject() {
                 style={{ minWidth: '120px' }}
                 className="text-xs font-medium bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors text-center flex items-center justify-center"
               >
-                {loading ? 'Criando...' : form.save_as_backlog ? 'Salvar em backlog' : 'Criar projeto'}
+                {loading ? 'Criando...' : (isBacklog || form.save_as_backlog) ? 'Salvar em backlog' : 'Criar projeto'}
               </button>
             </div>
 

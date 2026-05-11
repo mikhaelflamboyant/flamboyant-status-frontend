@@ -84,6 +84,7 @@ export default function Management() {
   const { user } = useAuth()
   const [dashboard, setDashboard] = useState(null)
   const [usersData, setUsersData] = useState(null)
+  const [activeProjectsList, setActiveProjectsList] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [expandedUnits, setExpandedUnits] = useState({})
@@ -103,6 +104,7 @@ export default function Management() {
           managementService.getUsers(),
         ])
         setDashboard(dashRes.data)
+        setActiveProjectsList(dashRes.data.active_projects || [])
         setUsersData(usersRes.data)
       } catch (err) {
         setError('Erro ao carregar painel de gestão.')
@@ -140,9 +142,11 @@ export default function Management() {
 
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Visão geral</p>
 
-        <div className="grid grid-cols-4 gap-3 mb-3">
+        <div className="grid grid-cols-6 gap-3 mb-3">
           <MetricCard label="Projetos ativos" value={dashboard.totals.active} onClick={() => navigate('/projetos')} />
           <MetricCard label="Finalizados" value={dashboard.totals.archived} onClick={() => navigate('/projetos/arquivados')} />
+          <MetricCard label="Backlog" value={dashboard.totals.backlog} onClick={() => navigate('/projetos/backlog')} />
+          <MetricCard label="Go-live" value={dashboard.totals.go_live} onClick={() => navigate('/projetos/go-live')} />
           <MetricCard label="Atrasados" value={dashboard.totals.overdue} color="#FCEBEB" textColor="#791F1F" onClick={() => navigate('/projetos?farol=VERMELHO')} />
           <MetricCard label="Conclusão média" value={`${dashboard.totals.avg_completion}%`} />
         </div>
@@ -465,6 +469,140 @@ export default function Management() {
             </div>
           </div>
         )}
+
+        <div className="mt-8">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
+            Todos os projetos ({(dashboard.totals.active || 0) + (dashboard.totals.backlog || 0) + (dashboard.totals.go_live || 0) + (dashboard.totals.archived || 0)})
+          </p>
+
+          {dashboard.backlog_projects?.length > 0 && (
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden mb-3">
+              <div
+                className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => toggleUnit('all_backlog')}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-800">Backlog</span>
+                  <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">
+                    {dashboard.backlog_projects.length} projeto{dashboard.backlog_projects.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-400">{expandedUnits['all_backlog'] ? '▼' : '▶'}</span>
+              </div>
+              {expandedUnits['all_backlog'] && (
+                <div className="px-3 py-2 flex flex-col gap-1.5">
+                  {dashboard.backlog_projects.map(p => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/projetos/${p.id}`)}
+                    >
+                      <span className="text-xs text-gray-800 truncate flex-1">{p.title}</span>
+                      <div className="flex items-center gap-4 shrink-0">
+                        <span className="text-xs text-gray-400">{p.area}</span>
+                        <span className="text-xs text-gray-400">
+                          {p.go_live ? new Date(p.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'}
+                        </span>
+                        <span className="text-xs text-primary-600 font-medium">Ver →</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden mb-3">
+            <div
+              className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => toggleUnit('all_ativos')}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-800">Ativos</span>
+                <span className="text-xs bg-primary-50 text-primary-700 px-2.5 py-0.5 rounded-full">
+                  {dashboard.totals.active} projeto{dashboard.totals.active !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <span className="text-xs text-gray-400">{expandedUnits['all_ativos'] ? '▼' : '▶'}</span>
+            </div>
+            {expandedUnits['all_ativos'] && (
+              <div className="px-3 py-2 flex flex-col gap-1.5">
+                {activeProjectsList?.map(p => {
+                  const fc = FAROL_COLORS[p.traffic_light]
+                  return (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/projetos/${p.id}`)}
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div style={{ width: 7, height: 7, borderRadius: '50%', background: fc?.dot || '#888', flexShrink: 0 }} />
+                        <span className="text-xs text-gray-800 truncate">{p.title}</span>
+                      </div>
+                      <div className="flex items-center gap-4 shrink-0">
+                        <span className="text-xs text-gray-400">{PHASE_LABELS[p.current_phase] || p.current_phase}</span>
+                        <span className="text-xs text-gray-400">
+                          {p.go_live ? new Date(p.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'}
+                        </span>
+                        <span className="text-xs text-primary-600 font-medium">Ver →</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {dashboard.go_live_projects?.length > 0 && (
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden mb-3">
+              <div
+                className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => toggleUnit('all_golive')}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-gray-800">Go-live</span>
+                  <span className="text-xs bg-teal-50 text-teal-700 px-2.5 py-0.5 rounded-full">
+                    {dashboard.go_live_projects.length} projeto{dashboard.go_live_projects.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-400">{expandedUnits['all_golive'] ? '▼' : '▶'}</span>
+              </div>
+              {expandedUnits['all_golive'] && (
+                <div className="px-3 py-2 flex flex-col gap-1.5">
+                  {dashboard.go_live_projects.map(p => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/projetos/${p.id}`)}
+                    >
+                      <span className="text-xs text-gray-800 truncate flex-1">{p.title}</span>
+                      <div className="flex items-center gap-4 shrink-0">
+                        <span className="text-xs text-gray-400">{p.area}</span>
+                        <span className="text-xs text-gray-400">
+                          {p.go_live ? new Date(p.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'}
+                        </span>
+                        <span className="text-xs text-primary-600 font-medium">Ver →</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div
+            className="bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => navigate('/projetos/arquivados')}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-800">Finalizados</span>
+              <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">
+                {dashboard.totals.archived} projeto{dashboard.totals.archived !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <span className="text-xs text-primary-600 font-medium">Ver todos →</span>
+          </div>
+        </div>
 
       </div>
     </div>
