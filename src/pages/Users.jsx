@@ -183,6 +183,7 @@ export default function Users() {
             </p>
             {syncResult && <p className="text-xs text-teal-600 mt-1">{syncResult}</p>}
           </div>
+          {/* Botão Sincronizar AD - desativado temporariamente
           {['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) && (
             <button
               onClick={handleSync}
@@ -197,6 +198,7 @@ export default function Users() {
               {syncing ? 'Sincronizando...' : 'Sincronizar AD'}
             </button>
           )}
+          */}
         </div>
 
         <div className="flex gap-1 mb-5">
