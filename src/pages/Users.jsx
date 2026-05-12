@@ -44,6 +44,8 @@ export default function Users() {
   const [contactSearch, setContactSearch] = useState('')
   const [contactAreaFilter, setContactAreaFilter] = useState('')
   const [deletingContactId, setDeletingContactId] = useState(null)
+  const [syncingContacts, setSyncingContacts] = useState(false)
+  const [syncContactsResult, setSyncContactsResult] = useState('')
 
   const handleSync = async () => {
     if (!confirm('Sincronizar usuários do Active Directory?')) return
@@ -144,6 +146,21 @@ export default function Users() {
       alert(err.response?.data?.error || 'Erro ao excluir usuário.')
     } finally {
       setUpdatingId(null)
+    }
+  }
+
+  const handleSyncContacts = async () => {
+    if (!confirm('Sincronizar contatos do Active Directory?')) return
+    setSyncingContacts(true)
+    setSyncContactsResult('')
+    try {
+      const res = await contactsService.syncAD()
+      setSyncContactsResult(res.data.message)
+      fetchContacts()
+    } catch (err) {
+      setSyncContactsResult('Erro ao sincronizar contatos.')
+    } finally {
+      setSyncingContacts(false)
     }
   }
 
@@ -365,6 +382,31 @@ export default function Users() {
 
         {!loading && !error && tab === 'contatos' && (
           <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400">
+                {contacts.length} contato{contacts.length !== 1 ? 's' : ''} cadastrado{contacts.length !== 1 ? 's' : ''}
+              </p>
+              {['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) && (
+                <div className="flex items-center gap-3">
+                  {syncContactsResult && (
+                    <p className="text-xs text-teal-600">{syncContactsResult}</p>
+                  )}
+                  <button
+                    onClick={handleSyncContacts}
+                    disabled={syncingContacts}
+                    className="text-xs bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium flex items-center gap-2"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="23 4 23 10 17 10"/>
+                      <polyline points="1 20 1 14 7 14"/>
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                    {syncingContacts ? 'Sincronizando...' : 'Sincronizar AD'}
+                  </button>
+                </div>
+              )}
+            </div>
+            
             <div className="flex gap-2">
               <input
                 type="text"
