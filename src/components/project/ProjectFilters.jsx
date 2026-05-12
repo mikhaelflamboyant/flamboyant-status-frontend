@@ -103,10 +103,10 @@ function MultiDropdown({ label, options, selected, onChange, renderOption }) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className={`h-8 px-3 text-xs border rounded-lg bg-white outline-none transition-colors cursor-pointer flex items-center gap-1.5 ${
+        className={`h-8 px-3 text-xs border rounded-lg outline-none transition-colors cursor-pointer flex items-center gap-1.5 ${
           hasSelection
             ? 'border-primary-400 text-primary-700 bg-primary-50'
-            : 'border-gray-200 text-gray-600'
+            : 'border-gray-200 text-gray-600 bg-white'
         }`}
       >
         {btnLabel}
@@ -118,9 +118,9 @@ function MultiDropdown({ label, options, selected, onChange, renderOption }) {
       {open && (
         <div style={{
           position: 'absolute', top: '36px', left: 0, zIndex: 50,
-          background: 'var(--color-background-primary)',
-          border: '0.5px solid var(--color-border-tertiary)',
-          borderRadius: 'var(--border-radius-lg)',
+          background: '#ffffff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
           padding: '6px', minWidth: '180px', maxHeight: '260px',
           overflowY: 'auto',
           boxShadow: '0 4px 16px rgba(0,0,0,0.08)'
@@ -128,27 +128,35 @@ function MultiDropdown({ label, options, selected, onChange, renderOption }) {
           {options.map(opt => (
             <label
               key={opt.key}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => toggle(opt.key)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '6px', cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                selected.includes(opt.key) ? 'bg-primary-600 border-primary-600' : 'border-gray-300'
-              }`}>
+              <div style={{
+                width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: selected.includes(opt.key) ? '#534AB7' : '#ffffff',
+                border: selected.includes(opt.key) ? '1px solid #534AB7' : '1px solid #d1d5db',
+              }}>
                 {selected.includes(opt.key) && (
                   <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
                     <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
                   </svg>
                 )}
               </div>
-              {renderOption ? renderOption(opt) : <span className="text-xs text-gray-700">{opt.label}</span>}
+              {renderOption ? renderOption(opt) : <span style={{ fontSize: '12px', color: '#374151' }}>{opt.label}</span>}
             </label>
           ))}
           {selected.length > 0 && (
             <>
-              <div className="border-t border-gray-100 my-1" />
+              <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="w-full text-left px-2 py-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-50"
+                style={{ width: '100%', textAlign: 'left', padding: '6px 8px', fontSize: '12px', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '6px' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}
               >
                 Limpar seleção
               </button>
@@ -173,14 +181,14 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const area = canSeeAllAreas ? (filters.areas?.[0] || '') : user?.area
-        const params = area ? `?area=${encodeURIComponent(area)}` : ''
-        const response = await api.get(`/users${params}`)
-        setUsers(response.data.sort((a, b) => a.name.localeCompare(b.name)))
+        const response = await api.get('/users')
+        setUsers(response.data
+          .filter(u => u.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(u.role))
+          .sort((a, b) => a.name.localeCompare(b.name)))
       } catch (err) { console.error(err) }
     }
     if (canSeeAllAreas || isManagerLevel) fetchUsers()
-  }, [filters.areas, user])
+  }, [user])
 
   useEffect(() => {
     const fetchRequesters = async () => {
@@ -203,8 +211,8 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
     filters.phases?.length > 0 ||
     filters.areas?.length > 0 ||
     filters.priorities?.length > 0 ||
-    filters.responsible_id ||
-    filters.requester_id ||
+    filters.responsible_ids?.length > 0 ||
+    filters.requester_ids?.length > 0 ||
     filters.filtro
   )
 
@@ -214,8 +222,8 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
     phases: [],
     areas: [],
     priorities: [],
-    responsible_id: '',
-    requester_id: '',
+    responsible_ids: [],
+    requester_ids: [],
     filtro: '',
   })
 
@@ -238,9 +246,9 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
         selected={filters.traffic_light || []}
         onChange={val => onChange({ ...filters, traffic_light: val })}
         renderOption={opt => (
-          <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: opt.dot, display: 'inline-block', flexShrink: 0 }} />
-            <span className="text-xs text-gray-700">{opt.label}</span>
+            <span style={{ fontSize: '12px', color: '#374151' }}>{opt.label}</span>
           </div>
         )}
       />
@@ -270,25 +278,19 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
 
       {showUserFilter && (
         <>
-          <select
-            value={filters.responsible_id || ''}
-            onChange={e => onChange({ ...filters, responsible_id: e.target.value })}
-            className={selectCls}
-          >
-            <option value="">Todos os responsáveis</option>
-            {users
-              .filter(u => u.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(u.role))
-              .map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-          </select>
+          <MultiDropdown
+            label="Responsável"
+            options={users.map(u => ({ key: u.id, label: u.name }))}
+            selected={filters.responsible_ids || []}
+            onChange={val => onChange({ ...filters, responsible_ids: val })}
+          />
 
-          <select
-            value={filters.requester_id || ''}
-            onChange={e => onChange({ ...filters, requester_id: e.target.value })}
-            className={selectCls}
-          >
-            <option value="">Todos os solicitantes</option>
-            {requesters.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-          </select>
+          <MultiDropdown
+            label="Solicitante"
+            options={requesters.map(u => ({ key: u.id, label: u.name }))}
+            selected={filters.requester_ids || []}
+            onChange={val => onChange({ ...filters, requester_ids: val })}
+          />
         </>
       )}
 
