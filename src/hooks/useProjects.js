@@ -26,7 +26,7 @@ export function useProjects() {
     traffic_light: initialFarol ? [initialFarol] : (savedFilters?.traffic_light || []),
     phases: savedFilters?.phases || [],
     areas: savedFilters?.areas || [],
-    priorities: savedFilters?.priorities || [],
+    levels: savedFilters?.levels || [],
     user_id: savedFilters?.user_id || '',
     filtro: initialFiltro || savedFilters?.filtro || '',
     responsible_ids: savedFilters?.responsible_ids || [],
@@ -78,7 +78,7 @@ export function useProjects() {
         return false
       }
 
-      if (filters.priorities?.length > 0 && !filters.priorities.includes(String(project.priority))) {
+      if (filters.levels?.length > 0 && !filters.levels.includes(project.level)) {
         return false
       }
 

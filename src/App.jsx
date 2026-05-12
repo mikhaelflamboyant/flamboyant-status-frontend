@@ -36,7 +36,11 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/painel" element={<Management />} />
+        <Route path="/painel" element={
+          <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR']}>
+            <Management />
+          </ProtectedRoute>
+        } />
 
         <Route path="/projetos/novo" element={
           <ProtectedRoute>

@@ -72,12 +72,11 @@ const FAROL_OPTIONS = [
   { key: 'VERMELHO', label: 'Vermelho', dot: '#E24B4A' },
 ]
 
-const PRIORITY_OPTIONS = [
-  { key: '5', label: 'Prioridade 5' },
-  { key: '4', label: 'Prioridade 4' },
-  { key: '3', label: 'Prioridade 3' },
-  { key: '2', label: 'Prioridade 2' },
-  { key: '1', label: 'Prioridade 1' },
+const LEVEL_OPTIONS = [
+  { key: 'A', label: 'A - Estratégico' },
+  { key: 'B', label: 'B - Performance (ROI)' },
+  { key: 'C', label: 'C - Compliance' },
+  { key: 'D', label: 'D - Inovação e transformação digital' },
 ]
 
 function MultiDropdown({ label, options, selected, onChange, renderOption }) {
@@ -210,7 +209,7 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
     filters.traffic_light?.length > 0 ||
     filters.phases?.length > 0 ||
     filters.areas?.length > 0 ||
-    filters.priorities?.length > 0 ||
+    filters.levels?.length > 0 ||
     filters.responsible_ids?.length > 0 ||
     filters.requester_ids?.length > 0 ||
     filters.filtro
@@ -221,7 +220,7 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
     traffic_light: [],
     phases: [],
     areas: [],
-    priorities: [],
+    levels: [],
     responsible_ids: [],
     requester_ids: [],
     filtro: '',
@@ -270,10 +269,10 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
       />
 
       <MultiDropdown
-        label="Prioridade"
-        options={PRIORITY_OPTIONS}
-        selected={filters.priorities || []}
-        onChange={val => onChange({ ...filters, priorities: val })}
+        label="Nível"
+        options={LEVEL_OPTIONS}
+        selected={filters.levels || []}
+        onChange={val => onChange({ ...filters, levels: val })}
       />
 
       {showUserFilter && (
