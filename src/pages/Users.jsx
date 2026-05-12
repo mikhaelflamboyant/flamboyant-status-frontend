@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Navbar } from '../components/layout/Navbar'
 import { useAuth } from '../hooks/useAuth'
 import api from '../services/api'
+import { contactsService } from '../services/contacts.service'
 
 const ROLES = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR', 'SUPERVISOR', 'ANALISTA']
 
@@ -39,6 +40,10 @@ export default function Users() {
   const [error, setError] = useState('')
   const [syncing, setSyncing] = useState(false)
   const [syncResult, setSyncResult] = useState('')
+  const [contacts, setContacts] = useState([])
+  const [contactSearch, setContactSearch] = useState('')
+  const [contactAreaFilter, setContactAreaFilter] = useState('')
+  const [deletingContactId, setDeletingContactId] = useState(null)
 
   const handleSync = async () => {
     if (!confirm('Sincronizar usuários do Active Directory?')) return
@@ -70,7 +75,27 @@ export default function Users() {
     }
   }
 
-  useEffect(() => { fetchUsers() }, [])
+  const fetchContacts = async () => {
+    try {
+      const res = await contactsService.list()
+      setContacts(res.data)
+    } catch {}
+  }
+
+  const handleDeleteContact = async (id) => {
+    if (!confirm('Excluir este contato da lista?')) return
+    setDeletingContactId(id)
+    try {
+      await contactsService.delete(id)
+      setContacts(prev => prev.filter(c => c.id !== id))
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao excluir contato.')
+    } finally {
+      setDeletingContactId(null)
+    }
+  }
+
+  useEffect(() => { fetchUsers(); fetchContacts() }, [])
 
   const handleRoleChange = async (userId, newRole) => {
     setUpdatingId(userId)
@@ -123,6 +148,8 @@ export default function Users() {
   }
 
   const canApprove = CAN_APPROVE.includes(user?.role)
+  const canManageContacts = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) &&
+    (user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -180,6 +207,16 @@ export default function Users() {
                 {pending.length}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setTab('contatos')}
+            className={`text-xs px-4 py-2 rounded-lg font-medium transition-colors ${
+              tab === 'contatos'
+                ? 'bg-primary-600 text-white'
+                : 'bg-white border border-gray-200 text-gray-500 hover:bg-gray-50'
+            }`}
+          >
+            Contatos ({contacts.length})
           </button>
         </div>
 
@@ -281,11 +318,9 @@ export default function Users() {
 
         {!loading && !error && tab === 'pendentes' && (
           <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-
             {pending.length === 0 && (
               <p className="text-xs text-gray-400 text-center py-8">Nenhuma solicitação pendente.</p>
             )}
-
             {pending.map((u, index) => (
               <div
                 key={u.id}
@@ -305,7 +340,6 @@ export default function Users() {
                     </p>
                   </div>
                 </div>
-
                 {canApprove && (
                   <div className="flex items-center gap-2">
                     <button
@@ -326,6 +360,89 @@ export default function Users() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {!loading && !error && tab === 'contatos' && (
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Buscar por nome..."
+                value={contactSearch}
+                onChange={e => setContactSearch(e.target.value)}
+                className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-700 outline-none focus:border-primary-600 transition-colors flex-1"
+              />
+              <select
+                value={contactAreaFilter}
+                onChange={e => setContactAreaFilter(e.target.value)}
+                className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 outline-none focus:border-primary-600 transition-colors"
+              >
+                <option value="">Todas as áreas</option>
+                {[...new Set(contacts.map(c => c.area))].sort().map(area => (
+                  <option key={area} value={area}>{area}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-50 grid grid-cols-12 gap-4">
+                <p className="col-span-5 text-xs font-medium text-gray-400">Nome</p>
+                <p className="col-span-6 text-xs font-medium text-gray-400">Área</p>
+                <p className="col-span-1"></p>
+              </div>
+
+              {contacts
+                .filter(c =>
+                  (!contactSearch || c.name.toLowerCase().includes(contactSearch.toLowerCase())) &&
+                  (!contactAreaFilter || c.area === contactAreaFilter)
+                )
+                .map((c, index, arr) => (
+                  <div
+                    key={c.id}
+                    className={`px-5 py-3 grid grid-cols-12 gap-4 items-center hover:bg-gray-50 transition-colors ${
+                      index !== arr.length - 1 ? 'border-b border-gray-50' : ''
+                    }`}
+                  >
+                    <div className="col-span-5 flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-500 shrink-0">
+                        {c.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm text-gray-800 truncate">{c.name}</span>
+                    </div>
+                    <div className="col-span-6">
+                      <span className="text-xs text-gray-500">{c.area}</span>
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      {canManageContacts && (
+                        <button
+                          onClick={() => handleDeleteContact(c.id)}
+                          disabled={deletingContactId === c.id}
+                          className="hover:opacity-70 transition-opacity disabled:opacity-30"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14H6L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4h6v2"/>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+              {contacts.filter(c =>
+                (!contactSearch || c.name.toLowerCase().includes(contactSearch.toLowerCase())) &&
+                (!contactAreaFilter || c.area === contactAreaFilter)
+              ).length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-8">Nenhum contato encontrado.</p>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-400">
+              Contatos são adicionados automaticamente ao salvar projetos com nomes inseridos manualmente.
+            </p>
           </div>
         )}
 

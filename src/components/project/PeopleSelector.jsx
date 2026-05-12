@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { contactsService } from '../../services/contacts.service'
 
 const AREAS = [
   'Administração Pessoal',
@@ -44,15 +45,26 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
   const [userId, setUserId] = useState('')
   const [manualMode, setManualMode] = useState(false)
   const [manualName, setManualName] = useState('')
+  const [contacts, setContacts] = useState([])
+
+  useEffect(() => {
+    if (!area) return
+    contactsService.list(area).then(r => setContacts(r.data)).catch(() => {})
+  }, [area])
 
   const filteredUsers = useMemo(() => {
     if (!area) return []
-    return users.filter(u =>
+    const systemUsers = users.filter(u =>
       u.area === area &&
       !selected.find(s => s.user_id === u.id) &&
       !excluded.find(e => e.user_id === u.id)
     )
-  }, [area, users, selected, excluded])
+    const filteredContacts = contacts.filter(c =>
+      !selected.find(s => s.name === c.name && s.area === c.area) &&
+      !excluded.find(e => e.name === c.name && e.area === c.area)
+    ).map(c => ({ id: `contact_${c.id}`, name: c.name, area: c.area, isContact: true }))
+    return [...systemUsers, ...filteredContacts]
+  }, [area, users, contacts, selected, excluded])
 
   const noUsersFound = area && filteredUsers.length === 0
 
@@ -71,6 +83,15 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
       setUserId('')
       return
     }
+    if (val.startsWith('contact_')) {
+      const contact = filteredUsers.find(u => u.id === val)
+      if (contact) {
+        onAdd({ user_id: `manual_${Date.now()}`, name: contact.name, area: contact.area })
+        setUserId('')
+        setArea('')
+      }
+      return
+    }
     const user = users.find(u => u.id === val)
     if (user) {
       onAdd({ user_id: user.id, name: user.name, area: user.area })
@@ -80,8 +101,11 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
     }
   }
 
-  const handleManualAdd = () => {
+  const handleManualAdd = async () => {
     if (!manualName.trim()) return
+    try {
+      await contactsService.create(manualName.trim(), area)
+    } catch {}
     onAdd({ user_id: `manual_${Date.now()}`, name: manualName.trim(), area })
     setManualName('')
     setArea('')
@@ -139,7 +163,13 @@ function PeopleRow({ users, selected, excluded = [], onAdd, onRemoveRow, canRemo
           ) : (
             <select value={userId} onChange={handleUserChange} className={selectCls}>
               <option value="">Selecione o nome</option>
-              {filteredUsers.map(u => (
+              {filteredUsers.filter(u => !u.isContact).map(u => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+              {filteredUsers.filter(u => u.isContact).length > 0 && (
+                <option disabled>── Contatos cadastrados ──</option>
+              )}
+              {filteredUsers.filter(u => u.isContact).map(u => (
                 <option key={u.id} value={u.id}>{u.name}</option>
               ))}
               <option value="__manual__">Digite o nome manualmente</option>

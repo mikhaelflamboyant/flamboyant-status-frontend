@@ -75,6 +75,11 @@ export function ProjectCard({ project }) {
         <div className="flex flex-col items-end gap-1.5 min-w-110px">
           <ProgressBar value={project.completion_pct} color={progressColor} />
           <span className="text-xs text-gray-400">Go-live: {goLive}</span>
+          {project.updated_at && (
+            <span className="text-xs text-gray-300">
+              Atualizado: {new Date(project.updated_at).toLocaleDateString('pt-BR')}
+            </span>
+          )}
         </div>
 
       </div>
