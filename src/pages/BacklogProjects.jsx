@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { projectsService } from '../services/projects.service'
@@ -7,6 +7,100 @@ import { PeopleSelector } from '../components/project/PeopleSelector'
 import { CostSelector } from '../components/project/CostSelector'
 import api from '../services/api'
 
+const AREAS = [
+  'Administração Pessoal','Administrativo Urbanismo','Agropecuária','Almoxarifado','Apoio',
+  'Arquitetura','Assuntos Regulatórios','Atendimento','Brigada','Comercial','Compras',
+  'Conservação','Contabilidade','Controladoria','Engenharia','Estacionamento',
+  'Experiência Urbanismo','Family Office','Financeiro','Helicenter','In Concert',
+  'Incorporação','Inovação','Instituto Flamboyant','Jurídico','Legalização','Manutenção',
+  'Marketing Coorporativo','Marketing Institucional','Marketing Urbanismo','Operações',
+  'Pessoas e Cultura','Planejamento e Projetos','Planejamento Financeiro',
+  'Planejamento Financeiro e Administrativo','Planejamento Financeiro Urbanismo','Processos',
+  'Produtos e Projetos Urbanismo','Produtos Urbanismo','Projetos Executivos','Projetos Urbanismo',
+  'Recebimento Fiscal','Relacionamento','Resíduos','Secretaria','Segurança','Suprimentos',
+  'Tecnologia da Informação','Vendas',
+]
+
+const LEVEL_OPTIONS = [
+  { key: 'A', label: 'A — Estratégico' },
+  { key: 'B', label: 'B — Performance (ROI)' },
+  { key: 'C', label: 'C — Compliance' },
+  { key: 'D', label: 'D — Inovação e transformação digital' },
+]
+
+function MultiDropdown({ label, options, selected, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const toggle = (key) => {
+    if (selected.includes(key)) onChange(selected.filter(k => k !== key))
+    else onChange([...selected, key])
+  }
+
+  const hasSelection = selected.length > 0
+  const btnLabel = hasSelection ? `${label} (${selected.length})` : label
+
+  return (
+    <div style={{ position: 'relative' }} ref={ref}>
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className={`h-8 px-3 text-xs border rounded-lg outline-none transition-colors cursor-pointer flex items-center gap-1.5 ${
+          hasSelection ? 'border-primary-400 text-primary-700 bg-primary-50' : 'border-gray-200 text-gray-600 bg-white'
+        }`}>
+        {btnLabel}
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', top: '36px', left: 0, zIndex: 50,
+          background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px',
+          padding: '6px', minWidth: '180px', maxHeight: '260px', overflowY: 'auto',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.08)'
+        }}>
+          {options.map(opt => (
+            <label key={opt.key} onClick={() => toggle(opt.key)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '6px', cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              <div style={{
+                width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: selected.includes(opt.key) ? '#534AB7' : '#ffffff',
+                border: selected.includes(opt.key) ? '1px solid #534AB7' : '1px solid #d1d5db',
+              }}>
+                {selected.includes(opt.key) && (
+                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                    <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
+                  </svg>
+                )}
+              </div>
+              <span style={{ fontSize: '12px', color: '#374151' }}>{opt.label}</span>
+            </label>
+          ))}
+          {selected.length > 0 && (
+            <>
+              <div style={{ borderTop: '1px solid #f3f4f6', margin: '4px 0' }} />
+              <button type="button" onClick={() => onChange([])}
+                style={{ width: '100%', textAlign: 'left', padding: '6px 8px', fontSize: '12px', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '6px' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                Limpar seleção
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function BacklogProjects() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -14,7 +108,6 @@ export default function BacklogProjects() {
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState([])
   const [assigningId, setAssigningId] = useState(null)
-  const [selectedUserId, setSelectedUserId] = useState('')
   const [saving, setSaving] = useState(false)
   const [assignForm, setAssignForm] = useState({
     description: '', execution_type: 'INTERNA',
@@ -24,6 +117,10 @@ export default function BacklogProjects() {
   const [responsibles, setResponsibles] = useState([])
   const [members, setMembers] = useState([])
   const [costs, setCosts] = useState([])
+  const [search, setSearch] = useState('')
+  const [filterAreas, setFilterAreas] = useState([])
+  const [filterLevels, setFilterLevels] = useState([])
+  const [filterResponsibles, setFilterResponsibles] = useState([])
 
   const canAssignOthers = ['GERENTE', 'COORDENADOR', 'ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
   const canApprove = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
@@ -103,11 +200,27 @@ export default function BacklogProjects() {
     }
   }
 
+  const filteredProjects = projects.filter(p => {
+    if (search && !p.title.toLowerCase().includes(search.toLowerCase()) &&
+        !p.area?.toLowerCase().includes(search.toLowerCase())) return false
+    if (filterAreas.length > 0 && !filterAreas.includes(p.area)) return false
+    if (filterLevels.length > 0 && !filterLevels.includes(p.level)) return false
+    if (filterResponsibles.length > 0) {
+      const hasResponsible = p.requesters?.some(
+        r => r.type === 'RESPONSAVEL' && filterResponsibles.includes(r.user_id)
+      )
+      if (!hasResponsible) return false
+    }
+    return true
+  })
+
+  const hasFilters = search || filterAreas.length > 0 || filterLevels.length > 0 || filterResponsibles.length > 0
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-6xl mx-auto px-6 py-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-5">
           <div>
             <h1 className="text-base font-medium text-gray-900">Backlog</h1>
             <p className="text-xs text-gray-400 mt-0.5">
@@ -134,16 +247,56 @@ export default function BacklogProjects() {
           </div>
         </div>
 
+        <div className="flex gap-2 flex-wrap mb-5">
+          <input
+            type="text"
+            placeholder="Buscar por nome ou área..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-700 outline-none focus:border-primary-600 transition-colors placeholder:text-gray-300"
+            style={{ minWidth: '200px' }}
+          />
+          <MultiDropdown
+            label="Área"
+            options={AREAS.map(a => ({ key: a, label: a }))}
+            selected={filterAreas}
+            onChange={setFilterAreas}
+          />
+          <MultiDropdown
+            label="Nível"
+            options={LEVEL_OPTIONS}
+            selected={filterLevels}
+            onChange={setFilterLevels}
+          />
+          {canAssignOthers && (
+            <MultiDropdown
+              label="Responsável"
+              options={users.map(u => ({ key: u.id, label: u.name }))}
+              selected={filterResponsibles}
+              onChange={setFilterResponsibles}
+            />
+          )}
+          {hasFilters && (
+            <button type="button"
+              onClick={() => { setSearch(''); setFilterAreas([]); setFilterLevels([]); setFilterResponsibles([]) }}
+              className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+              Limpar filtros
+            </button>
+          )}
+        </div>
+
         {loading && <p className="text-sm text-gray-400 text-center py-16">Carregando...</p>}
 
-        {!loading && projects.length === 0 && (
+        {!loading && filteredProjects.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-sm text-gray-400">Nenhum projeto em backlog.</p>
+            <p className="text-sm text-gray-400">
+              {hasFilters ? 'Nenhum projeto encontrado com os filtros aplicados.' : 'Nenhum projeto em backlog.'}
+            </p>
           </div>
         )}
 
         <div className="flex flex-col gap-4">
-          {projects.map(project => (
+          {filteredProjects.map(project => (
             <div key={project.id} className="bg-white border border-gray-100 rounded-xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -153,6 +306,15 @@ export default function BacklogProjects() {
                         #{project.freshservice_ticket_id}
                       </span>
                     )}
+                    {project.level && (
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">
+                        {project.level}
+                      </span>
+                    )}
+                    {project.area && (
+                      <span className="text-xs text-gray-400">{project.area}</span>
+                    )}
+                    <span className="text-xs text-gray-300">·</span>
                     <span className="text-xs text-gray-400">
                       {new Date(project.created_at).toLocaleDateString('pt-BR')}
                     </span>
