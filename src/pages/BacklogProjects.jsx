@@ -107,6 +107,7 @@ export default function BacklogProjects() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState([])
+  const [requesters, setRequesters] = useState([])
   const [assigningId, setAssigningId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [assignForm, setAssignForm] = useState({
@@ -120,7 +121,7 @@ export default function BacklogProjects() {
   const [search, setSearch] = useState('')
   const [filterAreas, setFilterAreas] = useState([])
   const [filterLevels, setFilterLevels] = useState([])
-  const [filterResponsibles, setFilterResponsibles] = useState([])
+  const [filterRequesters, setFilterRequesters] = useState([])
 
   const canAssignOthers = ['GERENTE', 'COORDENADOR', 'ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
   const canApprove = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
@@ -129,6 +130,13 @@ export default function BacklogProjects() {
     try {
       const res = await projectsService.listBacklog()
       setProjects(res.data)
+      const allRequesters = res.data.flatMap(p =>
+        p.requesters?.filter(r => r.type === 'SOLICITANTE' && r.user_id) || []
+      )
+      const unique = Array.from(
+        new Map(allRequesters.map(r => [r.user_id, { id: r.user_id, name: r.user?.name || r.manual_name }])).values()
+      ).sort((a, b) => a.name.localeCompare(b.name))
+      setRequesters(unique)
     } catch (err) {
       console.error(err)
     } finally {
@@ -205,16 +213,16 @@ export default function BacklogProjects() {
         !p.area?.toLowerCase().includes(search.toLowerCase())) return false
     if (filterAreas.length > 0 && !filterAreas.includes(p.area)) return false
     if (filterLevels.length > 0 && !filterLevels.includes(p.level)) return false
-    if (filterResponsibles.length > 0) {
-      const hasResponsible = p.requesters?.some(
-        r => r.type === 'RESPONSAVEL' && filterResponsibles.includes(r.user_id)
+    if (filterRequesters.length > 0) {
+      const hasRequester = p.requesters?.some(
+        r => r.type === 'SOLICITANTE' && filterRequesters.includes(r.user_id)
       )
-      if (!hasResponsible) return false
+      if (!hasRequester) return false
     }
     return true
   })
 
-  const hasFilters = search || filterAreas.length > 0 || filterLevels.length > 0 || filterResponsibles.length > 0
+  const hasFilters = search || filterAreas.length > 0 || filterLevels.length > 0 || filterRequesters.length > 0
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -268,17 +276,17 @@ export default function BacklogProjects() {
             selected={filterLevels}
             onChange={setFilterLevels}
           />
-          {canAssignOthers && (
+          {requesters.length > 0 && (
             <MultiDropdown
-              label="Responsável"
-              options={users.map(u => ({ key: u.id, label: u.name }))}
-              selected={filterResponsibles}
-              onChange={setFilterResponsibles}
+              label="Solicitante"
+              options={requesters.map(u => ({ key: u.id, label: u.name }))}
+              selected={filterRequesters}
+              onChange={setFilterRequesters}
             />
           )}
           {hasFilters && (
             <button type="button"
-              onClick={() => { setSearch(''); setFilterAreas([]); setFilterLevels([]); setFilterResponsibles([]) }}
+              onClick={() => { setSearch(''); setFilterAreas([]); setFilterLevels([]); setFilterRequesters([]) }}
               className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
               Limpar filtros
             </button>
