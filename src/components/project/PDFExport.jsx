@@ -86,7 +86,7 @@ export function PDFExport({ project, statusUpdates }) {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-gray-800">{getStatusReportFriday(s.created_at)}</p>
+                      <p className="text-xs font-medium text-gray-800">{getStatusReportFriday()}</p>
                       <p className="text-xs text-gray-400 truncate">{s.author?.name}</p>
                     </div>
                   </button>

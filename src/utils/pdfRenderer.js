@@ -392,7 +392,7 @@ export class PDFRenderer {
     const pad = 6
     const innerW = w - pad * 2
 
-    const meta = `${getStatusReportFriday(update.created_at)} · ${update.author?.name || 'Sem autor'}`
+    const meta = `${getStatusReportFriday()} · ${update.author?.name || 'Sem autor'}`
     const highlights = (update.highlights || '').split('\n').filter(l => l.trim())
     const nextSteps = (update.next_steps || '').split('\n').filter(l => l.trim())
     const risks = update.risks || []
