@@ -61,8 +61,8 @@ function ControlPanel({ project, scopeItems = [], onSave }) {
       DESENVOLVIMENTO: !stageComplete('PLANEJAMENTO'),
       TESTES: !stageComplete('PLANEJAMENTO'),
       VALIDACAO_SOLICITANTE: !stageComplete('PLANEJAMENTO'),
-      ENTREGUE: !stageComplete('EXECUCAO'),
-      SUPORTE: !stageComplete('GO_LIVE'),
+      SUPORTE: !stageComplete('EXECUCAO'),
+      ENTREGUE: !stageComplete('GO_LIVE'),
     }
     return rules[phase] || false
   }
@@ -121,11 +121,11 @@ function ControlPanel({ project, scopeItems = [], onSave }) {
             <option value="VALIDACAO_SOLICITANTE" disabled={phaseBlocked('VALIDACAO_SOLICITANTE')}>
               Validação com o solicitante{phaseBlocked('VALIDACAO_SOLICITANTE') ? ' 🔒' : ''}
             </option>
-            <option value="ENTREGUE" disabled={phaseBlocked('ENTREGUE')}>
-              Entregue{phaseBlocked('ENTREGUE') ? ' 🔒' : ''}
-            </option>
             <option value="SUPORTE" disabled={phaseBlocked('SUPORTE')}>
               Suporte pós go-live{phaseBlocked('SUPORTE') ? ' 🔒' : ''}
+            </option>
+            <option value="ENTREGUE" disabled={phaseBlocked('ENTREGUE')}>
+              Entregue{phaseBlocked('ENTREGUE') ? ' 🔒' : ''}
             </option>
           </select>
         </div>
@@ -309,7 +309,7 @@ export default function ProjectDetail() {
     if (!confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) return
     try {
       await projectsService.delete(id)
-      if (project.current_phase === 'ENTREGUE' && !project.archived) {
+      if (project.current_phase === 'SUPORTE' && !project.archived) {
         navigate('/projetos/go-live')
       } else if (project.archived) {
         navigate('/projetos/arquivados')
@@ -880,9 +880,9 @@ export default function ProjectDetail() {
               scopeItems={scopeItems}
               onSave={async (data) => {
                 await projectsService.update(id, data)
-                if (data.current_phase === 'ENTREGUE') {
+                if (data.current_phase === 'SUPORTE') {
                   navigate('/projetos/go-live')
-                } else if (data.current_phase === 'SUPORTE') {
+                } else if (data.current_phase === 'ENTREGUE') {
                   navigate('/projetos/arquivados')
                 } else {
                   fetchProject()

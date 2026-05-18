@@ -121,7 +121,7 @@ export function Navbar() {
           {(user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) &&
             navLink('/projetos/backlog', 'Backlog')}
           {navLink('/projetos', 'Projetos ativos')}
-          {navLink('/projetos/go-live', 'Projetos em go-live')}
+          {navLink('/projetos/go-live', 'Suporte pós go-live')}
           {navLink('/projetos/arquivados', 'Projetos finalizados')}
           {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) && navLink('/usuarios', 'Usuários')}
           {user?.area === 'Tecnologia da Informação' && navLink('/api', 'API')}

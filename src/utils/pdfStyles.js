@@ -105,3 +105,12 @@ export function getPersonName(r) {
 export function getPersonArea(r) {
   return r?.user?.area || r?.manual_area || ''
 }
+
+export function getStatusReportFriday(dateStr) {
+  const date = new Date(dateStr)
+  const day = date.getDay()
+  const daysUntilFriday = day === 6 ? 6 : (5 - day + 7) % 7
+  const friday = new Date(date)
+  friday.setDate(date.getDate() + daysUntilFriday)
+  return friday.toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+}

@@ -66,7 +66,7 @@ export default function GoLiveProjects() {
       <div className="max-w-6xl mx-auto px-6 py-6">
 
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-base font-medium text-gray-900">Projetos em go-live</h1>
+          <h1 className="text-base font-medium text-gray-900">Suporte pós go-live</h1>
           <button onClick={() => navigate('/projetos')} className="text-xs text-primary-600 hover:text-primary-800">
             ← Voltar para ativos
           </button>
@@ -96,7 +96,7 @@ export default function GoLiveProjects() {
 
         {!loading && !error && filtered.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-sm text-gray-400">Nenhum projeto em go-live encontrado.</p>
+            <p className="text-sm text-gray-400">Nenhum projeto em suporte pós go-live encontrado.</p>
           </div>
         )}
 
