@@ -62,8 +62,8 @@ const PHASES = [
   { key: 'DESENVOLVIMENTO', label: 'Desenvolvimento' },
   { key: 'TESTES', label: 'Testes' },
   { key: 'VALIDACAO_SOLICITANTE', label: 'Validação' },
-  { key: 'ENTREGUE', label: 'Entregue' },
   { key: 'SUPORTE', label: 'Suporte pós go-live' },
+  { key: 'ENTREGUE', label: 'Entregue' },
 ]
 
 const FAROL_OPTIONS = [
