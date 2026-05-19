@@ -224,7 +224,7 @@ export default function Management() {
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-medium text-gray-500">Indicador PDTI - Projetos no prazo</p>
             <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-              dashboard.totals.active > 0 && (dashboard.by_farol.VERDE / dashboard.totals.active) >= 0.8
+              dashboard.totals.pdti_total > 0 && (dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) >= 0.8
                 ? 'bg-teal-50 text-teal-700'
                 : 'bg-red-50 text-red-600'
             }`}>
@@ -233,19 +233,19 @@ export default function Management() {
           </div>
           <div className="flex items-end gap-3 mb-2">
             <p className="text-2xl font-medium text-gray-900">
-              {dashboard.totals.active > 0
-                ? Math.round((dashboard.by_farol.VERDE / dashboard.totals.active) * 100)
+              {dashboard.totals.pdti_total > 0
+                ? Math.round((dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) * 100)
                 : 0}%
             </p>
             <p className="text-xs text-gray-400 mb-1">
-              {dashboard.by_farol.VERDE} de {dashboard.totals.active} projetos no prazo
+              {dashboard.totals.pdti_on_time} de {dashboard.totals.pdti_total} projetos no prazo
             </p>
           </div>
           <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              style={{ width: `${dashboard.totals.active > 0 ? Math.round((dashboard.by_farol.VERDE / dashboard.totals.active) * 100) : 0}%` }}
+              style={{ width: `${dashboard.totals.pdti_total > 0 ? Math.round((dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) * 100) : 0}%` }}
               className={`h-full rounded-full transition-all ${
-                dashboard.totals.active > 0 && (dashboard.by_farol.VERDE / dashboard.totals.active) >= 0.8
+                dashboard.totals.pdti_total > 0 && (dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) >= 0.8
                   ? 'bg-teal-500'
                   : 'bg-red-400'
               }`}
