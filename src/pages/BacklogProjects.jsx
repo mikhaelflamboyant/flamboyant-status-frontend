@@ -230,7 +230,14 @@ export default function BacklogProjects() {
       <div className="max-w-6xl mx-auto px-6 py-6">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h1 className="text-base font-medium text-gray-900">Backlog</h1>
+            <h1 className="text-base font-medium text-gray-900">
+              Backlog
+              {!loading && (
+                <span className="ml-2 text-sm font-normal text-gray-400">
+                  ({projects.length})
+                </span>
+              )}
+            </h1>
             <p className="text-xs text-gray-400 mt-0.5">
               Projetos aprovados aguardando atribuição de responsável
             </p>
