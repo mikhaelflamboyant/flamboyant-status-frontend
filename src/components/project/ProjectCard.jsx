@@ -68,6 +68,9 @@ export function ProjectCard({ project }) {
               <span className="text-gray-200">·</span>
               <Badge variant="gray">{PHASE_LABELS[project.current_phase]}</Badge>
               <Badge variant={priority.variant}>{priority.label}</Badge>
+              {project.complexity && (
+                <span className="text-xs text-gray-400">Complexidade {project.complexity}</span>
+              )}
             </div>
           </div>
         </div>

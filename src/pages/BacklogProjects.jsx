@@ -22,10 +22,10 @@ const AREAS = [
 ]
 
 const LEVEL_OPTIONS = [
-  { key: 'A', label: 'A — Estratégico' },
-  { key: 'B', label: 'B — Performance (ROI)' },
-  { key: 'C', label: 'C — Compliance' },
-  { key: 'D', label: 'D — Inovação e transformação digital' },
+  { key: 'A', label: 'A - Estratégico' },
+  { key: 'B', label: 'B - Performance (ROI)' },
+  { key: 'C', label: 'C - Compliance' },
+  { key: 'D', label: 'D - Inovação e transformação digital' },
 ]
 
 function MultiDropdown({ label, options, selected, onChange }) {

@@ -142,10 +142,11 @@ export default function Management() {
 
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Visão geral</p>
 
-        <div className="grid grid-cols-6 gap-3 mb-3">
+        <div className="grid grid-cols-7 gap-3 mb-3">
           <MetricCard label="Projetos ativos" value={dashboard.totals.active} onClick={() => navigate('/projetos')} />
           <MetricCard label="Finalizados" value={dashboard.totals.archived} onClick={() => navigate('/projetos/arquivados')} />
           <MetricCard label="Backlog" value={dashboard.totals.backlog} onClick={() => navigate('/projetos/backlog')} />
+          <MetricCard label="Em execução" value={dashboard.totals.in_execution} onClick={() => navigate('/projetos')} />
           <MetricCard label="Go-live" value={dashboard.totals.go_live} onClick={() => navigate('/projetos/go-live')} />
           <MetricCard label="Atrasados" value={dashboard.totals.overdue} color="#FCEBEB" textColor="#791F1F" onClick={() => navigate('/projetos?farol=VERMELHO')} />
           <MetricCard label="Conclusão média" value={`${dashboard.totals.avg_completion}%`} />
