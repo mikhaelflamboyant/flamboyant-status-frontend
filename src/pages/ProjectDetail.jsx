@@ -203,6 +203,8 @@ export default function ProjectDetail() {
   const [selectedPendingIds, setSelectedPendingIds] = useState([])
   const [editingGoLive, setEditingGoLive] = useState(false)
   const [goLiveValue, setGoLiveValue] = useState('')
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
 
   const fetchProject = async () => {
     try {
@@ -465,6 +467,18 @@ export default function ProjectDetail() {
     }
   }
 
+  const handleCancel = async () => {
+    if (!cancelReason.trim()) return
+    try {
+      await projectsService.cancel(id, cancelReason)
+      setShowCancelModal(false)
+      setCancelReason('')
+      navigate('/projetos')
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao cancelar projeto.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -673,20 +687,49 @@ export default function ProjectDetail() {
           </div>
           <div className="flex items-center gap-2">
             {canEdit && (
-              <button
-                onClick={() => navigate(`/projetos/${id}/editar`)}
-                className="text-xs text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 px-3 py-1.5 rounded-lg transition-colors font-medium"
-              >
+              <button onClick={() => navigate(`/projetos/${id}/editar`)}
+                className="text-xs text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
                 Editar projeto
               </button>
             )}
             {canDelete && (
-              <button
-                onClick={handleDelete}
-                className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors font-medium"
-              >
+              <button onClick={() => setShowCancelModal(true)}
+                className="text-xs text-amber-500 hover:text-amber-700 border border-amber-200 hover:border-amber-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
+                Cancelar projeto
+              </button>
+            )}
+            {canDelete && (
+              <button onClick={handleDelete}
+                className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
                 Excluir projeto
               </button>
+            )}
+
+            {showCancelModal && (
+              <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+                onClick={e => { if (e.target === e.currentTarget) setShowCancelModal(false) }}>
+                <div className="bg-white rounded-xl border border-gray-100 p-6 w-96 flex flex-col gap-4">
+                  <h3 className="text-sm font-medium text-gray-900">Cancelar projeto</h3>
+                  <p className="text-xs text-gray-500">Informe o motivo do cancelamento. O projeto será movido para a aba de projetos cancelados.</p>
+                  <textarea
+                    value={cancelReason}
+                    onChange={e => setCancelReason(e.target.value)}
+                    rows={4}
+                    placeholder="Descreva o motivo do cancelamento..."
+                    className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-amber-400 resize-none"
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => { setShowCancelModal(false); setCancelReason('') }}
+                      className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
+                      Voltar
+                    </button>
+                    <button onClick={handleCancel} disabled={!cancelReason.trim()}
+                      className="text-xs bg-amber-500 text-white px-4 py-1.5 rounded-lg hover:bg-amber-700 disabled:opacity-40 transition-colors font-medium">
+                      Confirmar cancelamento
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>

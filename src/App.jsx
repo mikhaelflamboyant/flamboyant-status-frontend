@@ -18,6 +18,7 @@ import Management from './pages/Management'
 import GoLiveProjects from './pages/GoLiveProjects'
 import FreshServiceRequests from './pages/FreshServiceRequests'
 import BacklogProjects from './pages/BacklogProjects'
+import CancelledProjects from './pages/CancelledProjects'
 
 function App() {
   return (
@@ -87,6 +88,12 @@ function App() {
         <Route path="/notificacoes" element={
           <ProtectedRoute>
             <Notifications />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/projetos/cancelados" element={
+          <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR']}>
+            <CancelledProjects />
           </ProtectedRoute>
         } />
 
