@@ -246,6 +246,9 @@ export default function ProjectDetail() {
   const isRequester = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'SOLICITANTE') ?? false
   const isFromTI = user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
   const canEdit = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
+  const isCancelled = project?.current_phase === 'CANCELADO'
+  const canRestore = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) &&
+  (user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role))
   const canDelete = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
   const canApproveScope = isFromTI && ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
   const canManageTasks = isFromTI && (
@@ -479,6 +482,16 @@ export default function ProjectDetail() {
     }
   }
 
+  const handleRestore = async () => {
+    if (!confirm('Restaurar este projeto para ativos?')) return
+    try {
+      await projectsService.restore(id)
+      navigate('/projetos')
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao restaurar projeto.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -503,6 +516,144 @@ export default function ProjectDetail() {
 
   const progressColor = FAROL_COLOR[project.traffic_light] || 'primary'
   const goLive = project.go_live ? new Date(project.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'
+
+  if (isCancelled) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="max-w-6xl mx-auto px-6 py-6">
+
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <button onClick={() => navigate('/projetos/cancelados')}
+                className="text-xs text-primary-600 hover:text-primary-800 transition-colors">
+                ← Projetos cancelados
+              </button>
+              <span className="text-xs text-gray-300">/</span>
+              <span className="text-xs text-gray-500 truncate max-w-xs">{project.title}</span>
+            </div>
+            {canRestore && (
+              <button onClick={handleRestore}
+                className="text-xs text-teal-600 hover:text-teal-800 border border-teal-200 hover:border-teal-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
+                Restaurar projeto
+              </button>
+            )}
+          </div>
+
+          <div className="bg-white border border-gray-100 rounded-xl p-6">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <h1 className="text-base font-medium text-gray-900 mb-2">{project.title}</h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="purple">{project.area}</Badge>
+                  {project.business_unit && <Badge variant="violet">{project.business_unit}</Badge>}
+                  <Badge variant="gray">
+                    {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
+                  </Badge>
+                  {project.level && (
+                    <span style={{ background: LEVEL_CONFIG[project.level]?.bg, color: LEVEL_CONFIG[project.level]?.text }}
+                      className="text-xs px-2.5 py-1 rounded-full font-medium">
+                      {LEVEL_CONFIG[project.level]?.label}
+                    </span>
+                  )}
+                  {project.complexity && (
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-medium">
+                      Complexidade: {project.complexity}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <span className="text-xs bg-red-50 text-red-600 px-3 py-1 rounded-full font-medium shrink-0">
+                Cancelado
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-2">Solicitante(s)</p>
+                {project.requesters?.filter(r => r.type === 'SOLICITANTE').length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {project.requesters.filter(r => r.type === 'SOLICITANTE').map(r => (
+                      <div key={r.id} className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">{r.user?.area || r.manual_area}</span>
+                        <div className="w-px h-3 bg-gray-200" />
+                        <span className="text-sm font-medium text-gray-800">{r.user?.name || r.manual_name}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm font-medium text-gray-800">{project.requester_name || '—'}</p>
+                )}
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-2">Responsável(is)</p>
+                {project.requesters?.filter(r => r.type === 'RESPONSAVEL').length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {project.requesters.filter(r => r.type === 'RESPONSAVEL').map(r => (
+                      <div key={r.id} className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">{r.user?.area || r.manual_area}</span>
+                        <div className="w-px h-3 bg-gray-200" />
+                        <span className="text-sm font-medium text-gray-800">{r.user?.name || r.manual_name}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm font-medium text-gray-800">{project.owner?.name || '—'}</p>
+                )}
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-1">Data de início</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {project.start_date ? new Date(project.start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-1">Go-live previsto</p>
+                <p className="text-sm font-medium text-gray-800">{goLive}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-1">Fase no cancelamento</p>
+                <p className="text-sm font-medium text-gray-800">Cancelado</p>
+              </div>
+            </div>
+
+            {project.description && (
+              <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                <p className="text-xs text-gray-400 mb-1">Descrição</p>
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{project.description}</p>
+              </div>
+            )}
+
+            {(project.cancel_reason || project.cancelled_by || project.cancelled_at) && (
+              <div className="bg-red-50 border border-red-100 rounded-lg p-4">
+                <p className="text-xs font-medium text-red-700 mb-3">Informações do cancelamento</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-red-400 mb-1">Cancelado por</p>
+                    <p className="text-sm font-medium text-red-800">{project.cancelled_by || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-red-400 mb-1">Data do cancelamento</p>
+                    <p className="text-sm font-medium text-red-800">
+                      {project.cancelled_at ? new Date(project.cancelled_at).toLocaleDateString('pt-BR') : '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-red-400 mb-1">Motivo</p>
+                    <p className="text-sm text-red-800 leading-relaxed">{project.cancel_reason || '—'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -94,20 +94,7 @@ export default function CancelledProjects() {
           <>
             <div className="flex flex-col gap-2.5">
               {paginated.map(p => (
-                <div key={p.id} className="relative">
-                  <ProjectCard project={p} />
-                  {canRestore && (
-                    <div className="absolute top-3 right-3" onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => handleRestore(p.id)}
-                        disabled={restoringId === p.id}
-                        className="text-xs text-teal-600 hover:text-teal-800 border border-teal-200 hover:border-teal-400 px-3 py-1.5 rounded-lg transition-colors font-medium bg-white disabled:opacity-40"
-                      >
-                        {restoringId === p.id ? 'Restaurando...' : 'Restaurar projeto'}
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <ProjectCard key={p.id} project={p} />
               ))}
             </div>
 
