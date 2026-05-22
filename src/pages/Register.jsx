@@ -22,7 +22,7 @@ const AREAS = [
   'Jurídico',
   'Legalização',
   'Manutenção',
-  'Marketing Coorporativo',
+  'Marketing Corporativo',
   'Marketing Institucional',
   'Marketing Urbanismo',
   'Pessoas e Cultura',

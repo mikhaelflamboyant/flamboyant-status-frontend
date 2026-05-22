@@ -63,24 +63,57 @@ export default function Projects() {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-3 mb-6">
-          <div className="bg-white border border-gray-100 rounded-xl p-4">
-            <p className="text-xs text-gray-400 mb-1">Total ativo</p>
-            <p className="text-2xl font-medium text-gray-900">{metrics.total}</p>
-          </div>
-          <div className="bg-white border border-gray-100 rounded-xl p-4">
-            <p className="text-xs text-gray-400 mb-1">No prazo</p>
-            <p className="text-2xl font-medium text-teal-600">{metrics.green}</p>
-          </div>
-          <div className="bg-white border border-gray-100 rounded-xl p-4">
-            <p className="text-xs text-gray-400 mb-1">Atenção</p>
-            <p className="text-2xl font-medium text-amber-500">{metrics.amber}</p>
-          </div>
-          <div className="bg-white border border-gray-100 rounded-xl p-4">
-            <p className="text-xs text-gray-400 mb-1">Atrasados</p>
-            <p className="text-2xl font-medium text-red-500">{metrics.red}</p>
-          </div>
-        </div>
+        {(() => {
+          const complexidade = (lista) => ({
+            alta: lista.filter(p => p.complexity === 'Alta').length,
+            media: lista.filter(p => p.complexity === 'Média').length,
+            baixa: lista.filter(p => p.complexity === 'Baixa').length,
+          })
+          const cTotal = complexidade(allFilteredProjects)
+          const cGreen = complexidade(allFilteredProjects.filter(p => p.traffic_light === 'VERDE'))
+          const cAmber = complexidade(allFilteredProjects.filter(p => p.traffic_light === 'AMARELO'))
+          const cRed = complexidade(allFilteredProjects.filter(p => p.traffic_light === 'VERMELHO'))
+
+          const ComplexLine = ({ c, total }) => {
+            const naoDefinida = total - c.alta - c.media - c.baixa
+            return (
+              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100">
+                {c.alta > 0 && <span className="text-xs text-gray-400">Alta: <span className="text-red-500 font-medium">{c.alta}</span></span>}
+                {c.media > 0 && <span className="text-xs text-gray-400">Média: <span className="text-amber-500 font-medium">{c.media}</span></span>}
+                {c.baixa > 0 && <span className="text-xs text-gray-400">Baixa: <span className="text-teal-600 font-medium">{c.baixa}</span></span>}
+                {naoDefinida > 0 && <span className="text-xs text-gray-300">Não def.: {naoDefinida}</span>}
+                {c.alta === 0 && c.media === 0 && c.baixa === 0 && naoDefinida === 0 && (
+                  <span className="text-xs text-gray-300">-</span>
+                )}
+              </div>
+            )
+          }
+
+          return (
+            <div className="grid grid-cols-4 gap-3 mb-6">
+              <div className="bg-white border border-gray-100 rounded-xl p-4">
+                <p className="text-xs text-gray-400 mb-1">Total ativo</p>
+                <p className="text-2xl font-medium text-gray-900">{metrics.total}</p>
+                <ComplexLine c={cTotal} total={allFilteredProjects.length} />
+              </div>
+              <div className="bg-white border border-gray-100 rounded-xl p-4">
+                <p className="text-xs text-gray-400 mb-1">No prazo</p>
+                <p className="text-2xl font-medium text-teal-600">{metrics.green}</p>
+                <ComplexLine c={cGreen} total={allFilteredProjects.filter(p => p.traffic_light === 'VERDE').length} />
+              </div>
+              <div className="bg-white border border-gray-100 rounded-xl p-4">
+                <p className="text-xs text-gray-400 mb-1">Atenção</p>
+                <p className="text-2xl font-medium text-amber-500">{metrics.amber}</p>
+                <ComplexLine c={cAmber} total={allFilteredProjects.filter(p => p.traffic_light === 'AMARELO').length} />
+              </div>
+              <div className="bg-white border border-gray-100 rounded-xl p-4">
+                <p className="text-xs text-gray-400 mb-1">Atrasados</p>
+                <p className="text-2xl font-medium text-red-500">{metrics.red}</p>
+                <ComplexLine c={cRed} total={allFilteredProjects.filter(p => p.traffic_light === 'VERMELHO').length} />
+              </div>
+            </div>
+          )
+        })()}
 
         <div className="mb-5">
           <ProjectFilters filters={filters} onChange={setFilters} hidePhase={view === 'kanban'} />

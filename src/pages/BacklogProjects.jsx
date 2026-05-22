@@ -13,7 +13,7 @@ const AREAS = [
   'Conservação','Contabilidade','Controladoria','Engenharia','Estacionamento',
   'Experiência Urbanismo','Family Office','Financeiro','Helicenter','In Concert',
   'Incorporação','Inovação','Instituto Flamboyant','Jurídico','Legalização','Manutenção',
-  'Marketing Coorporativo','Marketing Institucional','Marketing Urbanismo','Operações',
+  'Marketing Corporativo','Marketing Institucional','Marketing Urbanismo','Operações',
   'Pessoas e Cultura','Planejamento e Projetos','Planejamento Financeiro',
   'Planejamento Financeiro e Administrativo','Planejamento Financeiro Urbanismo','Processos',
   'Produtos e Projetos Urbanismo','Produtos Urbanismo','Projetos Executivos','Projetos Urbanismo',

@@ -11,7 +11,7 @@ import api from '../services/api'
 const AREAS = [
   'Administração Pessoal','Agropecuária','Arquitetura','Comercial','Conservação',
   'Contabilidade','Controladoria','Engenharia','Financeiro','Incorporação','Instituto',
-  'Inovação','Jurídico','Legalização','Manutenção','Marketing Coorporativo',
+  'Inovação','Jurídico','Legalização','Manutenção','Marketing Corporativo',
   'Marketing Institucional','Marketing Urbanismo','Pessoas e Cultura','Planejamento Financeiro',
   'Processos','Projetos Executivos','Relacionamento','Segurança','Suprimentos',
   'Tecnologia da Informação','Vendas',
