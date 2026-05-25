@@ -40,9 +40,13 @@ export function PDFExportGeral({ allProjects }) {
 
   const handleOpen = async () => {
     try {
-      const res = await api.get('/projects/go-live')
-      setGoLiveProjects(res.data)
-      const allIds = [...allProjects, ...res.data].map(p => p.id)
+      const [goLiveRes, archivedRes] = await Promise.all([
+        api.get('/projects/go-live'),
+        api.get('/projects/archived'),
+      ])
+      const extra = [...goLiveRes.data, ...archivedRes.data]
+      setGoLiveProjects(extra)
+      const allIds = [...allProjects, ...extra].map(p => p.id)
       setSelectedIds(allIds)
     } catch (err) {
       console.error(err)

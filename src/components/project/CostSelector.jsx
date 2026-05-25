@@ -2,10 +2,14 @@ import { useState } from 'react'
 
 const formatCurrency = (value) => {
   let clean = value.replace(/[^\d,]/g, '')
-  const parts = clean.split(',')
-  if (parts.length > 2) clean = parts[0] + ',' + parts.slice(1).join('')
+
+  const commaIndex = clean.indexOf(',')
+  if (commaIndex !== -1) {
+    clean = clean.slice(0, commaIndex + 1) + clean.slice(commaIndex + 1).replace(/,/g, '')
+  }
+
   const [intPart, decPart] = clean.split(',')
-  const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  const formatted = (intPart || '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
   return decPart !== undefined ? `${formatted},${decPart.slice(0, 2)}` : formatted
 }
 
