@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { projectsService } from '../services/projects.service'
 
-const PAGE_SIZE = 10
+const DEFAULT_PAGE_SIZE = 10
 
 export function useProjects() {
   const [searchParams] = useSearchParams()
@@ -10,6 +10,10 @@ export function useProjects() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(() => {
+    const saved = parseInt(sessionStorage.getItem('projectsPageSize'))
+    return [10, 50, 100].includes(saved) ? saved : DEFAULT_PAGE_SIZE
+  })
 
   const initialFarol = searchParams.get('farol') || ''
   const initialFiltro = searchParams.get('filtro') || ''
@@ -102,12 +106,12 @@ export function useProjects() {
     })
   }, [projects, filters])
 
-  const totalPages = Math.ceil(filteredProjects.length / PAGE_SIZE)
+  const totalPages = Math.ceil(filteredProjects.length / pageSize)
 
   const paginatedProjects = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE
-    return filteredProjects.slice(start, start + PAGE_SIZE)
-  }, [filteredProjects, page])
+    const start = (page - 1) * pageSize
+    return filteredProjects.slice(start, start + pageSize)
+  }, [filteredProjects, page, pageSize])
 
   const metrics = useMemo(() => {
     const base = filteredProjects
@@ -132,5 +136,7 @@ export function useProjects() {
     page,
     setPage,
     totalPages,
+    pageSize,
+    setPageSize,
   }
 }

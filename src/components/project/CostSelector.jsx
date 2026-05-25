@@ -1,10 +1,12 @@
 import { useState } from 'react'
 
 const formatCurrency = (value) => {
-  const numbers = value.replace(/\D/g, '')
-  if (!numbers) return ''
-  const amount = parseInt(numbers, 10)
-  return (amount / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  let clean = value.replace(/[^\d,]/g, '')
+  const parts = clean.split(',')
+  if (parts.length > 2) clean = parts[0] + ',' + parts.slice(1).join('')
+  const [intPart, decPart] = clean.split(',')
+  const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return decPart !== undefined ? `${formatted},${decPart.slice(0, 2)}` : formatted
 }
 
 const parseCurrency = (value) => {

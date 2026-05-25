@@ -9,7 +9,7 @@ import { useProjects } from '../hooks/useProjects'
 import { useAuth } from '../hooks/useAuth'
 
 export default function Projects() {
-  const { projects, allFilteredProjects, loading, error, filters, setFilters, metrics, totalProjects, page, setPage, totalPages, refetch } = useProjects()
+  const { projects, allFilteredProjects, loading, error, filters, setFilters, metrics, totalProjects, page, setPage, totalPages, refetch, pageSize, setPageSize } = useProjects()
   const navigate = useNavigate()
   const { user, canCreateProject } = useAuth()
   const [view, setView] = useState(() => localStorage.getItem('projectsView') || 'list')
@@ -151,9 +151,30 @@ export default function Projects() {
                 </div>
 
                 <div className="flex items-center justify-between mt-4">
-                  <p className="text-xs text-gray-400">
-                    {projects.length} projeto{projects.length !== 1 ? 's' : ''} nesta página · página {page} de {totalPages}
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-xs text-gray-400">
+                      {projects.length} projeto{projects.length !== 1 ? 's' : ''} nesta página · página {page} de {totalPages}
+                    </p>
+                    <select
+                      value={pageSize}
+                      onChange={e => {
+                        const val = e.target.value === 'custom'
+                          ? parseInt(prompt('Quantos projetos por página?') || pageSize)
+                          : parseInt(e.target.value)
+                        if (val > 0) {
+                          sessionStorage.setItem('projectsPageSize', val)
+                          setPageSize(val)
+                          setPage(1)
+                        }
+                      }}
+                      className="h-7 px-2 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 outline-none focus:border-primary-600"
+                    >
+                      <option value={10}>10 por página</option>
+                      <option value={50}>50 por página</option>
+                      <option value={100}>100 por página</option>
+                      <option value="custom">Personalizado...</option>
+                    </select>
+                  </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setPage(p => Math.max(1, p - 1))}
