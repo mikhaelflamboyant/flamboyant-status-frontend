@@ -193,17 +193,25 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
     const fetchRequesters = async () => {
       try {
         const response = await api.get('/projects')
-        const allRequesters = response.data.flatMap(p =>
-          p.requesters?.filter(r => r.type === 'SOLICITANTE' && r.user_id) || []
-        )
-        const unique = Array.from(
-          new Map(allRequesters.map(r => [r.user_id, { id: r.user_id, name: r.user?.name || r.manual_name }])).values()
-        ).sort((a, b) => a.name.localeCompare(b.name))
-        setRequesters(unique)
+        const seen = new Map()
+
+        response.data.forEach(p => {
+          if (filters.areas?.length > 0 && !filters.areas.includes(p.area)) return
+
+          p.requesters?.filter(r => r.type === 'SOLICITANTE').forEach(r => {
+            if (r.user_id && !seen.has(`user_${r.user_id}`)) {
+              seen.set(`user_${r.user_id}`, { id: r.user_id, name: r.user?.name || r.manual_name })
+            } else if (!r.user_id && r.manual_name && !seen.has(`manual_${r.manual_name}`)) {
+              seen.set(`manual_${r.manual_name}`, { id: `manual_${r.manual_name}`, name: r.manual_name })
+            }
+          })
+        })
+
+        setRequesters(Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name)))
       } catch (err) { console.error(err) }
     }
     fetchRequesters()
-  }, [])
+  }, [filters.areas])
 
   const hasAnyFilter = (
     filters.traffic_light?.length > 0 ||

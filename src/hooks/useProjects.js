@@ -90,9 +90,11 @@ export function useProjects() {
       }
 
       if (filters.requester_ids?.length > 0) {
-        const isRequester = project.requesters?.some(
-          r => filters.requester_ids.includes(r.user_id) && r.type === 'SOLICITANTE'
-        )
+        const isRequester = project.requesters?.some(r => {
+          if (r.type !== 'SOLICITANTE') return false
+          if (r.user_id) return filters.requester_ids.includes(r.user_id)
+          return filters.requester_ids.includes(`manual_${r.manual_name}`)
+        })
         if (!isRequester) return false
       }
 
