@@ -93,7 +93,7 @@ export default function ArchivedProjects() {
           <>
             <div className="flex flex-col gap-2.5">
               {paginated.map(project => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard key={project.id} project={project} page={page} />
               ))}
             </div>
 

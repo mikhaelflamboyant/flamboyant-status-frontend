@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Farol } from '../ui/Farol'
-import { Badge } from '../ui/Badge'
+import { Badge, AreaBadge, ComplexityBadge } from '../ui/Badge'
 import { ProgressBar } from '../ui/ProgressBar'
+import { LEVEL_CONFIG } from '../../utils/pdfStyles'
 
 const PHASE_LABELS = {
   RECEBIDA: 'Recebida',
@@ -28,8 +29,9 @@ const FAROL_COLOR = {
   VERMELHO: 'red',
 }
 
-export function ProjectCard({ project }) {
+export function ProjectCard({ project, page = 1 }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const priority = PRIORITY_CONFIG[project.priority] || PRIORITY_CONFIG[3]
   const progressColor = FAROL_COLOR[project.traffic_light] || 'primary'
   const goLive = project.go_live
@@ -38,7 +40,7 @@ export function ProjectCard({ project }) {
 
   return (
     <div
-      onClick={() => navigate(`/projetos/${project.id}`)}
+      onClick={() => navigate(`/projetos/${project.id}`, { state: { from: location.pathname + location.search, page } })}
       className="bg-white border border-gray-100 rounded-xl px-5 py-4 cursor-pointer hover:border-gray-200 hover:shadow-sm transition-all group"
     >
       <div className="flex items-center justify-between gap-4">
@@ -64,13 +66,20 @@ export function ProjectCard({ project }) {
               </button>
             </div>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              <span className="text-xs text-gray-400">{project.area}</span>
-              <span className="text-gray-200">·</span>
-              <Badge variant="gray">{PHASE_LABELS[project.current_phase]}</Badge>
-              <Badge variant={priority.variant}>{priority.label}</Badge>
-              {project.complexity && (
-                <span className="text-xs text-gray-400">Complexidade {project.complexity}</span>
+              <AreaBadge area={project.area} />
+              {project.business_unit && <Badge variant="violet">{project.business_unit}</Badge>}
+              <Badge variant="gray">
+                {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
+              </Badge>
+              {project.level && (
+                <span
+                  style={{ background: LEVEL_CONFIG[project.level]?.bg, color: LEVEL_CONFIG[project.level]?.text }}
+                  className="text-xs px-2.5 py-1 rounded-full font-medium"
+                >
+                  {LEVEL_CONFIG[project.level]?.label}
+                </span>
               )}
+              <ComplexityBadge value={project.complexity} />
             </div>
           </div>
         </div>

@@ -103,7 +103,7 @@ export default function GoLiveProjects() {
         {!loading && !error && paginated.length > 0 && (
           <>
             <div className="flex flex-col gap-2.5">
-              {paginated.map(p => <ProjectCard key={p.id} project={p} />)}
+              {paginated.map(p => <ProjectCard key={p.id} project={p} page={page} />)}
             </div>
 
             {totalPages > 1 && (

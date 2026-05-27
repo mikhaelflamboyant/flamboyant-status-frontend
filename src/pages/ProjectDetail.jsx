@@ -1,11 +1,11 @@
 import { PDFExport } from '../components/project/PDFExport'
 import api from '../services/api'
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { PhaseStrip } from '../components/project/PhaseStrip'
 import { Farol } from '../components/ui/Farol'
-import { Badge } from '../components/ui/Badge'
+import { Badge, AreaBadge, ComplexityBadge } from '../components/ui/Badge'
 import { ProgressBar } from '../components/ui/ProgressBar'
 import { StatusUpdateCard } from '../components/project/StatusUpdateCard'
 import { projectsService } from '../services/projects.service'
@@ -158,6 +158,8 @@ export default function ProjectDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user, isPrivileged } = useAuth()
+  const location = useLocation()
+  const backTo = location.state?.from || '/projetos'
 
   const [project, setProject] = useState(null)
   const [statusUpdates, setStatusUpdates] = useState([])
@@ -545,7 +547,7 @@ export default function ProjectDetail() {
               <div>
                 <h1 className="text-base font-medium text-gray-900 mb-2">{project.title}</h1>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="purple">{project.area}</Badge>
+                  <AreaBadge area={project.area} />
                   {project.business_unit && <Badge variant="violet">{project.business_unit}</Badge>}
                   <Badge variant="gray">
                     {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
@@ -556,11 +558,7 @@ export default function ProjectDetail() {
                       {LEVEL_CONFIG[project.level]?.label}
                     </span>
                   )}
-                  {project.complexity && (
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-medium">
-                      Complexidade: {project.complexity}
-                    </span>
-                  )}
+                  <ComplexityBadge value={project.complexity} />
                 </div>
               </div>
               <span className="text-xs bg-red-50 text-red-600 px-3 py-1 rounded-full font-medium shrink-0">
@@ -828,17 +826,17 @@ export default function ProjectDetail() {
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/projetos')}
+              onClick={() => navigate(backTo)}
               className="text-xs text-primary-600 hover:text-primary-800 transition-colors"
             >
-              ← Projetos
+              ← Voltar
             </button>
             <span className="text-xs text-gray-300">/</span>
             <span className="text-xs text-gray-500 truncate max-w-xs">{project.title}</span>
           </div>
           <div className="flex items-center gap-2">
             {canEdit && (
-              <button onClick={() => navigate(`/projetos/${id}/editar`)}
+              <button onClick={() => navigate(`/projetos/${id}/editar`, { state: { from: backTo } })}
                 className="text-xs text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
                 Editar projeto
               </button>
@@ -890,7 +888,7 @@ export default function ProjectDetail() {
             <div>
               <h1 className="text-base font-medium text-gray-900 mb-2">{project.title}</h1>
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="purple">{project.area}</Badge>
+                <AreaBadge area={project.area} />
                 {project.business_unit && <Badge variant="violet">{project.business_unit}</Badge>}
                 <Badge variant="gray">
                   {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
@@ -904,14 +902,10 @@ export default function ProjectDetail() {
                   </span>
                 ) : (
                   <span className="text-xs bg-gray-100 text-gray-400 px-2.5 py-1 rounded-full">
-                    Não definido
+                    Não definido  
                   </span>
                 )}
-                {project.complexity && (
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full font-medium">
-                    Complexidade: {project.complexity}
-                  </span>
-                )}
+                <ComplexityBadge value={project.complexity} />
               </div>
             </div>
             <div className="flex items-center gap-3">

@@ -94,7 +94,7 @@ export default function CancelledProjects() {
           <>
             <div className="flex flex-col gap-2.5">
               {paginated.map(p => (
-                <ProjectCard key={p.id} project={p} />
+                <ProjectCard key={p.id} project={p} page={page} />
               ))}
             </div>
 

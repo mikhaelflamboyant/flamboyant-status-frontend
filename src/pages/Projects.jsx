@@ -146,7 +146,7 @@ export default function Projects() {
               <>
                 <div className="flex flex-col gap-2.5">
                   {projects.map(project => (
-                    <ProjectCard key={project.id} project={project} />
+                    <ProjectCard key={project.id} project={project} page={page} />
                   ))}
                 </div>
 

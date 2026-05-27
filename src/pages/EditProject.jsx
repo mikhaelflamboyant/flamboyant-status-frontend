@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { Input } from '../components/ui/Input'
 import { LevelSelector } from '../components/project/LevelSelector'
@@ -11,6 +11,8 @@ import api from '../services/api'
 export default function EditProject() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const backTo = location.state?.from || '/projetos'
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -139,7 +141,7 @@ export default function EditProject() {
           budget_actual: c.budget_actual ? parseFloat(String(c.budget_actual).replace(/\./g, '').replace(',', '.')) : null,
         })),
       })
-      navigate(`/projetos/${id}`)
+      navigate(`/projetos/${id}`, { state: { from: backTo } })
     } catch (err) {
       setError(err.response?.data?.error || 'Erro ao salvar projeto.')
     } finally {
@@ -166,7 +168,7 @@ export default function EditProject() {
           <h1 className="text-base font-medium text-gray-900">Editar projeto</h1>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate(`/projetos/${id}`)}
+              onClick={() => navigate(`/projetos/${id}`, { state: { from: backTo } })}
               className="text-xs text-primary-600 hover:text-primary-800 transition-colors"
             >
               ← Voltar ao projeto
@@ -243,6 +245,22 @@ export default function EditProject() {
             <div className="flex flex-col gap-3">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Descrição</p>
 
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">
+                  Complexidade do projeto
+                </label>
+                <select
+                  value={form.complexity}
+                  onChange={e => handleChange('complexity', e.target.value)}
+                  className={selectCls}
+                >
+                  <option value="">Selecionar complexidade</option>
+                  <option value="Alta">Alta</option>
+                  <option value="Média">Média</option>
+                  <option value="Baixa">Baixa</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-500">
@@ -316,22 +334,6 @@ export default function EditProject() {
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-gray-500">
-                  Complexidade do projeto
-                </label>
-                <select
-                  value={form.complexity}
-                  onChange={e => handleChange('complexity', e.target.value)}
-                  className={selectCls}
-                >
-                  <option value="">Selecionar complexidade</option>
-                  <option value="Alta">Alta</option>
-                  <option value="Média">Média</option>
-                  <option value="Baixa">Baixa</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-500">
                   Descrição <span className="text-red-400">*</span>
                 </label>
                 <textarea
@@ -361,7 +363,7 @@ export default function EditProject() {
             <div className="flex gap-3 justify-end pt-2 border-t border-gray-100">
               <button
                 type="button"
-                onClick={() => navigate(`/projetos/${id}`)}
+                onClick={() => navigate(`/projetos/${id}`, { state: { from: backTo } })}
                 style={{ minWidth: '120px' }}
                 className="text-xs font-medium text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 py-2 rounded-lg transition-colors text-center"
               >

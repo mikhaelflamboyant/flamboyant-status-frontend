@@ -203,6 +203,22 @@ export default function NewProject() {
             <div className="flex flex-col gap-3">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Descrição</p>
 
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-500">
+                  Complexidade do projeto
+                </label>
+                <select
+                  value={form.complexity}
+                  onChange={e => handleChange('complexity', e.target.value)}
+                  className={selectCls}
+                >
+                  <option value="">Selecionar complexidade</option>
+                  <option value="Alta">Alta</option>
+                  <option value="Média">Média</option>
+                  <option value="Baixa">Baixa</option>
+                </select>
+              </div>
+
               <div className={`grid gap-3 ${isBacklog ? 'grid-cols-1' : 'grid-cols-3'}`}>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-500">
@@ -276,22 +292,6 @@ export default function NewProject() {
               <div className="flex flex-col gap-1">
                 <p className="text-xs font-medium text-gray-500">Nível do projeto <span className="text-red-400">*</span></p>
                 <LevelSelector value={form.level} onChange={(v) => setForm(f => ({...f, level: v}))} />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-gray-500">
-                  Complexidade do projeto
-                </label>
-                <select
-                  value={form.complexity}
-                  onChange={e => handleChange('complexity', e.target.value)}
-                  className={selectCls}
-                >
-                  <option value="">Selecionar complexidade</option>
-                  <option value="Alta">Alta</option>
-                  <option value="Média">Média</option>
-                  <option value="Baixa">Baixa</option>
-                </select>
               </div>
 
               <div className="flex flex-col gap-1">
