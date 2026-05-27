@@ -160,6 +160,7 @@ export default function ProjectDetail() {
   const { user, isPrivileged } = useAuth()
   const location = useLocation()
   const backTo = location.state?.from || '/projetos'
+  const backPage = location.state?.page || 1
 
   const [project, setProject] = useState(null)
   const [statusUpdates, setStatusUpdates] = useState([])
@@ -826,7 +827,7 @@ export default function ProjectDetail() {
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate(backTo)}
+              onClick={() => navigate(backTo, { state: { restorePage: backPage } })}
               className="text-xs text-primary-600 hover:text-primary-800 transition-colors"
             >
               ← Voltar

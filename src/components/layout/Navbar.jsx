@@ -89,6 +89,9 @@ export function Navbar() {
   const navLink = (to, label) => (
     <Link
       to={to}
+      onClick={() => {
+        if (to === '/projetos') sessionStorage.removeItem('projectsPage')
+      }}
       className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-medium ${
         isActive(to)
           ? 'bg-primary-50 text-primary-800'

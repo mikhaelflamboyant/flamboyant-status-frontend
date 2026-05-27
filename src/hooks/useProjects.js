@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { projectsService } from '../services/projects.service'
 
@@ -9,7 +9,9 @@ export function useProjects() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(() => {
+    return parseInt(sessionStorage.getItem('projectsPage') || '1')
+  })
   const [pageSize, setPageSize] = useState(() => {
     const saved = parseInt(sessionStorage.getItem('projectsPageSize'))
     return [10, 50, 100].includes(saved) ? saved : DEFAULT_PAGE_SIZE
@@ -52,14 +54,24 @@ export function useProjects() {
     }
   }
 
+  const isFirstRender = useRef(true)
+
   useEffect(() => {
     fetchProjects()
   }, [filters.filtro])
 
   useEffect(() => {
-    setPage(1)
-    sessionStorage.setItem('projectFilters', JSON.stringify(filters))
+    const savedJSON = sessionStorage.getItem('projectFilters')
+    const currentJSON = JSON.stringify(filters)
+    if (savedJSON !== currentJSON) {
+      setPage(1)
+    }
+    sessionStorage.setItem('projectFilters', currentJSON)
   }, [filters])
+
+  useEffect(() => {
+    sessionStorage.setItem('projectsPage', page)
+  }, [page])
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {

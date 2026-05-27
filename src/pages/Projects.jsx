@@ -1,6 +1,6 @@
 import { PDFExportGeral } from '../components/project/PDFExportGeral'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { ProjectCard } from '../components/project/ProjectCard'
 import { ProjectKanban } from '../components/project/ProjectKanban'

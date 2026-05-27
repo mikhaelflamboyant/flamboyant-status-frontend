@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { ProjectCard } from '../components/project/ProjectCard'
 import { projectsService } from '../services/projects.service'
@@ -15,8 +15,9 @@ export default function ArchivedProjects() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [filtro, setFiltro] = useState(searchParams.get('filtro') || '')
-  const [page, setPage] = useState(1)
   const navigate = useNavigate()
+  const location = useLocation()
+  const [page, setPage] = useState(location.state?.restorePage || 1)
 
   useEffect(() => {
     const fetch = async () => {
