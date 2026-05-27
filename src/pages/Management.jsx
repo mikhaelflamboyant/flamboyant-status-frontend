@@ -164,7 +164,7 @@ export default function Management() {
           <MetricCard label="Conclusão média" value={`${dashboard.totals.avg_completion}%`} />
         </div>
 
-        <div className="grid grid-cols-4 gap-3 mb-5">
+        <div className="grid grid-cols-5 gap-3 mb-5">
           <MetricCard
             label="Sem status recente"
             value={dashboard.totals.no_recent_status}
@@ -185,6 +185,13 @@ export default function Management() {
             color="#E1F5EE" textColor="#085041"
             sub="concluídos no mês atual"
             onClick={() => navigate('/projetos/arquivados?filtro=entregues_mes')}
+          />
+          <MetricCard
+            label={`Cancelados em ${currentMonth}`}
+            value={dashboard.totals.cancelled_this_month}
+            color="#FCEBEB" textColor="#791F1F"
+            sub="cancelados no mês atual"
+            onClick={() => navigate('/projetos/cancelados')}
           />
           <MetricCard
             label="Funcionários sem projetos"
