@@ -6,8 +6,8 @@ const PHASES = [
   { key: 'DESENVOLVIMENTO', label: 'Desenvolvimento' },
   { key: 'TESTES', label: 'Testes' },
   { key: 'VALIDACAO_SOLICITANTE', label: 'Validação' },
-  { key: 'ENTREGUE', label: 'Entregue' },
   { key: 'SUPORTE', label: 'Suporte' },
+  { key: 'ENTREGUE', label: 'Entregue' },
 ]
 
 export function PhaseStrip({ currentPhase }) {
