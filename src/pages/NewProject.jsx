@@ -94,8 +94,18 @@ export default function NewProject() {
         owner_id: responsibles.find(r => !String(r.user_id).startsWith('manual_'))?.user_id || null,
         costs: costs.map(c => ({
           name: c.name,
-          budget_planned: parseFloat(String(c.budget_planned).replace(/\./g, '').replace(',', '.')),
-          budget_actual: c.budget_actual ? parseFloat(String(c.budget_actual).replace(/\./g, '').replace(',', '.')) : null,
+          budget_planned: parseFloat(
+            String(c.budget_planned)
+              .replace(/\.(?=\d{3}([.,]|$))/g, '')
+              .replace(',', '.')
+          ),
+          budget_actual: c.budget_actual
+            ? parseFloat(
+                String(c.budget_actual)
+                  .replace(/\.(?=\d{3}([.,]|$))/g, '')
+                  .replace(',', '.')
+              )
+            : null,
         })),
       }
       const response = await projectsService.create(data)
