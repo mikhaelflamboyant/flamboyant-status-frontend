@@ -38,7 +38,8 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      const response = await authService.ldapLogin({ email: ldapEmail, password: ldapPassword })
+      const email = ldapEmail.includes('@') ? ldapEmail : `${ldapEmail}@flamboyant.com.br`
+      const response = await authService.ldapLogin({ email, password: ldapPassword })
       login(response.data.user, response.data.token)
       navigate('/projetos')
     } catch (err) {
@@ -84,8 +85,8 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input
               label="E-mail corporativo"
-              type="email"
-              placeholder="joao@grupoflamboyant.com.br"
+              type="text"
+              placeholder="mikhael.maia"
               value={ldapEmail}
               onChange={e => setLdapEmail(e.target.value)}
               required
