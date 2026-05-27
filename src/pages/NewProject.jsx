@@ -164,7 +164,7 @@ export default function NewProject() {
                 selected={requesters}
                 onChange={setRequesters}
                 buttonLabel="+ Adicionar solicitante"
-                excluded={[...responsibles, ...members]}
+                excluded={[...members]}
               />
 
               {!isBacklog && (
@@ -175,7 +175,7 @@ export default function NewProject() {
                   selected={responsibles}
                   onChange={setResponsibles}
                   buttonLabel="+ Adicionar responsável"
-                  excluded={[...requesters, ...members]}
+                  excluded={[...members]}
                 />
               )}
 

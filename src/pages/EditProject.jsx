@@ -208,7 +208,7 @@ export default function EditProject() {
                 selected={requesters}
                 onChange={setRequesters}
                 buttonLabel="+ Adicionar solicitante"
-                excluded={[...responsibles, ...members]}
+                excluded={[...members]}
               />
 
               <PeopleSelector
@@ -218,7 +218,7 @@ export default function EditProject() {
                 selected={responsibles}
                 onChange={setResponsibles}
                 buttonLabel="+ Adicionar responsável"
-                excluded={[...requesters, ...members]}
+                excluded={[...members]}
               />
 
               <PeopleSelector
