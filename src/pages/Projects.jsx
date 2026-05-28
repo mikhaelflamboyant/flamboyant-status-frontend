@@ -1,5 +1,5 @@
 import { PDFExportGeral } from '../components/project/PDFExportGeral'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { ProjectCard } from '../components/project/ProjectCard'
@@ -13,8 +13,19 @@ export default function Projects() {
   const navigate = useNavigate()
   const { user, canCreateProject } = useAuth()
   const [view, setView] = useState(() => localStorage.getItem('projectsView') || 'list')
+  const [showGoLiveBanner, setShowGoLiveBanner] = useState(true)
 
   const isTI = user?.area === 'Tecnologia da Informação'
+
+  const goLiveCritical = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const sevenDays = new Date(today)
+    sevenDays.setDate(today.getDate() + 7)
+    return allFilteredProjects
+      .filter(p => p.go_live && new Date(p.go_live) >= today && new Date(p.go_live) <= sevenDays)
+      .sort((a, b) => new Date(a.go_live) - new Date(b.go_live))
+  }, [allFilteredProjects])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -118,6 +129,46 @@ export default function Projects() {
         <div className="mb-5">
           <ProjectFilters filters={filters} onChange={setFilters} hidePhase={view === 'kanban'} />
         </div>
+
+        {showGoLiveBanner && goLiveCritical.length > 0 && (
+          <div className="mb-4 bg-danger-50 border border-danger-100 rounded-xl p-3.5 flex items-start gap-3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A32D2D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <div className="flex-1">
+              <p className="text-xs font-medium text-danger-800 mb-1">
+                {goLiveCritical.length} projeto{goLiveCritical.length !== 1 ? 's' : ''} com go-live nos próximos 7 dias
+              </p>
+              <p className="text-xs text-danger-600 mb-2">Verifique se estão no prazo e com status atualizado.</p>
+              <div className="flex flex-wrap gap-2">
+                {goLiveCritical.map(p => {
+                  const days = Math.ceil((new Date(p.go_live) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24))
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => navigate(`/projetos/${p.id}`)}
+                      className="flex items-center gap-2 bg-white border border-danger-100 rounded-full px-3 py-1 text-xs text-danger-600 hover:border-danger-400 transition-colors"
+                    >
+                      <span>{p.title.length > 35 ? p.title.slice(0, 35) + '…' : p.title}</span>
+                      <span className="bg-danger-50 text-danger-800 font-medium px-1.5 py-0.5 rounded-full">
+                        {days === 0 ? 'hoje' : `${days}d`}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <button
+              onClick={() => setShowGoLiveBanner(false)}
+              className="shrink-0 text-danger-400 hover:text-danger-600 transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        )}
 
         {loading && (
           <div className="text-center py-16">
