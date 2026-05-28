@@ -208,6 +208,7 @@ export default function ProjectDetail() {
   const [goLiveValue, setGoLiveValue] = useState('')
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
+  const [scopeSort, setScopeSort] = useState({ field: 'data', dir: 'asc' })
 
   const fetchProject = async () => {
     try {
@@ -1490,6 +1491,39 @@ export default function ProjectDetail() {
                 })()}
               </div>
               <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Ordenar</span>
+                {[
+                  { key: 'data', label: 'Data fim' },
+                  { key: 'conc', label: 'Conclusão' },
+                  { key: 'prog', label: 'Progresso' },
+                ].map(chip => {
+                  const isActive = scopeSort.field === chip.key
+                  const isDesc = isActive && scopeSort.dir === 'desc'
+                  return (
+                    <button
+                      key={chip.key}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => setScopeSort(prev =>
+                        prev.field === chip.key
+                          ? { ...prev, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+                          : { field: chip.key, dir: 'asc' }
+                      )}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                        isActive
+                          ? 'bg-primary-600 border-primary-600 text-white shadow-sm'
+                          : 'bg-white border-gray-300 text-gray-600 hover:border-primary-400 hover:text-primary-700'
+                      }`}
+                    >
+                      {chip.label}
+                      <span className={`transition-transform duration-150 ${isDesc ? 'rotate-180' : ''} ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                        {isActive ? '↑' : '↕'}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="flex items-center gap-2">
                 {canApproveScope && scopeItems.some(s => s.status === 'AGUARDANDO_APROVACAO' || s.pending_action) && (
                   <button
                     onClick={() => { setShowPendingModal(true); setSelectedPendingIds([]) }}
@@ -1582,7 +1616,23 @@ export default function ProjectDetail() {
 
             <div className="flex flex-col gap-3">
               {STAGES.map(stage => {
-                const stageItems = scopeItems.filter(s => s.stage === stage.key)
+                const stageItems = scopeItems
+                  .filter(s => s.stage === stage.key)
+                  .sort((a, b) => {
+                    const { field, dir } = scopeSort
+                    let valA, valB
+                    if (field === 'data') {
+                      valA = a.display_end_date ? new Date(a.display_end_date).getTime() : Infinity
+                      valB = b.display_end_date ? new Date(b.display_end_date).getTime() : Infinity
+                    } else if (field === 'conc') {
+                      valA = a.completion_date ? 0 : 1
+                      valB = b.completion_date ? 0 : 1
+                    } else {
+                      valA = a.display_completion_pct || 0
+                      valB = b.display_completion_pct || 0
+                    }
+                    return dir === 'asc' ? valA - valB : valB - valA
+                  })
                 const allDone = stageItems.length > 0 && stageItems.every(s => s.completion_date)
                 const hasItems = stageItems.length > 0
                 const doneCnt = stageItems.filter(s => s.completion_date).length
