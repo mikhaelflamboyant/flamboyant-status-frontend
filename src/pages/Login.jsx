@@ -86,7 +86,7 @@ export default function Login() {
             <Input
               label="E-mail corporativo"
               type="text"
-              placeholder="mikhael.maia"
+              placeholder="seu@email.com.br"
               value={ldapEmail}
               onChange={e => setLdapEmail(e.target.value)}
               required
