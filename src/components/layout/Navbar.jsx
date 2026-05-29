@@ -107,9 +107,7 @@ export function Navbar() {
 
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-md bg-primary-600 flex items-center justify-center">
-            <div className="w-2.5 h-2.5 rounded-sm bg-primary-50 opacity-80" />
-          </div>
+          <img src="/logo.png" alt="Grupo Flamboyant" className="w-6 h-6 object-contain" />
           <span className="text-sm font-medium text-gray-900 tracking-tight">
             Status report
           </span>
