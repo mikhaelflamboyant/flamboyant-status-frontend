@@ -169,7 +169,7 @@ function MultiDropdown({ label, options, selected, onChange, renderOption }) {
 
 const selectCls = 'h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 outline-none focus:border-primary-600 transition-colors cursor-pointer'
 
-export function ProjectFilters({ filters, onChange, hidePhase }) {
+export function ProjectFilters({ filters, onChange, hidePhase, extraOptions }) {
   const { user } = useAuth()
   const [users, setUsers] = useState([])
   const [requesters, setRequesters] = useState([])
@@ -307,8 +307,13 @@ export function ProjectFilters({ filters, onChange, hidePhase }) {
         className={selectCls}
       >
         <option value="">Filtros especiais</option>
-        <option value="sem_status">Sem status recente</option>
-        <option value="sem_golive">Sem go-live definido</option>
+        {extraOptions
+          ? extraOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)
+          : <>
+              <option value="sem_status">Sem status recente</option>
+              <option value="sem_golive">Sem go-live definido</option>
+            </>
+        }
       </select>
 
       {hasAnyFilter && (

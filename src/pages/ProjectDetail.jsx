@@ -33,6 +33,19 @@ const FAROL_COLOR = {
   VERMELHO: 'red',
 }
 
+const PHASE_LABELS = {
+  RECEBIDA: 'Recebida',
+  ENTREVISTA_SOLICITANTE: 'Entrevista com o solicitante',
+  LEVANTAMENTO_REQUISITOS: 'Levantamento de requisitos',
+  ANALISE_SOLUCAO: 'Análise da solução',
+  DESENVOLVIMENTO: 'Desenvolvimento',
+  TESTES: 'Testes',
+  VALIDACAO_SOLICITANTE: 'Validação com o solicitante',
+  SUPORTE: 'Suporte pós go-live',
+  ENTREGUE: 'Entregue',
+  CANCELADO: 'Cancelado',
+}
+
 function ControlPanel({ project, scopeItems = [], onSave }) {
   const isLegacy = project.legacy === true
   const [form, setForm] = useState({

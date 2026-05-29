@@ -2,23 +2,26 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { ProjectCard } from '../components/project/ProjectCard'
+import { ProjectFilters } from '../components/project/ProjectFilters'
 import { projectsService } from '../services/projects.service'
-import { useAuth } from '../hooks/useAuth'
 
 const PAGE_SIZE = 10
 
 export default function CancelledProjects() {
   const navigate = useNavigate()
-  const { user } = useAuth()
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const [restoringId, setRestoringId] = useState(null)
-
-  const canRestore = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) &&
-    (user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role))
+  const [filters, setFilters] = useState({
+    search: '',
+    traffic_light: [],
+    areas: [],
+    levels: [],
+    responsible_ids: [],
+    requester_ids: [],
+    filtro: '',
+  })
 
   const fetchProjects = () => {
     projectsService.listCancelled().then(r => {
@@ -31,33 +34,36 @@ export default function CancelledProjects() {
   }
 
   useEffect(() => { fetchProjects() }, [])
-  useEffect(() => { setPage(1) }, [search])
+  useEffect(() => { setPage(1) }, [filters])
 
   const filtered = useMemo(() => {
-    return projects.filter(p =>
-      p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.area.toLowerCase().includes(search.toLowerCase())
-    )
-  }, [projects, search])
+    return projects.filter(p => {
+      const search = filters.search.toLowerCase()
+      if (search && !p.title.toLowerCase().includes(search) && !p.area.toLowerCase().includes(search)) return false
+      if (filters.traffic_light?.length > 0 && !filters.traffic_light.includes(p.traffic_light)) return false
+      if (filters.areas?.length > 0 && !filters.areas.includes(p.area)) return false
+      if (filters.levels?.length > 0 && !filters.levels.includes(p.level)) return false
+      if (filters.responsible_ids?.length > 0) {
+        const ok = p.requesters?.some(r => filters.responsible_ids.includes(r.user_id) && r.type === 'RESPONSAVEL')
+        if (!ok) return false
+      }
+      if (filters.requester_ids?.length > 0) {
+        const ok = p.requesters?.some(r => {
+          if (r.type !== 'SOLICITANTE') return false
+          if (r.user_id) return filters.requester_ids.includes(r.user_id)
+          return filters.requester_ids.includes(`manual_${r.manual_name}`)
+        })
+        if (!ok) return false
+      }
+      return true
+    })
+  }, [projects, filters])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE
     return filtered.slice(start, start + PAGE_SIZE)
   }, [filtered, page])
-
-  const handleRestore = async (id) => {
-    if (!confirm('Restaurar este projeto para ativos?')) return
-    setRestoringId(id)
-    try {
-      await projectsService.restore(id)
-      fetchProjects()
-    } catch (err) {
-      alert(err.response?.data?.error || 'Erro ao restaurar projeto.')
-    } finally {
-      setRestoringId(null)
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -71,14 +77,8 @@ export default function CancelledProjects() {
           </button>
         </div>
 
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Buscar por nome ou área..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-700 outline-none focus:border-primary-600 min-w-64"
-          />
+        <div className="mb-5">
+          <ProjectFilters filters={filters} onChange={setFilters} hidePhase />
         </div>
 
         {loading && <div className="text-center py-16"><p className="text-sm text-gray-400">Carregando...</p></div>}
@@ -93,11 +93,8 @@ export default function CancelledProjects() {
         {!loading && !error && paginated.length > 0 && (
           <>
             <div className="flex flex-col gap-2.5">
-              {paginated.map(p => (
-                <ProjectCard key={p.id} project={p} page={page} />
-              ))}
+              {paginated.map(p => <ProjectCard key={p.id} project={p} page={page} />)}
             </div>
-
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">
                 <p className="text-xs text-gray-400">
