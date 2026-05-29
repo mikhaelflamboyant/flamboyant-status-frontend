@@ -23,8 +23,10 @@ export default function CancelledProjects() {
     filtro: '',
   })
 
-  const fetchProjects = () => {
-    projectsService.listCancelled().then(r => {
+  const fetchProjects = (filtro = '') => {
+    setLoading(true)
+    const params = filtro === 'sem_cronograma' ? 'filtro=sem_cronograma' : ''
+    projectsService.listCancelled(params).then(r => {
       setProjects(r.data)
       setLoading(false)
     }).catch(() => {
@@ -33,7 +35,7 @@ export default function CancelledProjects() {
     })
   }
 
-  useEffect(() => { fetchProjects() }, [])
+  useEffect(() => { fetchProjects(filters.filtro) }, [filters.filtro])
   useEffect(() => { setPage(1) }, [filters])
 
   const filtered = useMemo(() => {
@@ -78,7 +80,14 @@ export default function CancelledProjects() {
         </div>
 
         <div className="mb-5">
-          <ProjectFilters filters={filters} onChange={setFilters} hidePhase />
+          <ProjectFilters
+            filters={filters}
+            onChange={setFilters}
+            hidePhase
+            extraOptions={[
+              { value: 'sem_cronograma', label: 'Sem cronograma' },
+            ]}
+          />
         </div>
 
         {loading && <div className="text-center py-16"><p className="text-sm text-gray-400">Carregando...</p></div>}

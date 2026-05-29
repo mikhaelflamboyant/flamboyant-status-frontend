@@ -25,14 +25,16 @@ export default function GoLiveProjects() {
   })
 
   useEffect(() => {
-    projectsService.listGoLive().then(r => {
+    setLoading(true)
+    const params = filters.filtro === 'sem_cronograma' ? 'filtro=sem_cronograma' : ''
+    projectsService.listGoLive(params).then(r => {
       setProjects(r.data)
       setLoading(false)
     }).catch(() => {
       setError('Erro ao carregar projetos em go-live.')
       setLoading(false)
     })
-  }, [])
+  }, [filters.filtro])
 
   useEffect(() => { setPage(1) }, [filters])
 
@@ -93,6 +95,7 @@ export default function GoLiveProjects() {
             extraOptions={[
               { value: 'go_live_proximo', label: 'Go-live nos próximos 30 dias' },
               { value: 'go_live_atrasado', label: 'Go-live atrasado' },
+              { value: 'sem_cronograma', label: 'Sem cronograma' },
             ]}
           />
         </div>

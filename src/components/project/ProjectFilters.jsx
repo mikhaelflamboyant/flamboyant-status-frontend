@@ -312,6 +312,7 @@ export function ProjectFilters({ filters, onChange, hidePhase, extraOptions }) {
           : <>
               <option value="sem_status">Sem status recente</option>
               <option value="sem_golive">Sem go-live definido</option>
+              <option value="sem_cronograma">Sem cronograma</option>
             </>
         }
       </select>

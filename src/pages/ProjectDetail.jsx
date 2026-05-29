@@ -404,6 +404,10 @@ export default function ProjectDetail() {
 
   const handleCreateScopeItem = async () => {
     if (!scopeForm.title) return
+    if (!scopeForm.stage) {
+      alert('Selecione uma etapa para a atividade.')
+      return
+    }
     setScopeLoading(true)
     try {
       await scopeService.create(id, scopeForm)

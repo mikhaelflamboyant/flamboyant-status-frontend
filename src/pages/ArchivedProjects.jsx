@@ -29,7 +29,9 @@ export default function ArchivedProjects() {
     const fetch = async () => {
       setLoading(true)
       try {
-        const serverFiltro = filters.filtro === 'entregues_mes' ? 'filtro=entregues_mes' : ''
+        const serverFiltro = ['entregues_mes', 'sem_cronograma'].includes(filters.filtro)
+          ? `filtro=${filters.filtro}`
+          : ''
         const response = await projectsService.listArchived(serverFiltro)
         setProjects(response.data)
       } catch {
@@ -91,6 +93,7 @@ export default function ArchivedProjects() {
             hidePhase
             extraOptions={[
               { value: 'entregues_mes', label: 'Entregues no mês' },
+              { value: 'sem_cronograma', label: 'Sem cronograma' },
             ]}
           />
         </div>
