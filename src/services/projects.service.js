@@ -17,4 +17,5 @@ export const projectsService = {
   getFreshserviceRequests: () => api.get('/projects/freshservice-requests'),
   approveFreshservice: (id, data) => api.patch(`/projects/${id}/approve-freshservice`, data),
   rejectFreshservice: (id) => api.delete(`/projects/${id}/reject-freshservice`),
+  duplicate: (id, data) => api.post(`/projects/${id}/duplicate`, data),
 }

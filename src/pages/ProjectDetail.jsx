@@ -209,6 +209,9 @@ export default function ProjectDetail() {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [scopeSort, setScopeSort] = useState({ field: 'data', dir: 'asc' })
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false)
+  const [duplicateForm, setDuplicateForm] = useState({ title: '', include_team: true, include_schedule: false, include_costs: false })
+  const [duplicating, setDuplicating] = useState(false)
 
   const fetchProject = async () => {
     try {
@@ -471,6 +474,24 @@ export default function ProjectDetail() {
       fetchProject()
     } catch (err) {
       console.error(err)
+    }
+  }
+
+  const handleDuplicate = async () => {
+    setDuplicating(true)
+    try {
+      const response = await projectsService.duplicate(id, {
+        title: duplicateForm.title || `Cópia — ${project.title}`,
+        include_team: duplicateForm.include_team,
+        include_schedule: duplicateForm.include_schedule,
+        include_costs: duplicateForm.include_costs,
+      })
+      setShowDuplicateModal(false)
+      navigate(`/projetos/${response.data.id}`)
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao duplicar projeto.')
+    } finally {
+      setDuplicating(false)
     }
   }
 
@@ -838,6 +859,13 @@ export default function ProjectDetail() {
           </div>
           <div className="flex items-center gap-2">
             {canEdit && (
+              <button
+                onClick={() => { setShowDuplicateModal(true); setDuplicateForm({ title: `Cópia — ${project.title}`, include_team: true, include_schedule: false, include_costs: false }) }}
+                className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
+                Duplicar
+              </button>
+            )}
+            {canEdit && (
               <button onClick={() => navigate(`/projetos/${id}/editar`, { state: { from: backTo } })}
                 className="text-xs text-primary-600 hover:text-primary-800 border border-primary-200 hover:border-primary-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
                 Editar projeto
@@ -884,6 +912,76 @@ export default function ProjectDetail() {
             )}
           </div>
         </div>
+
+        {showDuplicateModal && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+            onClick={e => { if (e.target === e.currentTarget) setShowDuplicateModal(false) }}>
+            <div className="bg-white rounded-xl border border-gray-100 p-6 w-[480px] flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">Duplicar projeto</h3>
+                  <p className="text-xs text-gray-400">Escolha o que será copiado para o novo projeto</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-gray-400">Título do novo projeto</label>
+                <input
+                  value={duplicateForm.title}
+                  onChange={e => setDuplicateForm(f => ({ ...f, title: e.target.value }))}
+                  className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs text-gray-400 mb-1">Incluir no novo projeto</label>
+                {[
+                  { key: 'include_team', label: 'Solicitantes e responsáveis', sub: 'Mesmo time vinculado ao projeto original' },
+                  { key: 'include_schedule', label: 'Cronograma', sub: 'Atividades e etapas sem datas e sem % de conclusão' },
+                  { key: 'include_costs', label: 'Custos planejados', sub: 'Valores planejados sem os realizados' },
+                ].map(opt => (
+                  <div
+                    key={opt.key}
+                    onClick={() => setDuplicateForm(f => ({ ...f, [opt.key]: !f[opt.key] }))}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${
+                      duplicateForm[opt.key] ? 'border-primary-200 bg-primary-50/40' : 'border-gray-100 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                      duplicateForm[opt.key] ? 'bg-primary-600 border-primary-600' : 'border-gray-300'
+                    }`}>
+                      {duplicateForm[opt.key] && (
+                        <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                          <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-800">{opt.label}</p>
+                      <p className="text-xs text-gray-400">{opt.sub}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2 border-t border-gray-100">
+                <button onClick={() => setShowDuplicateModal(false)}
+                  className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
+                  Cancelar
+                </button>
+                <button onClick={handleDuplicate} disabled={duplicating}
+                  className="text-xs bg-primary-600 text-white px-4 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium">
+                  {duplicating ? 'Criando...' : 'Criar cópia'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white border border-gray-100 rounded-xl p-6 mb-4">
           <div className="flex items-start justify-between gap-4 mb-5">
