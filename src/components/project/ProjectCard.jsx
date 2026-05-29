@@ -15,14 +15,6 @@ const PHASE_LABELS = {
   ENTREGUE: 'Entregue',
 }
 
-const PRIORITY_CONFIG = {
-  1: { label: 'Prioridade 1', variant: 'green' },
-  2: { label: 'Prioridade 2', variant: 'green' },
-  3: { label: 'Prioridade 3', variant: 'amber' },
-  4: { label: 'Prioridade 4', variant: 'red' },
-  5: { label: 'Prioridade 5', variant: 'red' },
-}
-
 const FAROL_COLOR = {
   VERDE: 'green',
   AMARELO: 'amber',
@@ -32,11 +24,17 @@ const FAROL_COLOR = {
 export function ProjectCard({ project, page = 1 }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const priority = PRIORITY_CONFIG[project.priority] || PRIORITY_CONFIG[3]
   const progressColor = FAROL_COLOR[project.traffic_light] || 'primary'
   const goLive = project.go_live
     ? new Date(project.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
     : 'Sem previsão'
+
+  const lastStatusAt = project.status_updates?.[0]?.created_at
+  const daysSinceStatus = lastStatusAt
+    ? Math.floor((new Date() - new Date(lastStatusAt)) / (1000 * 60 * 60 * 24))
+    : null
+
+  const noStatusDays = daysSinceStatus !== null && daysSinceStatus >= 7 ? daysSinceStatus : null
 
   return (
     <div
@@ -48,7 +46,7 @@ export function ProjectCard({ project, page = 1 }) {
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Farol value={project.traffic_light} hideLabel />
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <p className="text-sm font-medium text-gray-900 truncate group-hover:text-primary-700 transition-colors">
                 {project.title}
               </p>
@@ -64,6 +62,18 @@ export function ProjectCard({ project, page = 1 }) {
                   <line x1="10" y1="14" x2="21" y2="3"/>
                 </svg>
               </button>
+              {noStatusDays !== null && (
+                <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
+                  noStatusDays >= 14
+                    ? 'bg-danger-50 text-danger-600'
+                    : 'bg-amber-50 text-amber-600'
+                }`}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                  Sem status há {noStatusDays}d
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               <AreaBadge area={project.area} />
@@ -87,7 +97,12 @@ export function ProjectCard({ project, page = 1 }) {
         <div className="flex flex-col items-end gap-1.5 min-w-110px">
           <ProgressBar value={project.completion_pct} color={progressColor} />
           <span className="text-xs text-gray-400">Go-live: {goLive}</span>
-          {project.updated_at && (
+          {lastStatusAt && (
+            <span className={`text-xs ${noStatusDays !== null ? (noStatusDays >= 14 ? 'text-danger-400' : 'text-amber-400') : 'text-gray-300'}`}>
+              Atualizado: {new Date(lastStatusAt).toLocaleDateString('pt-BR')}
+            </span>
+          )}
+          {!lastStatusAt && project.updated_at && (
             <span className="text-xs text-gray-300">
               Atualizado: {new Date(project.updated_at).toLocaleDateString('pt-BR')}
             </span>

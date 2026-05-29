@@ -1061,6 +1061,36 @@ export default function ProjectDetail() {
 
           <PhaseStrip currentPhase={project.current_phase} />
 
+          {project.phase_history?.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-50">
+              <p className="text-xs text-gray-400 mb-3">Histórico de fases</p>
+              <div className="relative pl-5">
+                <div className="absolute left-1.5 top-1 bottom-1 w-px bg-gray-100" />
+                {project.phase_history.map((h, i) => {
+                  const isLast = i === project.phase_history.length - 1
+                  return (
+                    <div key={h.id} className="relative mb-3 last:mb-0">
+                      <div className={`absolute -left-3.5 top-1 w-2 h-2 rounded-full border-2 ${
+                        isLast ? 'bg-primary-600 border-primary-600' : 'bg-white border-gray-300'
+                      }`} />
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-xs font-medium ${isLast ? 'text-primary-700' : 'text-gray-700'}`}>
+                          {PHASE_LABELS[h.to_phase] || h.to_phase}
+                        </span>
+                        <span className="text-xs text-gray-300">·</span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(h.changed_at).toLocaleDateString('pt-BR')}
+                        </span>
+                        <span className="text-xs text-gray-300">·</span>
+                        <span className="text-xs text-gray-400">{h.changed_by_user?.name}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {(
             ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) ||
             (isFromTI && isResponsible)
