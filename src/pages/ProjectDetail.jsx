@@ -1504,7 +1504,7 @@ export default function ProjectDetail() {
                     <p className="text-xs text-gray-400">Responsável(is)</p>
                     <MultiAssignee
                       label="Selecionar"
-                      options={project?.requesters?.filter(r => r.type === 'RESPONSAVEL').map(r => ({ id: r.user_id || `manual_${r.id}`, name: r.user?.name || r.manual_name })) || []}
+                      options={project?.requesters?.filter(r => r.type === 'RESPONSAVEL' && r.user_id).map(r => ({ id: r.user_id, name: r.user?.name })) || []}
                       selected={taskForm.assignee_ids || []}
                       onChange={val => setTaskForm({ ...taskForm, assignee_ids: val })}
                     />
@@ -1578,7 +1578,7 @@ export default function ProjectDetail() {
                             <p className="text-xs text-gray-400">Responsável(is)</p>
                             <MultiAssignee
                               label="Selecionar"
-                              options={project?.requesters?.filter(r => r.type === 'RESPONSAVEL').map(r => ({ id: r.user_id || `manual_${r.id}`, name: r.user?.name || r.manual_name })) || []}
+                              options={project?.requesters?.filter(r => r.type === 'RESPONSAVEL' && r.user_id).map(r => ({ id: r.user_id, name: r.user?.name })) || []}
                               selected={editTaskForm.assignee_ids || []}
                               onChange={val => setEditTaskForm({ ...editTaskForm, assignee_ids: val })}
                             />
