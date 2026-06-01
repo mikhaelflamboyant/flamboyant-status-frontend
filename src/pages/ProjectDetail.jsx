@@ -1,6 +1,6 @@
 import { PDFExport } from '../components/project/PDFExport'
 import api from '../services/api'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { PhaseStrip } from '../components/project/PhaseStrip'
@@ -44,6 +44,85 @@ const PHASE_LABELS = {
   SUPORTE: 'Suporte pós go-live',
   ENTREGUE: 'Entregue',
   CANCELADO: 'Cancelado',
+}
+
+function MultiAssignee({ label, options, selected, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const toggle = (id) => {
+    if (selected.includes(id)) onChange(selected.filter(x => x !== id))
+    else onChange([...selected, id])
+  }
+
+  const selectedNames = options.filter(o => selected.includes(o.id)).map(o => o.name)
+  const btnLabel = selectedNames.length === 0
+    ? label
+    : selectedNames.length === 1
+      ? selectedNames[0]
+      : `${selectedNames[0]} +${selectedNames.length - 1}`
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`h-8 px-3 text-xs border rounded-lg outline-none flex items-center gap-1.5 w-full justify-between transition-colors ${
+          selected.length > 0 ? 'border-primary-300 bg-primary-50 text-primary-700' : 'border-gray-200 bg-white text-gray-600'
+        }`}
+      >
+        <span className="truncate">{btnLabel}</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute top-9 left-0 z-50 bg-white border border-gray-200 rounded-lg p-1.5 min-w-[180px] max-h-48 overflow-y-auto shadow-lg">
+          {options.length === 0 && (
+            <p className="text-xs text-gray-400 px-2 py-1.5">Nenhum responsável disponível</p>
+          )}
+          {options.map(opt => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => toggle(opt.id)}
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                selected.includes(opt.id) ? 'bg-primary-600 border-primary-600' : 'border-gray-300'
+              }`}>
+                {selected.includes(opt.id) && (
+                  <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                    <polyline points="1,5 4,8 9,2" stroke="white" strokeWidth="1.5"/>
+                  </svg>
+                )}
+              </div>
+              <span className="text-xs text-gray-700">{opt.name}</span>
+            </button>
+          ))}
+          {selected.length > 0 && (
+            <>
+              <div className="border-t border-gray-100 my-1" />
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="w-full text-left px-2 py-1.5 text-xs text-gray-400 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                Limpar seleção
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function ControlPanel({ project, scopeItems = [], onSave }) {
@@ -202,7 +281,7 @@ export default function ProjectDetail() {
   const [tasks, setTasks] = useState([])
   const [taskTab, setTaskTab] = useState('pendentes')
   const [showTaskForm, setShowTaskForm] = useState(false)
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', assignee_id: '', start_date: '', end_date: '', scope_item_id: null })
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', assignee_ids: [], start_date: '', end_date: '', scope_item_id: null })
   const [taskLoading, setTaskLoading] = useState(false)
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editTaskForm, setEditTaskForm] = useState({})
@@ -352,10 +431,11 @@ export default function ProjectDetail() {
     try {
       await tasksService.create(id, {
         ...taskForm,
+        assignee_ids: taskForm.assignee_ids || [],
         phase: project?.current_phase || null,
         due_date: taskForm.end_date || null,
       })
-      setTaskForm({ title: '', description: '', assignee_id: '', due_date: '' })
+      setTaskForm({ title: '', description: '', assignee_ids: [], due_date: '' })
       setShowTaskForm(false)
       fetchProject()
     } catch (err) {
@@ -390,7 +470,7 @@ export default function ProjectDetail() {
       await tasksService.update(id, editingTaskId, {
         title: editTaskForm.title,
         description: editTaskForm.description,
-        assignee_id: editTaskForm.assignee_id || null,
+        assignee_ids: editTaskForm.assignee_ids || [],
         start_date: editTaskForm.start_date || null,
         end_date: editTaskForm.end_date || null,
       })
@@ -1421,17 +1501,13 @@ export default function ProjectDetail() {
                 />
                 <div className="grid grid-cols-4 gap-3">
                   <div className="flex flex-col gap-1">
-                    <p className="text-xs text-gray-400">Responsável</p>
-                    <select
-                      value={taskForm.assignee_id}
-                      onChange={e => setTaskForm({ ...taskForm, assignee_id: e.target.value })}
-                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                    >
-                      <option value="">Selecionar</option>
-                      {project?.requesters?.filter(r => r.type === 'RESPONSAVEL' && r.user_id).map(r => (
-                        <option key={r.user_id} value={r.user_id}>{r.user?.name || r.manual_name}</option>
-                      ))}
-                    </select>
+                    <p className="text-xs text-gray-400">Responsável(is)</p>
+                    <MultiAssignee
+                      label="Selecionar"
+                      options={project?.requesters?.filter(r => r.type === 'RESPONSAVEL' && r.user_id).map(r => ({ id: r.user_id, name: r.user?.name || r.manual_name })) || []}
+                      selected={taskForm.assignee_ids || []}
+                      onChange={val => setTaskForm({ ...taskForm, assignee_ids: val })}
+                    />
                   </div>
                   <div className="flex flex-col gap-1">
                     <p className="text-xs text-gray-400">Atividade do cronograma</p>
@@ -1499,17 +1575,13 @@ export default function ProjectDetail() {
                         />
                         <div className="grid grid-cols-3 gap-2">
                           <div className="flex flex-col gap-1">
-                            <p className="text-xs text-gray-400">Responsável</p>
-                            <select
-                              value={editTaskForm.assignee_id || ''}
-                              onChange={e => setEditTaskForm({ ...editTaskForm, assignee_id: e.target.value })}
-                              className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                            >
-                              <option value="">Nenhum</option>
-                              {project?.requesters?.filter(r => r.type === 'RESPONSAVEL' && r.user_id).map(r => (
-                                <option key={r.user_id} value={r.user_id}>{r.user?.name || r.manual_name}</option>
-                              ))}
-                            </select>
+                            <p className="text-xs text-gray-400">Responsável(is)</p>
+                            <MultiAssignee
+                              label="Selecionar"
+                              options={project?.requesters?.filter(r => r.type === 'RESPONSAVEL' && r.user_id).map(r => ({ id: r.user_id, name: r.user?.name || r.manual_name })) || []}
+                              selected={editTaskForm.assignee_ids || []}
+                              onChange={val => setEditTaskForm({ ...editTaskForm, assignee_ids: val })}
+                            />
                           </div>
                           <div className="flex flex-col gap-1">
                             <p className="text-xs text-gray-400">Data de início</p>
@@ -1561,7 +1633,12 @@ export default function ProjectDetail() {
                               <p className="text-xs text-gray-400 mt-0.5 whitespace-pre-wrap">{task.description}</p>
                             )}
                             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                              {task.assignee && <span className="text-xs text-gray-400">→ {task.assignee.name}</span>}
+                              {task.assignees?.length > 0
+                                ? task.assignees.map(a => (
+                                    <span key={a.user_id} className="text-xs text-gray-400">→ {a.user.name}</span>
+                                  ))
+                                : task.assignee && <span className="text-xs text-gray-400">→ {task.assignee.name}</span>
+                              }
                               {task.phase && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{task.phase}</span>}
                               {task.start_date && (
                                 <span className="text-xs text-gray-400">
@@ -1584,14 +1661,14 @@ export default function ProjectDetail() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          {isResponsible && task.assignee_id === user?.id && !task.completed && (
+                          {isResponsible && task.assignees?.some(a => a.user_id === user?.id) && !task.completed && (
                             <button
                               onClick={() => {
                                 setEditingTaskId(task.id)
                                 setEditTaskForm({
                                   title: task.title,
                                   description: task.description || '',
-                                  assignee_id: task.assignee_id || '',
+                                  assignee_ids: task.assignees?.map(a => a.user_id) || [],
                                   start_date: task.start_date ? new Date(task.start_date).toISOString().split('T')[0] : '',
                                   end_date: task.end_date ? new Date(task.end_date).toISOString().split('T')[0] : '',
                                 })
@@ -1741,6 +1818,7 @@ export default function ProjectDetail() {
                   <div className="flex flex-col gap-1">
                     <p className="text-xs text-gray-400">Data de fim</p>
                     <input type="date" value={scopeForm.end_date}
+                      min={scopeForm.start_date || undefined}
                       onChange={e => setScopeForm({ ...scopeForm, end_date: e.target.value })}
                       className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                     />
@@ -1901,6 +1979,7 @@ export default function ProjectDetail() {
                                               <div className="flex flex-col gap-1">
                                                 <p className="text-xs text-gray-400">Fim</p>
                                                 <input type="date" value={editScopeForm.end_date || ''}
+                                                  min={editScopeForm.start_date || undefined}
                                                   onChange={e => setEditScopeForm({ ...editScopeForm, end_date: e.target.value })}
                                                   className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                                                 />
