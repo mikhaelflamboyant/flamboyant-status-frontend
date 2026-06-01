@@ -195,7 +195,7 @@ export default function EditProject() {
 
               <Input
                 label="Título do projeto"
-                placeholder="Ex: Integração ERP — módulo financeiro"
+                placeholder="Ex: Integração ERP - módulo financeiro"
                 value={form.title}
                 onChange={e => handleChange('title', e.target.value)}
                 required
