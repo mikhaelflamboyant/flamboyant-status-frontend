@@ -367,7 +367,8 @@ export default function BacklogProjects() {
                       {canApprove && (
                         <button
                           onClick={() => handleReject(project.id)}
-                          className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors"
+                          className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                          style={{ background: '#A32D2D', color: '#fff' }}
                         >
                           Rejeitar
                         </button>

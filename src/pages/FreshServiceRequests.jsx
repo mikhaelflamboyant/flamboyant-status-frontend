@@ -162,7 +162,8 @@ export default function FreshServiceRequests() {
                       </button>
                       <button
                         onClick={() => handleReject(req.id)}
-                        className="text-xs text-red-400 hover:text-red-600 border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition-colors"
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                        style={{ background: '#A32D2D', color: '#fff' }}
                       >
                         Rejeitar
                       </button>
@@ -269,7 +270,8 @@ export default function FreshServiceRequests() {
                     <button
                       onClick={() => handleApprove(req.id)}
                       disabled={saving}
-                      className="text-xs bg-primary-600 text-white px-4 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50 font-medium"
+                      className="text-xs px-4 py-1.5 rounded-lg disabled:opacity-50 font-medium"
+                      style={{ background: '#0F6E56', color: '#fff' }}
                     >
                       {saving ? 'Salvando...' : 'Confirmar aprovação'}
                     </button>

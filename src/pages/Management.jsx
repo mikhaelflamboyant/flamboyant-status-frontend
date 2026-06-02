@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { managementService } from '../services/management.service'
 import { scopeService } from '../services/scope.service'
@@ -114,7 +114,8 @@ function RejectModal({ projectTitle, onConfirm, onCancel }) {
         <button
           onClick={() => onConfirm(reason)}
           disabled={!reason.trim()}
-          className="text-xs px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="text-xs px-3 py-1.5 rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+          style={{ background: '#A32D2D', color: '#fff' }}
         >
           Confirmar rejeição
         </button>
@@ -316,19 +317,21 @@ function ApprovalsTab() {
                       <button
                         onClick={() => handleApprove(proj.project_id, proj.project_title, proj.items)}
                         disabled={isLoading}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-teal-50 text-teal-800 border border-teal-200 hover:bg-teal-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                        style={{ background: '#0F6E56', color: '#fff' }}
                       >
-                        {isLoading ? 'Processando...' : '✓ Aprovar cronograma'}
+                        {isLoading ? 'Processando...' : 'Aprovar cronograma'}
                       </button>
                       <button
                         onClick={() => setRejectingId(isRejecting ? null : proj.project_id)}
                         disabled={isLoading}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                        style={{ background: '#A32D2D', color: '#fff' }}
                       >
-                        ✕ Rejeitar
+                        Rejeitar
                       </button>
                       <button
-                        onClick={() => navigate(`/projetos/${proj.project_id}`)}
+                        onClick={() => navigate(`/projetos/${proj.project_id}`, { state: { from: '/painel?tab=aprovacoes' } })}
                         className="text-xs text-primary-600 hover:text-primary-800 transition-colors ml-auto"
                       >
                         Ver projeto →
@@ -393,7 +396,8 @@ function ApprovalsTab() {
 export default function Management() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState('analise')
+  const [searchParams] = useSearchParams()
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'analise')
   const [dashboard, setDashboard] = useState(null)
   const [usersData, setUsersData] = useState(null)
   const [activeProjectsList, setActiveProjectsList] = useState([])
@@ -455,28 +459,32 @@ export default function Management() {
 
         <h1 className="text-base font-medium text-gray-900 mb-4">Painel de gestão</h1>
 
-        <div className="flex gap-1 mb-6 border-b border-gray-200">
+        <div className="flex gap-1 mb-5">
           <button
             onClick={() => setActiveTab('analise')}
-            className={`px-4 py-2 text-xs font-medium transition-colors border-b-2 -mb-px ${
+            className={`text-xs px-4 py-2 rounded-lg font-medium transition-colors border ${
               activeTab === 'analise'
-                ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'bg-primary-600 text-white border-primary-600'
+                : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
             }`}
           >
             Análise
           </button>
           <button
             onClick={() => setActiveTab('aprovacoes')}
-            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium transition-colors border-b-2 -mb-px ${
+            className={`flex items-center gap-2 text-xs px-4 py-2 rounded-lg font-medium transition-colors border ${
               activeTab === 'aprovacoes'
-                ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'bg-primary-600 text-white border-primary-600'
+                : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
             }`}
           >
             Aprovações
             {pendingCount > 0 && (
-              <span className="text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full font-medium">
+              <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                activeTab === 'aprovacoes'
+                  ? 'bg-white text-primary-600'
+                  : 'bg-amber-100 text-amber-800'
+              }`}>
                 {pendingCount}
               </span>
             )}
