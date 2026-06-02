@@ -156,7 +156,8 @@ export default function FreshServiceRequests() {
                             description: req.description || '',
                           }))
                         }}
-                        className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors font-medium"
+                        className="text-xs px-3 py-1.5 rounded-lg transition-colors font-medium"
+                        style={{ background: '#0F6E56', color: '#fff' }}
                       >
                         Aprovar
                       </button>
