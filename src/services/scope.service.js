@@ -10,4 +10,6 @@ export const scopeService = {
   reject: (projectId) => api.post(`/projects/${projectId}/scope/reject`),
   approveItems: (projectId, ids) => api.post(`/projects/${projectId}/scope/approve-items`, { ids }),
   rejectItems: (projectId, ids) => api.post(`/projects/${projectId}/scope/reject-items`, { ids }),
+  approveScopeItem: (projectId, itemId) => api.post(`/projects/${projectId}/scope/approve-items`, { ids: [itemId] }),
+  rejectScopeItem: (projectId, itemId, reason) => api.post(`/projects/${projectId}/scope/reject-items`, { ids: [itemId], reason }),
 }

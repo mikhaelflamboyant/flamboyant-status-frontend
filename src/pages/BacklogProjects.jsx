@@ -123,6 +123,9 @@ export default function BacklogProjects() {
   const [filterLevels, setFilterLevels] = useState([])
   const [filterRequesters, setFilterRequesters] = useState([])
 
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(() => parseInt(sessionStorage.getItem('backlogPageSize') || '10'))
+
   const canAssignOthers = ['GERENTE', 'COORDENADOR', 'ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
   const canApprove = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
 
@@ -143,6 +146,8 @@ export default function BacklogProjects() {
       setLoading(false)
     }
   }
+
+  useEffect(() => { setPage(1) }, [search, filterAreas, filterLevels, filterRequesters])
 
   useEffect(() => {
     fetchProjects()
@@ -223,6 +228,9 @@ export default function BacklogProjects() {
   })
 
   const hasFilters = search || filterAreas.length > 0 || filterLevels.length > 0 || filterRequesters.length > 0
+
+  const totalPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize))
+  const paginatedProjects = filteredProjects.slice((page - 1) * pageSize, page * pageSize)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -311,7 +319,7 @@ export default function BacklogProjects() {
         )}
 
         <div className="flex flex-col gap-4">
-          {filteredProjects.map(project => (
+          {paginatedProjects.map(project => (
             <div key={project.id} className="bg-white border border-gray-100 rounded-xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -488,6 +496,63 @@ export default function BacklogProjects() {
             </div>
           ))}
         </div>
+
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-gray-400">
+              {filteredProjects.length} projeto{filteredProjects.length !== 1 ? 's' : ''} · página {page} de {totalPages}
+            </p>
+            <select
+              value={pageSize}
+              onChange={e => {
+                const val = e.target.value === 'custom'
+                  ? parseInt(prompt('Quantos projetos por página?') || pageSize)
+                  : parseInt(e.target.value)
+                if (val > 0) {
+                  sessionStorage.setItem('backlogPageSize', val)
+                  setPageSize(val)
+                  setPage(1)
+                }
+              }}
+              className="h-7 px-2 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 outline-none focus:border-primary-600"
+            >
+              <option value={10}>10 por página</option>
+              <option value={50}>50 por página</option>
+              <option value={100}>100 por página</option>
+              <option value="custom">Personalizado...</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="h-8 px-3 text-xs border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+            >
+              ← Anterior
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`h-8 w-8 text-xs rounded-lg border transition-colors ${
+                  p === page
+                    ? 'bg-primary-600 text-white border-primary-600 font-medium'
+                    : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="h-8 px-3 text-xs border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+            >
+              Próxima →
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   )

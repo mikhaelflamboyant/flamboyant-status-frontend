@@ -162,11 +162,7 @@ function ApprovalsTab() {
   const handleApprove = async (projectId, projectTitle, items) => {
     setActionLoading(prev => ({ ...prev, [projectId]: true }))
     try {
-      await Promise.all(
-        items.map(item =>
-          scopeService.approveScopeItem(item.id).catch(() => null)
-        )
-      )
+      await scopeService.approveItems(projectId, items.map(i => i.id))
       await load()
     } catch {
     } finally {
@@ -178,11 +174,7 @@ function ApprovalsTab() {
     setActionLoading(prev => ({ ...prev, [projectId]: true }))
     setRejectingId(null)
     try {
-      await Promise.all(
-        items.map(item =>
-          scopeService.rejectScopeItem(item.id, reason).catch(() => null)
-        )
-      )
+      await scopeService.rejectItems(projectId, items.map(i => i.id))
       await load()
     } catch {
     } finally {
@@ -515,7 +507,7 @@ export default function Management() {
               <MetricCard label="Sem status recente" value={dashboard.totals.no_recent_status} color="#FAEEDA" textColor="#633806" sub="sem update há +7 dias" onClick={() => navigate('/projetos?filtro=sem_status')} />
               <MetricCard label="Sem go-live" value={dashboard.totals.no_go_live} color="#FAEEDA" textColor="#633806" sub="sem previsão definida" onClick={() => navigate('/projetos?filtro=sem_golive')} />
               <MetricCard label={`Entregues em ${currentMonth}`} value={dashboard.totals.delivered_this_month} color="#E1F5EE" textColor="#085041" sub="concluídos no mês atual" onClick={() => navigate('/projetos/arquivados?filtro=entregues_mes')} />
-              <MetricCard label={`Cancelados em ${currentMonth}`} value={dashboard.totals.cancelled_this_month} color="#FCEBEB" textColor="#791F1F" sub="cancelados no mês atual" onClick={() => navigate('/projetos/cancelados')} />
+              <MetricCard label={`Cancelados em ${currentMonth}`} value={dashboard.totals.cancelled_this_month} color="#FCEBEB" textColor="#791F1F" sub="cancelados no mês atual" onClick={() => navigate('/projetos/cancelados?filtro=cancelados_mes')} />
               <MetricCard label="Funcionários sem projetos" value={dashboard.totals.users_without_projects} sub="sem vínculo ativo" onClick={() => noProjectsRef.current?.scrollIntoView({ behavior: 'smooth' })} />
             </div>
 

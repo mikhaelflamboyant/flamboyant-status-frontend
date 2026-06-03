@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { ProjectCard } from '../components/project/ProjectCard'
 import { ProjectFilters } from '../components/project/ProjectFilters'
@@ -13,6 +13,7 @@ export default function CancelledProjects() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [page, setPage] = useState(1)
+  const [searchParams] = useSearchParams()
   const [filters, setFilters] = useState({
     search: '',
     traffic_light: [],
@@ -20,12 +21,16 @@ export default function CancelledProjects() {
     levels: [],
     responsible_ids: [],
     requester_ids: [],
-    filtro: '',
+    filtro: searchParams.get('filtro') || '',
   })
 
   const fetchProjects = (filtro = '') => {
     setLoading(true)
-    const params = filtro === 'sem_cronograma' ? 'filtro=sem_cronograma' : ''
+    const params = filtro === 'sem_cronograma'
+      ? 'filtro=sem_cronograma'
+      : filtro === 'cancelados_mes'
+      ? 'filtro=cancelados_mes'
+      : ''
     projectsService.listCancelled(params).then(r => {
       setProjects(r.data)
       setLoading(false)
@@ -85,6 +90,7 @@ export default function CancelledProjects() {
             onChange={setFilters}
             hidePhase
             extraOptions={[
+              { value: 'cancelados_mes', label: 'Cancelados no mês' },
               { value: 'sem_cronograma', label: 'Sem cronograma' },
             ]}
           />
