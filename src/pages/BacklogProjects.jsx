@@ -28,6 +28,8 @@ const LEVEL_OPTIONS = [
   { key: 'D', label: 'D - Inovação e transformação digital' },
 ]
 
+const BUSINESS_UNITS = ['Corporativo', 'Shopping', 'Urbanismo', 'Agropecuária', 'Instituto']
+
 function MultiDropdown({ label, options, selected, onChange }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
@@ -122,6 +124,7 @@ export default function BacklogProjects() {
   const [filterAreas, setFilterAreas] = useState([])
   const [filterLevels, setFilterLevels] = useState([])
   const [filterRequesters, setFilterRequesters] = useState([])
+  const [filterUnits, setFilterUnits] = useState([])
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(() => parseInt(sessionStorage.getItem('backlogPageSize') || '10'))
@@ -147,7 +150,7 @@ export default function BacklogProjects() {
     }
   }
 
-  useEffect(() => { setPage(1) }, [search, filterAreas, filterLevels, filterRequesters])
+  useEffect(() => { setPage(1) }, [search, filterAreas, filterLevels, filterRequesters, filterUnits])
 
   useEffect(() => {
     fetchProjects()
@@ -218,6 +221,7 @@ export default function BacklogProjects() {
         !p.area?.toLowerCase().includes(search.toLowerCase())) return false
     if (filterAreas.length > 0 && !filterAreas.includes(p.area)) return false
     if (filterLevels.length > 0 && !filterLevels.includes(p.level)) return false
+    if (filterUnits.length > 0 && !filterUnits.includes(p.business_unit)) return false
     if (filterRequesters.length > 0) {
       const hasRequester = p.requesters?.some(
         r => r.type === 'SOLICITANTE' && filterRequesters.includes(r.user_id)
@@ -227,7 +231,7 @@ export default function BacklogProjects() {
     return true
   })
 
-  const hasFilters = search || filterAreas.length > 0 || filterLevels.length > 0 || filterRequesters.length > 0
+  const hasFilters = search || filterAreas.length > 0 || filterLevels.length > 0 || filterRequesters.length > 0 || filterUnits.length > 0
 
   const totalPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize))
   const paginatedProjects = filteredProjects.slice((page - 1) * pageSize, page * pageSize)
@@ -291,6 +295,12 @@ export default function BacklogProjects() {
             selected={filterLevels}
             onChange={setFilterLevels}
           />
+<MultiDropdown
+            label="Unidade de negócio"
+            options={BUSINESS_UNITS.map(u => ({ key: u, label: u }))}
+            selected={filterUnits}
+            onChange={setFilterUnits}
+          />
           {requesters.length > 0 && (
             <MultiDropdown
               label="Solicitante"
@@ -301,7 +311,7 @@ export default function BacklogProjects() {
           )}
           {hasFilters && (
             <button type="button"
-              onClick={() => { setSearch(''); setFilterAreas([]); setFilterLevels([]); setFilterRequesters([]) }}
+              onClick={() => { setSearch(''); setFilterAreas([]); setFilterLevels([]); setFilterRequesters([]); setFilterUnits([]) }}
               className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
               Limpar filtros
             </button>

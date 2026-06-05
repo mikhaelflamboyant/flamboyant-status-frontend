@@ -180,10 +180,22 @@ export function ProjectFilters({ filters, onChange, hidePhase, extraOptions }) {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await api.get('/users')
-        setUsers(response.data
-          .filter(u => u.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(u.role))
-          .sort((a, b) => a.name.localeCompare(b.name)))
+        const response = await api.get('/projects')
+        const seen = new Map()
+
+        response.data.forEach(p => {
+          p.requesters?.filter(r => r.type === 'RESPONSAVEL' && r.user_id).forEach(r => {
+            if (!seen.has(r.user_id)) {
+              const isTIUser = r.user?.area === 'Tecnologia da Informação' ||
+                ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(r.user?.role)
+              if (isTIUser) {
+                seen.set(r.user_id, { id: r.user_id, name: r.user?.name || r.manual_name })
+              }
+            }
+          })
+        })
+
+        setUsers(Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name)))
       } catch (err) { console.error(err) }
     }
     if (canSeeAllAreas || isManagerLevel) fetchUsers()

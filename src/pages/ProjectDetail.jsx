@@ -125,7 +125,7 @@ function MultiAssignee({ label, options, selected, onChange }) {
   )
 }
 
-function ControlPanel({ project, scopeItems = [], onSave }) {
+function ControlPanel({ project, scopeItems = [], onSave, isPrivilegedUser = false }) {
   const isLegacy = project.legacy === true
   const [form, setForm] = useState({
     traffic_light: project.traffic_light,
@@ -136,9 +136,9 @@ function ControlPanel({ project, scopeItems = [], onSave }) {
 
   const stageComplete = (stageKey) => {
     if (isLegacy) return true
-
-    const hasPendingActions = scopeItems.some(s => s.pending_action)
-    if (hasPendingActions) return false
+    
+    const stagePending = scopeItems.some(s => s.stage === stageKey && s.pending_action)
+    if (stagePending) return false
 
     const stageItems = scopeItems.filter(s => s.stage === stageKey && s.status === 'APROVADO')
     if (stageItems.length === 0) return true
@@ -146,15 +146,14 @@ function ControlPanel({ project, scopeItems = [], onSave }) {
   }
 
   const phaseBlocked = (phase) => {
+    if (isPrivilegedUser) return false
+
     const rules = {
-      ENTREVISTA_SOLICITANTE: !stageComplete('PLANEJAMENTO'),
-      LEVANTAMENTO_REQUISITOS: !stageComplete('PLANEJAMENTO'),
-      ANALISE_SOLUCAO: !stageComplete('PLANEJAMENTO'),
       DESENVOLVIMENTO: !stageComplete('PLANEJAMENTO'),
       TESTES: !stageComplete('PLANEJAMENTO'),
       VALIDACAO_SOLICITANTE: !stageComplete('PLANEJAMENTO'),
       SUPORTE: !stageComplete('EXECUCAO'),
-      ENTREGUE: !stageComplete('GO_LIVE'),
+      ENTREGUE: !stageComplete('EXECUCAO'),
     }
     return rules[phase] || false
   }
@@ -1293,6 +1292,9 @@ export default function ProjectDetail() {
             <ControlPanel
               project={project}
               scopeItems={scopeItems}
+              isPrivilegedUser={
+                ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) && isResponsible
+              }
               onSave={async (data) => {
                 await projectsService.update(id, data)
                 if (data.current_phase === 'SUPORTE') {

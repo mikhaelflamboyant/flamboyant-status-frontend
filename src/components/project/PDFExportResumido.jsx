@@ -158,8 +158,8 @@ export function PDFExportResumido({ allProjects }) {
 
       const drawRow = (project, y, isOdd) => {
         const cols = getCols()
-        const responsaveis = project.requesters?.filter(r => r.type === 'RESPONSAVEL') || []
-        const gestores = responsaveis.map(r => getPersonName(r)).join(', ')
+        const solicitantes = project.requesters?.filter(r => r.type === 'SOLICITANTE') || []
+        const gestores = solicitantes.map(r => getPersonName(r)).join(', ')
         const status = getStatusLabel(project)
         const planned = getTotalBudget(project.costs, 'budget_planned')
         const actual = getTotalBudget(project.costs, 'budget_actual')
@@ -291,8 +291,8 @@ export function PDFExportResumido({ allProjects }) {
 
         let rowIndex = 0
         for (const project of unitProjects) {
-          const responsaveis = project.requesters?.filter(r => r.type === 'RESPONSAVEL') || []
-          const gestores = responsaveis.map(r => getPersonName(r)).join(', ')
+          const solicitantes = project.requesters?.filter(r => r.type === 'SOLICITANTE') || []
+          const gestores = solicitantes.map(r => getPersonName(r)).join(', ')
           const gestorLines = doc.splitTextToSize(gestores || '—', 40)
           const titleLines = doc.splitTextToSize(project.title || '', 64)
           const rowH = Math.max(11, Math.max(titleLines.length, gestorLines.length) * 4.2 + 5)
