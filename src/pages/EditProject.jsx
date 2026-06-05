@@ -82,7 +82,6 @@ export default function EditProject() {
             ? Number(c.budget_actual).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
             : '',
         })) || [])
-        console.log('COSTS:', p.costs)
       } catch (err) {
         setError('Erro ao carregar projeto.')
       } finally {
@@ -114,12 +113,6 @@ export default function EditProject() {
     }
 
     const area = requesters.map(r => r.area).join(', ')
-
-    console.log('COSTS ENVIADOS:', JSON.stringify(costs.map(c => ({
-      name: c.name,
-      budget_planned: parseFloat(String(c.budget_planned).replace(/\./g, '').replace(',', '.')),
-      budget_actual: c.budget_actual ? parseFloat(String(c.budget_actual).replace(/\./g, '').replace(',', '.')) : null,
-    }))))
 
     setSaving(true)
     try {

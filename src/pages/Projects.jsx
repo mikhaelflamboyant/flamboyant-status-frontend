@@ -1,4 +1,5 @@
 import { PDFExportGeral } from '../components/project/PDFExportGeral'
+import { PDFExportResumido } from '../components/project/PDFExportResumido'
 import { useState, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
@@ -61,7 +62,10 @@ export default function Projects() {
               </div>
             )}
             {isTI && (
-              <PDFExportGeral allProjects={allFilteredProjects} />
+              <>
+                <PDFExportGeral allProjects={allFilteredProjects} />
+                <PDFExportResumido allProjects={allFilteredProjects} />
+              </>
             )}
             {canCreateProject() && (
               <button
