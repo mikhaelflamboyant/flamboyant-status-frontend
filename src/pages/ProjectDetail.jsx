@@ -136,7 +136,7 @@ function ControlPanel({ project, scopeItems = [], onSave, isPrivilegedUser = fal
 
   const stageComplete = (stageKey) => {
     if (isLegacy) return true
-    
+
     const stagePending = scopeItems.some(s => s.stage === stageKey && s.pending_action)
     if (stagePending) return false
 
@@ -666,8 +666,8 @@ export default function ProjectDetail() {
               <div>
                 <h1 className="text-base font-medium text-gray-900 mb-2">{project.title}</h1>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <AreaBadge area={project.area} />
                   {project.business_unit && <Badge variant="violet">{project.business_unit}</Badge>}
+                  <AreaBadge area={project.area} />
                   <Badge variant="gray">
                     {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
                   </Badge>
@@ -1084,8 +1084,8 @@ export default function ProjectDetail() {
             <div>
               <h1 className="text-base font-medium text-gray-900 mb-2">{project.title}</h1>
               <div className="flex items-center gap-2 flex-wrap">
-                <AreaBadge area={project.area} />
                 {project.business_unit && <Badge variant="violet">{project.business_unit}</Badge>}
+                <AreaBadge area={project.area} />
                 <Badge variant="gray">
                   {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
                 </Badge>

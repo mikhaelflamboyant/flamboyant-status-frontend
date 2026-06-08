@@ -76,8 +76,8 @@ export function ProjectCard({ project, page = 1 }) {
               )}
             </div>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              <AreaBadge area={project.area} />
               {project.business_unit && <Badge variant="violet">{project.business_unit}</Badge>}
+              <AreaBadge area={project.area} />
               <Badge variant="gray">
                 {project.execution_type === 'INTERNA' ? 'Interna' : 'Fornecedor externo'}
               </Badge>

@@ -97,7 +97,7 @@ export function PDFExportResumido({ allProjects }) {
 
       const getCols = () => [
         { label: 'Projeto',           w: 65 },
-        { label: 'Gestor(es)',         w: 42 },
+        { label: 'Solicitante(s)',         w: 42 },
         { label: 'Início',             w: 28 },
         { label: 'Término previsto',   w: 32 },
         { label: 'Progresso',          w: 31 },
@@ -166,9 +166,9 @@ export function PDFExportResumido({ allProjects }) {
         const pct = project.completion_pct || 0
 
         const gestorLines = doc.splitTextToSize(gestores || '—', cols[1].w - 4)
-        const titleLines = doc.splitTextToSize(project.title || '', cols[0].w - 4)
+        const titleLines = doc.splitTextToSize(project.title || '', cols[0].w - 6)
         const rowLines = Math.max(titleLines.length, gestorLines.length)
-        const rowH = Math.max(11, rowLines * 4.2 + 5)
+        const rowH = Math.max(12, rowLines * 4.8 + 6)
 
         if (isOdd) {
           doc.setFillColor(249, 250, 251)
@@ -291,11 +291,12 @@ export function PDFExportResumido({ allProjects }) {
 
         let rowIndex = 0
         for (const project of unitProjects) {
+          const cols = getCols()
           const solicitantes = project.requesters?.filter(r => r.type === 'SOLICITANTE') || []
           const gestores = solicitantes.map(r => getPersonName(r)).join(', ')
-          const gestorLines = doc.splitTextToSize(gestores || '—', 40)
-          const titleLines = doc.splitTextToSize(project.title || '', 64)
-          const rowH = Math.max(11, Math.max(titleLines.length, gestorLines.length) * 4.2 + 5)
+          const gestorLines = doc.splitTextToSize(gestores || '—', cols[1].w - 4)
+          const titleLines = doc.splitTextToSize(project.title || '', cols[0].w - 6)
+          const rowH = Math.max(12, Math.max(titleLines.length, gestorLines.length) * 4.8 + 6)
 
           if (y + rowH > H - 16) {
             drawFooter()
