@@ -1616,7 +1616,10 @@ export default function ProjectDetail() {
                         <div className="flex items-start gap-3 flex-1">
                           <button
                             onClick={() => handleCompleteTask(task.id)}
-                            disabled={task.author_id !== user?.id}
+                            disabled={
+                              task.author_id !== user?.id &&
+                              !task.assignees?.some(a => a.user_id === user?.id)
+                            }
                             className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
                               task.completed ? 'bg-teal-500 border-teal-500' : 'border-gray-300 hover:border-primary-400'
                             } disabled:opacity-40 disabled:cursor-not-allowed`}
