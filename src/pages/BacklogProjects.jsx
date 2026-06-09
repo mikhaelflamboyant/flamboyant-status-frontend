@@ -254,7 +254,7 @@ export default function BacklogProjects() {
         p.complexity || '',
         EXECUTION_LABELS[p.execution_type] || p.execution_type || '',
         LEVEL_LABELS[p.level] || p.level || '',
-        p.description || '',
+        p.description ? (p.description.length > 300 ? p.description.slice(0, 300) + '...' : p.description) : '',
         custos.map(c => c.name || '').join('; '),
         custos.map(c => formatCurrency(c.budget_planned)).join('; '),
         custos.map(c => formatCurrency(c.budget_actual)).join('; '),
