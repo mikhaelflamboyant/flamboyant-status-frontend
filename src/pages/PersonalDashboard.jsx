@@ -79,12 +79,12 @@ export default function PersonalDashboard() {
   const statusReports = (data?.statusReports || []).filter(p =>
     tab === 'pendentes' ? !p.launched_this_week : p.launched_this_week
   )
-  const scopeItems = (data?.scopeItems || []).filter(i =>
-    tab === 'pendentes' ? !i.completion_date : !!i.completion_date
-  )
-  const tasks = (data?.tasks || []).filter(t =>
-    tab === 'pendentes' ? !t.completed : t.completed
-  )
+  const scopeItems = (data?.scopeItems || [])
+    .filter(i => i?.project)
+    .filter(i => tab === 'pendentes' ? !i.completion_date : !!i.completion_date)
+  const tasks = (data?.tasks || [])
+    .filter(t => t?.project)
+    .filter(t => tab === 'pendentes' ? !t.completed : t.completed)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -248,12 +248,12 @@ export default function PersonalDashboard() {
                 {scopeItems.map(i => (
                   <div
                     key={i.id}
-                    onClick={() => navigate(`/projetos/${i.project.id}`)}
+                    onClick={() => i.project?.id && navigate(`/projetos/${i.project.id}`)}
                     className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-gray-800 truncate">{i.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{i.project.title}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{i.project?.title}</p>
                     </div>
                     <span className="text-xs text-gray-400 shrink-0 ml-3">Conclusão em {formatDate(i.end_date)}</span>
                   </div>
@@ -282,12 +282,12 @@ export default function PersonalDashboard() {
                 {tasks.map(t => (
                   <div
                     key={t.id}
-                    onClick={() => navigate(`/projetos/${t.project.id}`)}
+                    onClick={() => t.project?.id && navigate(`/projetos/${t.project.id}`)}
                     className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <p className={`text-xs truncate ${t.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{t.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{t.project.title}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{t.project?.title}</p>
                     </div>
                     <span className="text-xs text-gray-400 shrink-0 ml-3">Conclusão em {formatDate(t.end_date)}</span>
                   </div>
