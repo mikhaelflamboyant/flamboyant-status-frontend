@@ -314,7 +314,7 @@ export default function PersonalDashboard() {
                 {feed.map(f => (
                   <div
                     key={f.id}
-                    onClick={() => navigate(`/projetos/${f.project.id}`)}
+                    onClick={() => f.project?.id && navigate(`/projetos/${f.project.id}`)}
                     className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -322,9 +322,9 @@ export default function PersonalDashboard() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-gray-800 truncate">
                           <span style={{ fontWeight: 500, color: f.is_own ? '#444441' : '#0C447C' }}>
-                            {f.is_own ? 'Você' : f.user.name}
+                            {f.is_own ? 'Você' : f.user?.name}
                           </span>
-                          {' · '}{f.project.title}
+                          {' · '}{f.project?.title}
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">{formatRelative(f.created_at)}</p>
                       </div>
