@@ -15,6 +15,12 @@ import ApiDocs from './pages/ApiDocs'
 import SamlSuccess from './pages/SamlSuccess'
 import EditProject from './pages/EditProject'
 import Management from './pages/Management'
+import PersonalGoLive from './pages/PersonalGoLive'
+import PersonalStatusReports from './pages/PersonalStatusReports'
+import PersonalScopeItems from './pages/PersonalScopeItems'
+import PersonalTasks from './pages/PersonalTasks'
+import PersonalFeed from './pages/PersonalFeed'
+import PersonalDashboard from './pages/PersonalDashboard'
 import GoLiveProjects from './pages/GoLiveProjects'
 import FreshServiceRequests from './pages/FreshServiceRequests'
 import BacklogProjects from './pages/BacklogProjects'
@@ -94,6 +100,42 @@ function App() {
         <Route path="/projetos/cancelados" element={
           <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR']}>
             <CancelledProjects />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/painel/pessoal" element={
+          <ProtectedRoute requiredArea="Tecnologia da Informação">
+            <PersonalDashboard />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/painel/pessoal/go-live" element={
+          <ProtectedRoute requiredArea="Tecnologia da Informação">
+            <PersonalGoLive />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/painel/pessoal/status-reports" element={
+          <ProtectedRoute requiredArea="Tecnologia da Informação">
+            <PersonalStatusReports />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/painel/pessoal/atividades" element={
+          <ProtectedRoute requiredArea="Tecnologia da Informação">
+            <PersonalScopeItems />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/painel/pessoal/tarefas" element={
+          <ProtectedRoute requiredArea="Tecnologia da Informação">
+            <PersonalTasks />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/painel/pessoal/feed" element={
+          <ProtectedRoute requiredArea="Tecnologia da Informação">
+            <PersonalFeed />
           </ProtectedRoute>
         } />
 

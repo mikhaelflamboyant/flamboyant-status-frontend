@@ -84,7 +84,10 @@ export function Navbar() {
     navigate('/login')
   }
 
-  const isActive = (path) => location.pathname === path
+  const isActive = (path) => {
+    if (path === '/painel/pessoal') return location.pathname.startsWith('/painel/pessoal')
+    return location.pathname === path
+  }
 
   const navLink = (to, label) => (
     <Link
@@ -92,7 +95,7 @@ export function Navbar() {
       onClick={() => {
         if (to === '/projetos') sessionStorage.removeItem('projectsPage')
       }}
-      className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-medium ${
+      className={`text-xs px-2.5 py-1.5 rounded-lg transition-colors font-medium whitespace-nowrap ${
         isActive(to)
           ? 'bg-primary-50 text-primary-800'
           : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -105,20 +108,22 @@ export function Navbar() {
   return (
     <nav className="bg-white border-b border-gray-100 px-6 h-12 flex items-center justify-between sticky top-0 z-10 shadow-card">
 
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2.5 shrink-0">
           <img src="/logo.png" alt="Grupo Flamboyant" className="w-6 h-6 object-contain" />
           <span className="text-sm font-medium text-gray-900 tracking-tight">
             Status report
           </span>
         </div>
 
-        <div className="h-4 w-px bg-gray-100" />
+        <div className="h-4 w-px bg-gray-100 shrink-0" />
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) &&
             (user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) &&
             navLink('/painel', 'Painel de gestão')}
+          {user?.area === 'Tecnologia da Informação' &&
+            navLink('/painel/pessoal', 'Painel pessoal')}
           {(user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) &&
             navLink('/projetos/backlog', 'Backlog')}
           {navLink('/projetos', 'Projetos ativos')}
