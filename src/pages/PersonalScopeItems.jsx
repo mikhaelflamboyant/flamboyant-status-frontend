@@ -111,7 +111,7 @@ export default function PersonalScopeItems() {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className="text-xs text-gray-400">Conclui {formatDate(i.end_date)}</span>
+                      <span className="text-xs text-gray-400">Conclusão em {formatDate(i.end_date)}</span>
                       {i.completion_date && (
                         <span className="text-xs text-teal-600 font-medium">Concluído {formatDate(i.completion_date)}</span>
                       )}

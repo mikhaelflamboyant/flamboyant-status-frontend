@@ -107,7 +107,7 @@ export default function PersonalTasks() {
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       <span className={`text-xs ${new Date(t.end_date) < new Date() && !t.completed ? 'text-red-500' : 'text-gray-400'}`}>
-                        Conclui {formatDate(t.end_date)}
+                        Conclusão em {formatDate(t.end_date)}
                       </span>
                       {t.completed && (
                         <span className="text-xs text-teal-600 font-medium">Concluída</span>

@@ -255,7 +255,7 @@ export default function PersonalDashboard() {
                       <p className="text-xs text-gray-800 truncate">{i.title}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{i.project.title}</p>
                     </div>
-                    <span className="text-xs text-gray-400 shrink-0 ml-3">Conclui {formatDate(i.end_date)}</span>
+                    <span className="text-xs text-gray-400 shrink-0 ml-3">Conclusão em {formatDate(i.end_date)}</span>
                   </div>
                 ))}
               </div>
@@ -289,7 +289,7 @@ export default function PersonalDashboard() {
                       <p className={`text-xs truncate ${t.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{t.title}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{t.project.title}</p>
                     </div>
-                    <span className="text-xs text-gray-400 shrink-0 ml-3">Conclui {formatDate(t.end_date)}</span>
+                    <span className="text-xs text-gray-400 shrink-0 ml-3">Conclusão em {formatDate(t.end_date)}</span>
                   </div>
                 ))}
               </div>
