@@ -122,7 +122,7 @@ export function Navbar() {
           {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) &&
             (user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) &&
             navLink('/painel', 'Painel de gestão')}
-          {user?.area === 'Tecnologia da Informação' &&
+          {(user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) &&
             navLink('/painel/pessoal', 'Painel pessoal')}
           {(user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) &&
             navLink('/projetos/backlog', 'Backlog')}
