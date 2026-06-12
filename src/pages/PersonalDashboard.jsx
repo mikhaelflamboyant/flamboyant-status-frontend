@@ -93,7 +93,6 @@ export default function PersonalDashboard() {
 
         <h1 className="text-base font-medium text-gray-900 mb-4">Painel pessoal</h1>
 
-        {/* Cards de resumo */}
         <div className="grid grid-cols-4 gap-3 mb-4">
           <MetricCard
             label="Status reports pendentes"
@@ -121,7 +120,6 @@ export default function PersonalDashboard() {
           />
         </div>
 
-        {/* Toggle Pendentes / Concluídos */}
         <div className="flex gap-1 mb-5">
           <button
             onClick={() => setTab('pendentes')}
@@ -147,7 +145,6 @@ export default function PersonalDashboard() {
 
         <div className="flex flex-col gap-3">
 
-          {/* 1. Go-live próximo */}
           <div className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-medium text-gray-500">Projetos com go-live próximo</p>
@@ -192,7 +189,6 @@ export default function PersonalDashboard() {
             )}
           </div>
 
-          {/* 2. Status reports */}
           <div className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-medium text-gray-500">Status reports da semana</p>
@@ -228,7 +224,6 @@ export default function PersonalDashboard() {
             )}
           </div>
 
-          {/* 3. Atividades do cronograma */}
           <div className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-medium text-gray-500">Atividades do cronograma · esta semana</p>
@@ -262,7 +257,6 @@ export default function PersonalDashboard() {
             )}
           </div>
 
-          {/* 4. Tarefas */}
           <div className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-medium text-gray-500">Tarefas · esta semana</p>
@@ -296,7 +290,6 @@ export default function PersonalDashboard() {
             )}
           </div>
 
-          {/* 5. Feed */}
           <div className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-medium text-gray-500">Atividade recente · últimos 7 dias</p>
