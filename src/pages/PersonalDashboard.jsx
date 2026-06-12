@@ -50,17 +50,44 @@ const formatRelative = (d) => {
   return `há ${days} dia${days > 1 ? 's' : ''}`
 }
 
+const PHASE_OPTIONS = [
+  { key: 'RECEBIDA', label: 'Recebida' },
+  { key: 'ENTREVISTA_SOLICITANTE', label: 'Entrevista' },
+  { key: 'LEVANTAMENTO_REQUISITOS', label: 'Levantamento de requisitos' },
+  { key: 'ANALISE_SOLUCAO', label: 'Análise da solução' },
+  { key: 'DESENVOLVIMENTO', label: 'Desenvolvimento' },
+  { key: 'TESTES', label: 'Testes' },
+  { key: 'VALIDACAO_SOLICITANTE', label: 'Validação com solicitante' },
+]
+
 export default function PersonalDashboard() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('pendentes')
+  const [filterProject, setFilterProject] = useState('')
+  const [filterPhase, setFilterPhase] = useState('')
+  const [projects, setProjects] = useState([])
+
+  const buildQuery = () => {
+    const params = new URLSearchParams()
+    if (filterProject) params.set('project_id', filterProject)
+    if (filterPhase) params.set('phase', filterPhase)
+    return params.toString() ? `?${params.toString()}` : ''
+  }
 
   useEffect(() => {
-    api.get('/personal/dashboard')
+    setLoading(true)
+    api.get(`/personal/dashboard${buildQuery()}`)
       .then(r => setData(r.data))
       .catch(console.error)
       .finally(() => setLoading(false))
+  }, [filterProject, filterPhase])
+
+  useEffect(() => {
+    api.get('/personal/projects')
+      .then(r => setProjects(r.data || []))
+      .catch(() => {})
   }, [])
 
   if (loading) return (
@@ -92,6 +119,39 @@ export default function PersonalDashboard() {
       <div className="max-w-6xl mx-auto px-6 py-6">
 
         <h1 className="text-base font-medium text-gray-900 mb-4">Painel pessoal</h1>
+
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <select
+            value={filterProject}
+            onChange={e => { setFilterProject(e.target.value); setTab('pendentes') }}
+            className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 outline-none focus:border-primary-600 transition-colors"
+          >
+            <option value="">Todos os projetos</option>
+            {projects.map(p => (
+              <option key={p.id} value={p.id}>{p.title}</option>
+            ))}
+          </select>
+
+          <select
+            value={filterPhase}
+            onChange={e => { setFilterPhase(e.target.value); setTab('pendentes') }}
+            className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-600 outline-none focus:border-primary-600 transition-colors"
+          >
+            <option value="">Todas as fases</option>
+            {PHASE_OPTIONS.map(p => (
+              <option key={p.key} value={p.key}>{p.label}</option>
+            ))}
+          </select>
+
+          {(filterProject || filterPhase) && (
+            <button
+              onClick={() => { setFilterProject(''); setFilterPhase('') }}
+              className="h-8 px-3 text-xs border border-gray-200 rounded-lg bg-white text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Limpar filtros
+            </button>
+          )}
+        </div>
 
         <div className="grid grid-cols-4 gap-3 mb-4">
           <MetricCard
