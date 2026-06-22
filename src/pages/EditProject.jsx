@@ -28,6 +28,7 @@ export default function EditProject() {
     go_live: '',
     go_live_undefined: false,
     business_unit: '',
+    requested_at: '',
   })
   const [requesters, setRequesters] = useState([])
   const [responsibles, setResponsibles] = useState([])
@@ -53,6 +54,7 @@ export default function EditProject() {
           go_live: p.go_live ? p.go_live.split('T')[0] : '',
           go_live_undefined: !p.go_live,
           business_unit: p.business_unit || '',
+          requested_at: p.requested_at ? p.requested_at.split('T')[0] : '',
         })
         setRequesters(p.requesters
           ?.filter(r => r.type === 'SOLICITANTE')
@@ -119,6 +121,7 @@ export default function EditProject() {
       await projectsService.update(id, {
         ...form,
         go_live: form.go_live_undefined ? null : form.go_live,
+        requested_at: form.requested_at || null,
         area,
         level: form.level,
         requester_ids: requesters.filter(r => !String(r.user_id).startsWith('manual_')).map(r => r.user_id),
@@ -264,7 +267,7 @@ export default function EditProject() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-500">
                     Tipo de execução <span className="text-red-400">*</span>
@@ -301,6 +304,16 @@ export default function EditProject() {
                     />
                     <span className="text-xs text-gray-400">Não definida</span>
                   </label>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-gray-500">Data de solicitação</label>
+                  <input
+                    type="date"
+                    value={form.requested_at}
+                    onChange={e => handleChange('requested_at', e.target.value)}
+                    className="h-9 w-full px-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary-600 transition-colors bg-white text-gray-700"
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">

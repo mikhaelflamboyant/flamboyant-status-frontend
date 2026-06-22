@@ -724,6 +724,13 @@ export default function ProjectDetail() {
                   {project.start_date ? new Date(project.start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
                 </p>
               </div>
+
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-1">Data de solicitação</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {project.requested_at ? new Date(project.requested_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-3">
@@ -1149,6 +1156,13 @@ export default function ProjectDetail() {
               <p className="text-xs text-gray-400 mb-1">Data de início</p>
               <p className="text-sm font-medium text-gray-800">
                 {project.start_date ? new Date(project.start_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
+              </p>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-400 mb-1">Data de solicitação</p>
+              <p className="text-sm font-medium text-gray-800">
+                {project.requested_at ? new Date(project.requested_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '—'}
               </p>
             </div>
 
