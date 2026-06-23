@@ -112,6 +112,8 @@ export default function BacklogProjects() {
   const [requesters, setRequesters] = useState([])
   const [assigningId, setAssigningId] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [editingRequestedAt, setEditingRequestedAt] = useState(null)
+  const [requestedAtValue, setRequestedAtValue] = useState('')
   const [assignForm, setAssignForm] = useState({
     description: '', execution_type: 'INTERNA',
     start_date: '', start_date_undefined: false,
@@ -354,6 +356,16 @@ export default function BacklogProjects() {
     }
   }
 
+  const handleSaveRequestedAt = async (projectId) => {
+    try {
+      await projectsService.update(projectId, { requested_at: requestedAtValue || null })
+      setEditingRequestedAt(null)
+      fetchProjects()
+    } catch (err) {
+      alert('Erro ao salvar data de solicitação.')
+    }
+  }
+
   const filteredProjects = projects.filter(p => {
     if (search && !p.title.toLowerCase().includes(search.toLowerCase()) &&
         !p.area?.toLowerCase().includes(search.toLowerCase())) return false
@@ -514,6 +526,53 @@ export default function BacklogProjects() {
                       </span>
                     </p>
                   )}
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-gray-400">Data de solicitação:</span>
+                    {editingRequestedAt === project.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="date"
+                          value={requestedAtValue}
+                          onChange={e => setRequestedAtValue(e.target.value)}
+                          className="h-7 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                        />
+                        <button
+                          onClick={() => handleSaveRequestedAt(project.id)}
+                          className="text-xs bg-primary-600 text-white px-2 py-1 rounded-lg hover:bg-primary-800"
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={() => setEditingRequestedAt(null)}
+                          className="text-xs text-gray-400 hover:text-gray-600"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-gray-600 font-medium">
+                          {project.requested_at
+                            ? new Date(project.requested_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+                            : '—'}
+                        </span>
+                        {canApprove && (
+                          <button
+                            onClick={() => {
+                              setEditingRequestedAt(project.id)
+                              setRequestedAtValue(project.requested_at ? project.requested_at.split('T')[0] : '')
+                            }}
+                            className="hover:opacity-70 transition-opacity"
+                          >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   {assigningId !== project.id && (
