@@ -116,6 +116,7 @@ export default function BacklogProjects() {
     description: '', execution_type: 'INTERNA',
     start_date: '', start_date_undefined: false,
     go_live: '', go_live_undefined: false,
+    requested_at: '',
   })
   const [responsibles, setResponsibles] = useState([])
   const [members, setMembers] = useState([])
@@ -321,6 +322,7 @@ export default function BacklogProjects() {
         start_date: assignForm.start_date_undefined ? null : (assignForm.start_date || null),
         go_live: assignForm.go_live_undefined ? null : (assignForm.go_live || null),
         go_live_undefined: assignForm.go_live_undefined,
+        requested_at: assignForm.requested_at || null,
         member_ids: members.filter(m => !String(m.user_id).startsWith('manual_')).map(m => m.user_id),
         member_names: members.filter(m => String(m.user_id).startsWith('manual_')).map(m => ({ name: m.name, area: m.area })),
         costs: costs.map(c => ({
@@ -498,7 +500,9 @@ export default function BacklogProjects() {
                     )}
                     <span className="text-xs text-gray-300">·</span>
                     <span className="text-xs text-gray-400">
-                      {new Date(project.created_at).toLocaleDateString('pt-BR')}
+                      {project.requested_at
+                        ? `Solicitado em ${new Date(project.requested_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}`
+                        : `Cadastrado em ${new Date(project.created_at).toLocaleDateString('pt-BR')}`}
                     </span>
                   </div>
                   <h2 className="text-sm font-medium text-gray-900 mb-1">{project.title}</h2>
@@ -525,6 +529,7 @@ export default function BacklogProjects() {
                             start_date_undefined: !project.start_date,
                             go_live: project.go_live ? new Date(project.go_live).toISOString().split('T')[0] : '',
                             go_live_undefined: !project.go_live,
+                            requested_at: project.requested_at ? new Date(project.requested_at).toISOString().split('T')[0] : '',
                           }))
                         }}
                         className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors font-medium"
@@ -569,7 +574,14 @@ export default function BacklogProjects() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs text-gray-400">Data de solicitação</p>
+                      <input type="date" value={assignForm.requested_at}
+                        onChange={e => setAssignForm(f => ({...f, requested_at: e.target.value}))}
+                        className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                      />
+                    </div>
                     <div className="flex flex-col gap-1">
                       <p className="text-xs text-gray-400">Tipo de execução <span className="text-red-400">*</span></p>
                       <select
@@ -643,7 +655,7 @@ export default function BacklogProjects() {
                         setResponsibles([])
                         setMembers([])
                         setCosts([])
-                        setAssignForm({ description: '', execution_type: 'INTERNA', start_date: '', start_date_undefined: false, go_live: '', go_live_undefined: false })
+                        setAssignForm({ description: '', execution_type: 'INTERNA', start_date: '', start_date_undefined: false, go_live: '', go_live_undefined: false, requested_at: '' })
                       }}
                       className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5"
                     >
