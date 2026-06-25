@@ -137,13 +137,13 @@ export default function Users() {
   }
 
   const handleDelete = async (userId) => {
-    if (!confirm('Tem certeza que deseja excluir este usuário?')) return
+    if (!confirm('Desativar este usuário? Ele não conseguirá mais acessar o sistema, mas todo o histórico dele será preservado.')) return
     setUpdatingId(userId)
     try {
-      await api.delete(`/users/${userId}`)
+      await api.patch(`/users/${userId}/deactivate`)
       setUsers(prev => prev.filter(u => u.id !== userId))
     } catch (err) {
-      alert(err.response?.data?.error || 'Erro ao excluir usuário.')
+      alert(err.response?.data?.error || 'Erro ao desativar usuário.')
     } finally {
       setUpdatingId(null)
     }
