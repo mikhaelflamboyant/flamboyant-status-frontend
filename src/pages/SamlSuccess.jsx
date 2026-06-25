@@ -15,6 +15,7 @@ export default function SamlSuccess() {
       try {
         const user = JSON.parse(decodeURIComponent(userRaw))
         login(user, token)
+        window.history.replaceState({}, document.title, '/saml/success')
         navigate('/projetos', { replace: true })
       } catch (err) {
         navigate('/login?error=saml_error', { replace: true })

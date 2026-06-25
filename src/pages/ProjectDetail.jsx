@@ -293,6 +293,13 @@ export default function ProjectDetail() {
   const [editScopeForm, setEditScopeForm] = useState({})
   const [users, setUsers] = useState([])
   const [toast, setToast] = useState('')
+  const [errorToast, setErrorToast] = useState('')
+
+  const showError = (err, fallback) => {
+    console.error(err)
+    setErrorToast(err?.response?.data?.error || fallback)
+    setTimeout(() => setErrorToast(''), 5000)
+  }
   const [showPendingModal, setShowPendingModal] = useState(false)
   const [selectedPendingIds, setSelectedPendingIds] = useState([])
   const [editingGoLive, setEditingGoLive] = useState(false)
@@ -370,7 +377,7 @@ export default function ProjectDetail() {
       setShowStatusForm(false)
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao salvar o status report.')
     } finally {
       setStatusLoading(false)
     }
@@ -402,7 +409,7 @@ export default function ProjectDetail() {
       setEditingReq(false)
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao salvar os requisitos.')
     } finally {
       setReqLoading(false)
     }
@@ -438,7 +445,7 @@ export default function ProjectDetail() {
       setShowTaskForm(false)
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao criar a tarefa.')
     } finally {
       setTaskLoading(false)
     }
@@ -449,7 +456,7 @@ export default function ProjectDetail() {
       await tasksService.complete(id, taskId)
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao concluir a tarefa.')
     }
   }
 
@@ -459,7 +466,7 @@ export default function ProjectDetail() {
       await tasksService.delete(id, taskId)
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao excluir a tarefa.')
     }
   }
 
@@ -477,7 +484,7 @@ export default function ProjectDetail() {
       setEditTaskForm({})
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao atualizar a tarefa.')
     }
   }
 
@@ -494,7 +501,7 @@ export default function ProjectDetail() {
       setShowScopeForm(false)
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao criar a atividade.')
     } finally {
       setScopeLoading(false)
     }
@@ -505,7 +512,7 @@ export default function ProjectDetail() {
       await scopeService.requestApproval(id)
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao solicitar aprovação.')
     }
   }
 
@@ -514,7 +521,7 @@ export default function ProjectDetail() {
       await scopeService.approve(id)
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao aprovar o cronograma.')
     }
   }
 
@@ -523,7 +530,7 @@ export default function ProjectDetail() {
       await scopeService.reject(id)
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao rejeitar o cronograma.')
     }
   }
 
@@ -533,7 +540,7 @@ export default function ProjectDetail() {
       await scopeService.delete(id, scopeId)
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao excluir a atividade.')
     }
   }
 
@@ -545,7 +552,7 @@ export default function ProjectDetail() {
       setEditScopeForm({})
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao atualizar a atividade.')
     }
   }
 
@@ -557,7 +564,7 @@ export default function ProjectDetail() {
       setSelectedPendingIds([])
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao aprovar os itens.')
     }
   }
 
@@ -569,7 +576,7 @@ export default function ProjectDetail() {
       setSelectedPendingIds([])
       fetchProject()
     } catch (err) {
-      console.error(err)
+      showError(err, 'Erro ao rejeitar os itens.')
     }
   }
 
@@ -788,6 +795,14 @@ export default function ProjectDetail() {
           <span>⚠️</span>
           <span>{toast}</span>
           <span className="text-gray-400">Redirecionando...</span>
+        </div>
+      )}
+
+      {errorToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white text-xs px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
+          <span>⚠️</span>
+          <span>{errorToast}</span>
+          <button onClick={() => setErrorToast('')} className="text-red-200 hover:text-white ml-1">✕</button>
         </div>
       )}
 
