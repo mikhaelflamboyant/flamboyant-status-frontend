@@ -17,8 +17,6 @@ import { tasksService } from '../services/tasks.service'
 import { scopeService } from '../services/scope.service'
 import { LEVEL_CONFIG } from '../utils/pdfStyles'
 import { LinkifiedText } from '../components/ui/LinkifiedText'
-// import { MarkdownEditor } from '../components/ui/MarkdownEditor'
-// import { MarkdownContent } from '../components/ui/MarkdownContent'
 
 const STAGES = [
   { key: 'PLANEJAMENTO', label: '1. Planejamento' },
@@ -345,10 +343,10 @@ export default function ProjectDetail() {
 
   useEffect(() => { fetchProject() }, [id])
 
-  const isMember = project?.members?.some(m => m.user_id === user?.id) ?? false
-  const isOwner = project?.owner_id === user?.id ?? false
-  const isResponsible = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'RESPONSAVEL') ?? false
-  const isRequester = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'SOLICITANTE') ?? false
+  const isMember = project?.members?.some(m => m.user_id === user?.id) || false
+  const isOwner = project?.owner_id === user?.id
+  const isResponsible = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'RESPONSAVEL') || false
+  const isRequester = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'SOLICITANTE') || false
   const isFromTI = user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
   const canEdit = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
   const isCancelled = project?.current_phase === 'CANCELADO'

@@ -6,7 +6,6 @@ import { LevelSelector } from '../components/project/LevelSelector'
 import { CostSelector } from '../components/project/CostSelector'
 import { PeopleSelector } from '../components/project/PeopleSelector'
 import { projectsService } from '../services/projects.service'
-// import { MarkdownEditor } from '../components/ui/MarkdownEditor'
 import api from '../services/api'
 import { useAuth } from '../hooks/useAuth'
 
