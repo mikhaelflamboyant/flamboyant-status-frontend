@@ -103,8 +103,8 @@ export default function FreshServiceRequests() {
             <h1 className="text-base font-medium text-gray-900">Solicitações FreshService</h1>
             <p className="text-xs text-gray-400 mt-0.5">Projetos criados via chamado aguardando aprovação para entrar na esteira</p>
           </div>
-          <button onClick={() => navigate('/projetos')} className="text-xs text-primary-600 hover:text-primary-800">
-            ← Projetos
+          <button onClick={() => navigate('/projetos/backlog')} className="text-xs text-primary-600 hover:text-primary-800">
+            ← Backlog
           </button>
         </div>
 
