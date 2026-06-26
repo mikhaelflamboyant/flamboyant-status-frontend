@@ -28,7 +28,7 @@ const ROLE_BADGE = {
   ANALISTA:          'bg-gray-100 text-gray-600',
 }
 
-const CAN_APPROVE = ['ANALISTA_MASTER', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR']
+const CAN_APPROVE = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR']
 
 export default function Users() {
   const { user, isManager } = useAuth()
