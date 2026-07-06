@@ -173,6 +173,84 @@ export default function PersonalDashboard() {
     .filter(t => tab === 'pendentes' ? !t.completed : t.completed)
     .sort(byEndDate)
 
+  const actionItems = (() => {
+    const items = []
+
+    // Go-live vencido (só o que já passou da data)
+    goLive.forEach(p => {
+      const u = getUrgency(p.go_live)
+      if (u.status === 'vencido') {
+        items.push({
+          key: `golive-${p.id}`,
+          title: p.title,
+          subtitle: 'Go-live vencido',
+          label: u.label,
+          tone: u.tone,
+          sortDate: p.go_live,
+          onClick: () => navigate('/painel/pessoal/go-live'),
+        })
+      }
+    })
+
+    // Status report pendente (tag vermelha = atrasado)
+    ;(data?.statusReports || []).forEach(p => {
+      if (p.tag === 'vermelho' && !p.launched_this_week) {
+        items.push({
+          key: `status-${p.project_id}`,
+          title: p.project_title,
+          subtitle: 'Status report pendente',
+          label: '',
+          tone: 'vermelho',
+          sortDate: null,
+          onClick: () => navigate('/painel/pessoal/status-reports'),
+        })
+      }
+    })
+
+    // Atividades atrasadas (vencidas)
+    ;(data?.scopeItems || [])
+      .filter(i => i?.project && !i.completion_date)
+      .forEach(i => {
+        const u = getUrgency(i.end_date)
+        if (u.status === 'vencido') {
+          items.push({
+            key: `scope-${i.id}`,
+            title: i.title,
+            subtitle: `Atividade atrasada · ${i.project?.title}`,
+            label: u.label,
+            tone: u.tone,
+            sortDate: i.end_date,
+            onClick: () => navigate('/painel/pessoal/atividades'),
+          })
+        }
+      })
+
+    // Tarefas atrasadas (vencidas)
+    ;(data?.tasks || [])
+      .filter(t => t?.project && !t.completed)
+      .forEach(t => {
+        const u = getUrgency(t.end_date)
+        if (u.status === 'vencido') {
+          items.push({
+            key: `task-${t.id}`,
+            title: t.title,
+            subtitle: `Tarefa atrasada · ${t.project?.title}`,
+            label: u.label,
+            tone: u.tone,
+            sortDate: t.end_date,
+            onClick: () => navigate('/painel/pessoal/tarefas'),
+          })
+        }
+      })
+
+    // Ordenação: vencido primeiro (data mais antiga no topo); sem data por último
+    return items.sort((a, b) => {
+      const da = a.sortDate ? new Date(a.sortDate).getTime() : Infinity
+      const db = b.sortDate ? new Date(b.sortDate).getTime() : Infinity
+      return da - db
+    })
+  })()
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -215,6 +293,48 @@ export default function PersonalDashboard() {
             </button>
           )}
         </div>
+
+        {actionItems.length > 0 && (
+          <div className="mb-4">
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Precisa de ação hoje</p>
+            <div className="border border-red-100 rounded-xl overflow-hidden">
+              <div className="bg-red-50 px-4 py-2.5 flex items-center gap-2 border-b border-red-100">
+                <AlertTriangle size={14} className="text-red-500 shrink-0" />
+                <span className="text-xs font-medium text-red-800">
+                  {actionItems.length} {actionItems.length === 1 ? 'item precisa' : 'itens precisam'} de ação
+                </span>
+              </div>
+              <div className="bg-white flex flex-col">
+                {actionItems.map(item => {
+                  const st = URGENCY_STYLES[item.tone] || URGENCY_STYLES.neutro
+                  return (
+                    <div
+                      key={item.key}
+                      onClick={item.onClick}
+                      className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <span className="mt-0.5">
+                          <ShapeIcon shape={st.icon || 'triangle'} size={14} />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-gray-800 truncate">{item.title}</p>
+                          <p className="text-xs text-gray-400 truncate">{item.subtitle}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {item.label && (
+                          <span className="text-xs font-medium" style={{ color: st.text }}>{item.label}</span>
+                        )}
+                        <span className="text-gray-300 text-xs">→</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-4 gap-3 mb-4">
           <MetricCard
