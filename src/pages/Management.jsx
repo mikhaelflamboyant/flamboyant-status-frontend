@@ -45,8 +45,9 @@ const LEVELS = [
 ]
 
 function FarolIcon({ value, size = 14 }) {
-  const color = FAROL_COLORS[value]?.dot || '#888'
-  return <div style={{ width: size * 0.6, height: size * 0.6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+  if (value === 'VERDE') return <CheckCircle2 size={size} className="text-teal-500 shrink-0" />
+  if (value === 'AMARELO') return <Clock size={size} className="text-amber-500 shrink-0" />
+  return <AlertTriangle size={size} className="text-red-500 shrink-0" />
 }
 
 function Metric({ label, value, sub, onClick }) {
@@ -938,7 +939,7 @@ export default function Management() {
               </div>
             </Section>
 
-            <div className="mt-8">
+            <div className="mt-8 mb-8">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
                 Todos os projetos ({(dashboard.totals.active || 0) + (dashboard.totals.backlog || 0) + (dashboard.totals.go_live || 0) + (dashboard.totals.archived || 0)})
               </p>
