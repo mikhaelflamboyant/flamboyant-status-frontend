@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import api from '../services/api'
+import { CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
 
 function getGoLiveColor(goLiveDate) {
   if (!goLiveDate) return null
@@ -48,6 +49,57 @@ const formatRelative = (d) => {
   if (diff < 24) return `há ${diff}h`
   const days = Math.floor(diff / 24)
   return `há ${days} dia${days > 1 ? 's' : ''}`
+}
+
+function getUrgency(dateStr) {
+  if (!dateStr) return { status: 'futuro', label: '', tone: 'neutro' }
+
+  const date = new Date(dateStr)
+  date.setHours(0, 0, 0, 0)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+
+  const diffDays = Math.round((date - today) / (1000 * 60 * 60 * 24))
+
+  if (diffDays < 0) {
+    const label = diffDays === -1 ? 'venceu ontem' : `venceu há ${Math.abs(diffDays)} dias`
+    return { status: 'vencido', label, tone: 'vermelho' }
+  }
+  if (diffDays === 0) {
+    return { status: 'hoje', label: 'vence hoje', tone: 'ambar' }
+  }
+  const label = `vence ${date.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}`
+  return { status: 'futuro', label, tone: 'neutro' }
+}
+
+const URGENCY_STYLES = {
+  vermelho: { text: '#791F1F', icon: 'triangle' },
+  ambar:    { text: '#633806', icon: 'clock' },
+  neutro:   { text: '#9CA3AF', icon: null },
+}
+
+function ShapeIcon({ shape, size = 13, className = '' }) {
+  if (shape === 'check') return <CheckCircle2 size={size} className={`text-teal-500 shrink-0 ${className}`} />
+  if (shape === 'clock') return <Clock size={size} className={`text-amber-500 shrink-0 ${className}`} />
+  if (shape === 'triangle') return <AlertTriangle size={size} className={`text-red-500 shrink-0 ${className}`} />
+  return null
+}
+
+function getCurrentWeekRangeLabel() {
+  const now = new Date()
+  const day = now.getDay() // 0=dom, 6=sáb
+  const diffToSaturday = day === 6 ? 0 : -(day + 1)
+  const start = new Date(now)
+  start.setDate(now.getDate() + diffToSaturday)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+
+  const fmt = (d) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  const dow = (d) => d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
+
+  return `${dow(start)} ${fmt(start)} – ${dow(end)} ${fmt(end)}`
 }
 
 const PHASE_OPTIONS = [
@@ -118,7 +170,10 @@ export default function PersonalDashboard() {
       <Navbar />
       <div className="max-w-6xl mx-auto px-6 py-6">
 
-        <h1 className="text-base font-medium text-gray-900 mb-4">Painel pessoal</h1>
+        <div className="flex items-baseline gap-2 mb-4 flex-wrap">
+          <h1 className="text-base font-medium text-gray-900">Painel pessoal</h1>
+          <span className="text-xs text-gray-400">Semana: {getCurrentWeekRangeLabel()}</span>
+        </div>
 
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <select
