@@ -6,6 +6,7 @@ import { scopeService } from '../services/scope.service'
 import { useAuth } from '../hooks/useAuth'
 import {
   AlertTriangle, Clock, CalendarX, CheckCircle2,
+  ChevronRight, ChevronDown, ArrowRight,
 } from 'lucide-react'
 
 const PHASE_LABELS = {
@@ -505,6 +506,44 @@ function NivelEstrategico({ byLevel, projects }) {
   )
 }
 
+function ProjectDropdown({ label, count, pill, list, open, onToggle, showFarol, onRowClick }) {
+  return (
+    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden mb-2.5">
+      <div className={`flex items-center justify-between px-4 py-3 cursor-pointer ${open ? 'border-b border-gray-100' : ''}`} onClick={onToggle}>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-gray-900">{label}</span>
+          <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${pill}`}>{count} projeto{count !== 1 ? 's' : ''}</span>
+        </div>
+        {open ? <ChevronDown size={16} className="text-gray-300" /> : <ChevronRight size={16} className="text-gray-300" />}
+      </div>
+      {open && (
+        <div className="p-2">
+          <div className="flex items-center gap-2.5 px-2.5 pt-1 pb-1.5">
+            {showFarol && <span className="w-3.5 shrink-0" />}
+            <span className="flex-1 text-[10px] text-gray-300">Título do projeto</span>
+            <span className="w-28 shrink-0 text-[10px] text-gray-300">Unidade de negócio</span>
+            <span className="w-20 shrink-0 text-right text-[10px] text-gray-300">Go-live</span>
+          </div>
+          {list.map((p) => (
+            <div
+              key={p.id}
+              onClick={() => onRowClick?.(p)}
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-gray-50 cursor-pointer"
+            >
+              {showFarol && <FarolIcon value={p.traffic_light} size={13} />}
+              <span className="flex-1 min-w-0 text-xs text-gray-700 truncate">{p.title}</span>
+              <span className="w-28 shrink-0 text-xs text-gray-400">{p.area}</span>
+              <span className="w-20 shrink-0 text-right text-xs text-gray-400">
+                {p.go_live ? new Date(p.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Management() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -517,6 +556,7 @@ export default function Management() {
   const [error, setError] = useState('')
   const [expandedUnits, setExpandedUnits] = useState({})
   const [expandedUsers, setExpandedUsers] = useState({})
+  const [openCart, setOpenCart] = useState('ativos')
   const [pendingCount, setPendingCount] = useState(null)
   const noProjectsRef = useRef(null)
 
@@ -878,91 +918,45 @@ export default function Management() {
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
                 Todos os projetos ({(dashboard.totals.active || 0) + (dashboard.totals.backlog || 0) + (dashboard.totals.go_live || 0) + (dashboard.totals.archived || 0)})
               </p>
-              {dashboard.backlog_projects?.length > 0 && (
-                <div className="bg-white border border-gray-100 rounded-xl overflow-hidden mb-3">
-                  <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => toggleUnit('all_backlog')}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-gray-800">Backlog</span>
-                      <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">{dashboard.backlog_projects.length} projeto{dashboard.backlog_projects.length !== 1 ? 's' : ''}</span>
-                    </div>
-                    <span className="text-xs text-gray-400">{expandedUnits['all_backlog'] ? '▼' : '▶'}</span>
-                  </div>
-                  {expandedUnits['all_backlog'] && (
-                    <div className="px-3 py-2 flex flex-col gap-1.5">
-                      {dashboard.backlog_projects.map(p => (
-                        <div key={p.id} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => navigate(`/projetos/${p.id}`)}>
-                          <span className="text-xs text-gray-800 truncate flex-1">{p.title}</span>
-                          <div className="flex items-center gap-4 shrink-0">
-                            <span className="text-xs text-gray-400">{p.area}</span>
-                            <span className="text-xs text-gray-400">{p.go_live ? new Date(p.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'}</span>
-                            <span className="text-xs text-primary-600 font-medium">Ver →</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden mb-3">
-                <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => toggleUnit('all_ativos')}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-800">Ativos</span>
-                    <span className="text-xs bg-primary-50 text-primary-700 px-2.5 py-0.5 rounded-full">{dashboard.totals.active} projeto{dashboard.totals.active !== 1 ? 's' : ''}</span>
-                  </div>
-                  <span className="text-xs text-gray-400">{expandedUnits['all_ativos'] ? '▼' : '▶'}</span>
-                </div>
-                {expandedUnits['all_ativos'] && (
-                  <div className="px-3 py-2 flex flex-col gap-1.5">
-                    {activeProjectsList?.map(p => {
-                      const fc = FAROL_COLORS[p.traffic_light]
-                      return (
-                        <div key={p.id} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => navigate(`/projetos/${p.id}`)}>
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <div style={{ width: 7, height: 7, borderRadius: '50%', background: fc?.dot || '#888', flexShrink: 0 }} />
-                            <span className="text-xs text-gray-800 truncate">{p.title}</span>
-                          </div>
-                          <div className="flex items-center gap-4 shrink-0">
-                            <span className="text-xs text-gray-400">{PHASE_LABELS[p.current_phase] || p.current_phase}</span>
-                            <span className="text-xs text-gray-400">{p.go_live ? new Date(p.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'}</span>
-                            <span className="text-xs text-primary-600 font-medium">Ver →</span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-              {dashboard.go_live_projects?.length > 0 && (
-                <div className="bg-white border border-gray-100 rounded-xl overflow-hidden mb-3">
-                  <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => toggleUnit('all_golive')}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-gray-800">Go-live</span>
-                      <span className="text-xs bg-teal-50 text-teal-700 px-2.5 py-0.5 rounded-full">{dashboard.go_live_projects.length} projeto{dashboard.go_live_projects.length !== 1 ? 's' : ''}</span>
-                    </div>
-                    <span className="text-xs text-gray-400">{expandedUnits['all_golive'] ? '▼' : '▶'}</span>
-                  </div>
-                  {expandedUnits['all_golive'] && (
-                    <div className="px-3 py-2 flex flex-col gap-1.5">
-                      {dashboard.go_live_projects.map(p => (
-                        <div key={p.id} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => navigate(`/projetos/${p.id}`)}>
-                          <span className="text-xs text-gray-800 truncate flex-1">{p.title}</span>
-                          <div className="flex items-center gap-4 shrink-0">
-                            <span className="text-xs text-gray-400">{p.area}</span>
-                            <span className="text-xs text-gray-400">{p.go_live ? new Date(p.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'}</span>
-                            <span className="text-xs text-primary-600 font-medium">Ver →</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => navigate('/projetos/arquivados')}>
+
+              <ProjectDropdown
+                label="Backlog"
+                count={dashboard.totals.backlog}
+                pill="bg-gray-100 text-gray-500"
+                list={dashboard.backlog_projects || []}
+                open={openCart === 'backlog'}
+                onToggle={() => setOpenCart(openCart === 'backlog' ? null : 'backlog')}
+                onRowClick={(p) => navigate(`/projetos/${p.id}`)}
+              />
+
+              <ProjectDropdown
+                label="Ativos"
+                count={dashboard.totals.active}
+                pill="bg-primary-50 text-primary-800"
+                list={activeProjectsList || []}
+                showFarol
+                open={openCart === 'ativos'}
+                onToggle={() => setOpenCart(openCart === 'ativos' ? null : 'ativos')}
+                onRowClick={(p) => navigate(`/projetos/${p.id}`)}
+              />
+
+              <ProjectDropdown
+                label="Go-live"
+                count={dashboard.totals.go_live}
+                pill="bg-teal-50 text-teal-800"
+                list={dashboard.go_live_projects || []}
+                showFarol
+                open={openCart === 'golive'}
+                onToggle={() => setOpenCart(openCart === 'golive' ? null : 'golive')}
+                onRowClick={(p) => navigate(`/projetos/${p.id}`)}
+              />
+
+              <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50" onClick={() => navigate('/projetos/arquivados')}>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-800">Finalizados</span>
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">{dashboard.totals.archived} projeto{dashboard.totals.archived !== 1 ? 's' : ''}</span>
+                  <span className="text-sm font-medium text-gray-900">Finalizados</span>
+                  <span className="text-xs font-medium bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">{dashboard.totals.archived} projetos</span>
                 </div>
-                <span className="text-xs text-primary-600 font-medium">Ver todos →</span>
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-primary-600">Ver todos <ArrowRight size={13} /></span>
               </div>
             </div>
           </>
