@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { managementService } from '../services/management.service'
@@ -6,7 +6,7 @@ import { scopeService } from '../services/scope.service'
 import { useAuth } from '../hooks/useAuth'
 import {
   AlertTriangle, Clock, CalendarX, CheckCircle2,
-  ChevronRight, ChevronDown, ArrowRight,
+  ChevronRight, ChevronDown, ArrowRight, Search,
 } from 'lucide-react'
 
 const PHASE_LABELS = {
@@ -140,6 +140,13 @@ function timeAgo(dateStr) {
   if (hours < 24) return `há ${hours}h`
   return `há ${Math.floor(hours / 24)}d`
 }
+
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão')
+
+const farolDist = (projects) =>
+  projects.reduce((acc, p) => ({ ...acc, [p.traffic_light]: (acc[p.traffic_light] || 0) + 1 }), {})
+
+const initials = (name) => name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() || ''
 
 function RejectModal({ projectTitle, onConfirm, onCancel }) {
   const [reason, setReason] = useState('')
@@ -549,6 +556,126 @@ function ProjectDropdown({ label, count, pill, list, open, onToggle, showFarol, 
   )
 }
 
+function ResponsaveisTable({ responsaveis, onProjectClick }) {
+  const [q, setQ] = useState('')
+  const [sortDesc, setSortDesc] = useState(true)
+  const [semProjetos, setSemProjetos] = useState(false)
+  const [expanded, setExpanded] = useState(null)
+
+  const maxLoad = Math.max(1, ...responsaveis.map((p) => p.projects_count))
+  const rows = responsaveis
+    .filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
+    .filter((p) => !semProjetos || p.projects_count === 0)
+    .sort((a, b) => (sortDesc ? b.projects_count - a.projects_count : a.projects_count - b.projects_count))
+
+  const loadColor = (n) => (n >= 7 ? 'bg-red-400' : n >= 4 ? 'bg-amber-400' : 'bg-teal-400')
+  const th = 'text-[11px] font-semibold text-gray-400 uppercase tracking-wide'
+  const cols = 'grid-cols-[2fr_1.2fr_1.4fr_1.2fr_1.6fr_24px]'
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="relative">
+          <Search size={14} className="text-gray-300 absolute left-2.5 top-2.5 pointer-events-none" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar responsável…"
+            className="h-8 min-w-[220px] pl-7 pr-2.5 text-xs text-gray-700 border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+          />
+        </div>
+        <button
+          onClick={() => setSemProjetos((v) => !v)}
+          className={`h-8 flex items-center px-2.5 text-xs font-medium rounded-lg border transition-colors ${semProjetos ? 'border-primary-600 bg-primary-50 text-primary-800' : 'border-gray-200 bg-white text-gray-500'}`}
+        >
+          Sem projetos
+        </button>
+        <span className="ml-auto text-xs text-gray-400">{rows.length} responsáve{rows.length === 1 ? 'l' : 'is'}</span>
+      </div>
+
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div className={`grid ${cols} gap-3 px-4 py-2.5 border-b border-gray-100 bg-gray-50`}>
+          <span className={th}>Responsável</span>
+          <span className={th}>Cargo</span>
+          <span className={th}>Área</span>
+          <button onClick={() => setSortDesc((s) => !s)} className={`${th} inline-flex items-center gap-1 text-left`}>
+            Carga {sortDesc ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+          </button>
+          <span className={th}>Distribuição de farol</span>
+          <span />
+        </div>
+
+        {rows.map((person) => {
+          const d = farolDist(person.projects)
+          const open = expanded === person.id
+          return (
+            <div key={person.id} className="border-b border-gray-50 last:border-0">
+              <div
+                onClick={() => setExpanded(open ? null : person.id)}
+                className={`grid ${cols} gap-3 px-4 py-2.5 items-center cursor-pointer hover:bg-gray-50`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-7 h-7 rounded-full bg-primary-50 text-primary-800 flex items-center justify-center text-xs font-medium shrink-0">{initials(person.name)}</div>
+                  <p className="text-xs font-medium text-gray-700 truncate">{person.name}</p>
+                </div>
+                <span className="text-xs text-gray-500">{person.role}</span>
+                <span className="text-xs text-gray-500">{person.area}</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 max-w-[70px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${loadColor(person.projects_count)}`} style={{ width: `${(person.projects_count / maxLoad) * 100}%` }} />
+                  </div>
+                  <span className="text-xs font-medium text-gray-900 tabular-nums">{person.projects_count}</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  {person.projects_count === 0 ? (
+                    <span className="text-[11px] text-gray-300">Sem vínculo</span>
+                  ) : (
+                    ['VERDE', 'AMARELO', 'VERMELHO'].filter((k) => d[k]).map((k) => (
+                      <span key={k} className="inline-flex items-center gap-1 text-xs text-gray-500">
+                        <FarolIcon value={k} size={13} />
+                        {d[k]}
+                      </span>
+                    ))
+                  )}
+                </div>
+                <span className="flex justify-end text-gray-300">
+                  {person.projects_count > 0 && (open ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+                </span>
+              </div>
+
+              {open && person.projects_count > 0 && (
+                <div className="px-4 pt-1 pb-3 bg-gray-50 flex flex-col gap-0.5">
+                  <div className="flex items-center gap-2.5 pr-2.5 pb-1.5">
+                    <span className="w-7 shrink-0" />
+                    <span className="flex-1 text-[10px] text-gray-300">Título do projeto</span>
+                    <span className="w-32 shrink-0 text-[10px] text-gray-300">Fase</span>
+                    <span className="w-20 shrink-0 text-[10px] text-gray-300">Go-live</span>
+                  </div>
+                  {person.projects.map((p) => (
+                    <div
+                      key={p.id}
+                      onClick={() => onProjectClick?.(p)}
+                      className="flex items-center gap-2.5 pr-2.5 py-1.5 rounded-md hover:bg-white cursor-pointer"
+                    >
+                      <span className="w-7 flex justify-center shrink-0">
+                        <FarolIcon value={p.traffic_light} size={13} />
+                      </span>
+                      <span className="flex-1 min-w-0 text-xs text-gray-700 truncate">{p.title}</span>
+                      <span className="w-32 shrink-0 text-xs text-gray-400 truncate">{PHASE_LABELS[p.current_phase] || p.current_phase}</span>
+                      <span className="w-20 shrink-0 text-xs text-gray-400">{fmtDate(p.go_live)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+        {rows.length === 0 && <p className="text-center text-sm text-gray-400 py-10">Nenhum responsável encontrado.</p>}
+      </div>
+    </div>
+  )
+}
+
 export default function Management() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -559,11 +686,8 @@ export default function Management() {
   const [activeProjectsList, setActiveProjectsList] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [expandedUnits, setExpandedUnits] = useState({})
-  const [expandedUsers, setExpandedUsers] = useState({})
   const [openCart, setOpenCart] = useState('ativos')
   const [pendingCount, setPendingCount] = useState(null)
-  const noProjectsRef = useRef(null)
 
   const TI_AREA = 'Tecnologia da Informação'
   const canAccess = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) &&
@@ -591,10 +715,6 @@ export default function Management() {
     load()
   }, [])
 
-  const toggleUnit = (unit) => setExpandedUnits(prev => ({ ...prev, [unit]: !prev[unit] }))
-  const toggleUser = (userId) => setExpandedUsers(prev => ({ ...prev, [userId]: !prev[userId] }))
-  const initials = (name) => name?.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
-
   if (loading) return (
     <div className="min-h-screen bg-gray-50"><Navbar />
       <div className="flex items-center justify-center py-20"><p className="text-sm text-gray-400">Carregando painel...</p></div>
@@ -610,6 +730,7 @@ export default function Management() {
   const currentMonth = new Date().toLocaleString('pt-BR', { month: 'long' })
 
   const strategicProjects = (activeProjectsList || []).map(p => ({ ...p, unit: p.area }))
+  const responsaveis = (usersData?.responsaveis || []).map(r => ({ ...r, projects_count: r.carga }))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -705,7 +826,7 @@ export default function Management() {
                 <Metric label="Go-live" value={dashboard.totals.go_live} onClick={() => navigate('/projetos/go-live')} />
                 <Metric label="Suporte pós go-live" value={dashboard.totals.support ?? dashboard.totals.go_live} sub="projetos em suporte" onClick={() => navigate('/projetos/go-live')} />
                 <Metric label="Conclusão média" value={`${dashboard.totals.avg_completion}%`} />
-                <Metric label="Funcionários sem projetos" value={dashboard.totals.users_without_projects} sub="sem vínculo ativo" onClick={() => noProjectsRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+                <Metric label="Funcionários sem projetos" value={dashboard.totals.users_without_projects} sub="sem vínculo ativo" />
               </div>
             </Section>
 
@@ -817,108 +938,6 @@ export default function Management() {
               </div>
             </Section>
 
-            {/* ───────── ABAIXO: FASE 4 (intacto) ───────── */}
-
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Funcionários por unidade de negócio</p>
-
-            <div className="flex flex-col gap-3">
-              {Object.entries(usersData.by_area).map(([unit, users]) => (
-                <div key={unit} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => toggleUnit(unit)}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-gray-800">{unit}</span>
-                      <span className="text-xs bg-violet-50 text-violet-800 px-2.5 py-0.5 rounded-full">{users.length} funcionário{users.length !== 1 ? 's' : ''}</span>
-                    </div>
-                    <span className="text-xs text-gray-400">{expandedUnits[unit] ? '▼' : '▶'}</span>
-                  </div>
-                  {expandedUnits[unit] && (
-                    <div className="p-3 flex flex-col gap-2">
-                      {users.map(u => (
-                        <div key={u.id} className="border border-gray-100 rounded-xl overflow-hidden">
-                          <div className="flex items-center justify-between px-3 py-2.5 bg-white border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => toggleUser(u.id)}>
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center text-xs font-medium text-primary-800 shrink-0">{initials(u.name)}</div>
-                              <div>
-                                <p className="text-xs font-medium text-gray-800">{u.name}</p>
-                                <p className="text-xs text-gray-400">{u.role}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-xs font-medium text-gray-700">{u.projects_count} projeto{u.projects_count !== 1 ? 's' : ''}</span>
-                              <div className="flex gap-1">
-                                {Object.entries(u.projects.reduce((acc, p) => { acc[p.traffic_light] = (acc[p.traffic_light] || 0) + 1; return acc }, {}))
-                                  .sort(([a], [b]) => ({ VERDE: 0, AMARELO: 1, VERMELHO: 2 }[a] ?? 3) - ({ VERDE: 0, AMARELO: 1, VERMELHO: 2 }[b] ?? 3))
-                                  .map(([farol, count]) => {
-                                    const fc = FAROL_COLORS[farol]
-                                    if (!fc) return null
-                                    return <span key={farol} style={{ background: fc.bg, color: fc.text }} className="text-xs px-1.5 py-0.5 rounded">{count} {fc.label}</span>
-                                  })}
-                              </div>
-                              <span className="text-xs text-gray-400">{expandedUsers[u.id] ? '▼' : '▶'}</span>
-                            </div>
-                          </div>
-                          {expandedUsers[u.id] && (
-                            <div className="px-3 py-2 flex flex-col gap-1.5 bg-white">
-                              {u.projects.length === 0 ? (
-                                <p className="text-xs text-gray-400 text-center py-3">Nenhum projeto vinculado.</p>
-                              ) : u.projects.map(p => {
-                                const fc = FAROL_COLORS[p.traffic_light]
-                                return (
-                                  <div key={p.id} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => navigate(`/projetos/${p.id}`)}>
-                                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                                      <div style={{ width: 7, height: 7, borderRadius: '50%', background: fc?.dot || '#888', flexShrink: 0 }} />
-                                      <span className="text-xs text-gray-800 truncate">{p.title}</span>
-                                    </div>
-                                    <div className="flex items-center gap-4 shrink-0">
-                                      <span className="text-xs text-gray-400">{PHASE_LABELS[p.current_phase] || p.current_phase}</span>
-                                      <span className="text-xs text-gray-400">{p.go_live ? new Date(p.go_live).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'Sem previsão'}</span>
-                                      <span className="text-xs text-primary-600 font-medium">Ver →</span>
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {usersData.without_projects && Object.keys(usersData.without_projects).length > 0 && (
-              <div ref={noProjectsRef} className="mt-8">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Funcionários sem projetos ({dashboard.totals.users_without_projects})</p>
-                <div className="flex flex-col gap-3">
-                  {Object.entries(usersData.without_projects).map(([unit, users]) => (
-                    <div key={unit} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-                      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => toggleUnit(`no_projects_${unit}`)}>
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm font-medium text-gray-800">{unit}</span>
-                          <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">{users.length} funcionário{users.length !== 1 ? 's' : ''}</span>
-                        </div>
-                        <span className="text-xs text-gray-400">{expandedUnits[`no_projects_${unit}`] ? '▼' : '▶'}</span>
-                      </div>
-                      {expandedUnits[`no_projects_${unit}`] && (
-                        <div className="p-3 flex flex-col gap-2">
-                          {users.map(u => (
-                            <div key={u.id} className="flex items-center gap-2.5 px-3 py-2 bg-gray-50 rounded-lg">
-                              <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center text-xs font-medium text-primary-800 shrink-0">{initials(u.name)}</div>
-                              <div>
-                                <p className="text-xs font-medium text-gray-800">{u.name}</p>
-                                <p className="text-xs text-gray-400">{u.role}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="mt-8">
               <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
                 Todos os projetos ({(dashboard.totals.active || 0) + (dashboard.totals.backlog || 0) + (dashboard.totals.go_live || 0) + (dashboard.totals.archived || 0)})
@@ -964,6 +983,13 @@ export default function Management() {
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-primary-600">Ver todos <ArrowRight size={13} /></span>
               </div>
             </div>
+
+            <Section title="Responsáveis por projeto">
+              <ResponsaveisTable
+                responsaveis={responsaveis}
+                onProjectClick={(p) => navigate(`/projetos/${p.id}`)}
+              />
+            </Section>
           </>
         )}
 
