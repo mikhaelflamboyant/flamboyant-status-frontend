@@ -4,6 +4,9 @@ import { Navbar } from '../components/layout/Navbar'
 import { managementService } from '../services/management.service'
 import { scopeService } from '../services/scope.service'
 import { useAuth } from '../hooks/useAuth'
+import {
+  AlertTriangle, Clock, CalendarX, CheckCircle2,
+} from 'lucide-react'
 
 const PHASE_LABELS = {
   RECEBIDA: 'Recebida',
@@ -32,16 +35,49 @@ const FAROL_COLORS = {
   VERMELHO: { bg: '#FCEBEB', text: '#791F1F', dot: '#E24B4A', label: 'atraso' },
 }
 
-function MetricCard({ label, value, color, textColor, sub, onClick }) {
+function FarolIcon({ value, size = 14 }) {
+  const color = FAROL_COLORS[value]?.dot || '#888'
+  return <div style={{ width: size * 0.6, height: size * 0.6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+}
+
+function Metric({ label, value, sub, onClick }) {
   return (
     <div
-      className={`bg-white border border-gray-100 rounded-xl p-4 ${onClick ? 'cursor-pointer hover:border-gray-300 hover:shadow-sm transition-all' : ''}`}
-      style={color ? { background: color, borderColor: 'transparent' } : {}}
+      className={`bg-white border border-gray-100 rounded-xl p-4 ${onClick ? 'cursor-pointer hover:border-gray-300 transition-colors' : ''}`}
       onClick={onClick}
     >
-      <p className="text-xs mb-1" style={{ color: textColor || '#6B7280' }}>{label}</p>
-      <p className="text-2xl font-medium" style={{ color: textColor || '#111827' }}>{value}</p>
-      {sub && <p className="text-xs mt-1" style={{ color: textColor || '#9CA3AF' }}>{sub}</p>}
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs text-gray-500">{label}</span>
+      </div>
+      <p className="text-2xl font-medium text-gray-900 tracking-tight tabular-nums">{value}</p>
+      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+    </div>
+  )
+}
+
+function Alert({ label, value, sub, icon: Icon, tone, onClick }) {
+  return (
+    <div className={`rounded-xl p-4 ${onClick ? 'cursor-pointer' : ''} ${tone}`} onClick={onClick}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium">
+          <Icon size={15} />
+          {label}
+        </span>
+      </div>
+      <p className="text-2xl font-medium tabular-nums">{value}</p>
+      {sub && <p className="text-xs opacity-80 mt-1">{sub}</p>}
+    </div>
+  )
+}
+
+function Section({ title, right, children }) {
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{title}</p>
+        {right}
+      </div>
+      {children}
     </div>
   )
 }
@@ -449,7 +485,8 @@ export default function Management() {
       <Navbar />
       <div className="max-w-6xl mx-auto px-6 py-6">
 
-        <h1 className="text-base font-medium text-gray-900 mb-4">Painel de gestão</h1>
+        <h1 className="text-base font-medium text-gray-900 mb-1">Painel de gestão</h1>
+        <p className="text-xs text-gray-400 mb-6">Visão consolidada dos projetos e da carteira</p>
 
         <div className="flex gap-1 mb-5">
           <button
@@ -485,162 +522,200 @@ export default function Management() {
 
         {activeTab === 'analise' && (
           <>
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Visão geral</p>
-
-            <div className="grid grid-cols-7 gap-3 mb-3">
-              <MetricCard label="Projetos ativos" value={dashboard.totals.active} onClick={() => navigate('/projetos')} />
-              <MetricCard label="Finalizados" value={dashboard.totals.archived} onClick={() => navigate('/projetos/arquivados')} />
-              <MetricCard label="Backlog" value={dashboard.totals.backlog} onClick={() => navigate('/projetos/backlog')} />
-              <MetricCard label="Em execução" value={dashboard.totals.in_execution} onClick={() => {
-                sessionStorage.setItem('projectFilters', JSON.stringify({
-                  search: '', traffic_light: [], phases: ['DESENVOLVIMENTO', 'TESTES', 'VALIDACAO_SOLICITANTE'],
-                  areas: [], levels: [], filtro: '', responsible_ids: [], requester_ids: [],
-                }))
-                navigate('/projetos')
-              }} />
-              <MetricCard label="Go-live" value={dashboard.totals.go_live} onClick={() => navigate('/projetos/go-live')} />
-              <MetricCard label="Atrasados" value={dashboard.totals.overdue} color="#FCEBEB" textColor="#791F1F" onClick={() => navigate('/projetos?farol=VERMELHO')} />
-              <MetricCard label="Conclusão média" value={`${dashboard.totals.avg_completion}%`} />
-            </div>
-
-            <div className="grid grid-cols-5 gap-3 mb-5">
-              <MetricCard label="Sem status recente" value={dashboard.totals.no_recent_status} color="#FAEEDA" textColor="#633806" sub="sem update há +7 dias" onClick={() => navigate('/projetos?filtro=sem_status')} />
-              <MetricCard label="Sem go-live" value={dashboard.totals.no_go_live} color="#FAEEDA" textColor="#633806" sub="sem previsão definida" onClick={() => navigate('/projetos?filtro=sem_golive')} />
-              <MetricCard label={`Entregues em ${currentMonth}`} value={dashboard.totals.delivered_this_month} color="#E1F5EE" textColor="#085041" sub="concluídos no mês atual" onClick={() => navigate('/projetos/arquivados?filtro=entregues_mes')} />
-              <MetricCard label={`Cancelados em ${currentMonth}`} value={dashboard.totals.cancelled_this_month} color="#FCEBEB" textColor="#791F1F" sub="cancelados no mês atual" onClick={() => navigate('/projetos/cancelados?filtro=cancelados_mes')} />
-              <MetricCard label="Funcionários sem projetos" value={dashboard.totals.users_without_projects} sub="sem vínculo ativo" onClick={() => noProjectsRef.current?.scrollIntoView({ behavior: 'smooth' })} />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 mb-8">
-              <div className="bg-white border border-gray-100 rounded-xl p-4">
-                <p className="text-xs font-medium text-gray-500 mb-3">Por farol</p>
-                <div className="flex flex-col gap-2">
-                  {[['VERDE', 'No prazo'], ['AMARELO', 'Atenção'], ['VERMELHO', 'Atrasado']].map(([key, label]) => (
-                    <div key={key} className="flex items-center gap-2">
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: FAROL_COLORS[key].dot, flexShrink: 0 }} />
-                      <span className="text-xs text-gray-700 flex-1">{label}</span>
-                      <span className="text-xs font-medium text-gray-900">{dashboard.by_farol[key] || 0}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-white border border-gray-100 rounded-xl p-4">
-                <p className="text-xs font-medium text-gray-500 mb-3">Por unidade de negócio</p>
-                <div className="flex flex-col gap-1.5">
-                  {Object.entries(dashboard.by_unit).filter(([, v]) => v > 0).map(([unit, count]) => (
-                    <div key={unit} className="flex justify-between text-xs">
-                      <span className="text-gray-700">{unit}</span>
-                      <span className="font-medium text-gray-900">{count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-white border border-gray-100 rounded-xl p-4">
-                <p className="text-xs font-medium text-gray-500 mb-3">Por fase</p>
-                <div className="flex flex-col gap-1.5">
-                  {Object.entries(PHASE_LABELS).map(([key, label]) => (
-                    <div key={key} className="flex justify-between text-xs">
-                      <span className="text-gray-500">{label}</span>
-                      <span className="font-medium text-gray-900">{dashboard.by_phase[key] || 0}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-100 rounded-xl p-4 mb-5">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium text-gray-500">Indicador PDTI - Projetos no prazo</p>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                  dashboard.totals.pdti_total > 0 && (dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) >= 0.8
-                    ? 'bg-teal-50 text-teal-700' : 'bg-red-50 text-red-600'
-                }`}>Meta: 80%</span>
-              </div>
-              <div className="flex items-end gap-3 mb-2">
-                <p className="text-2xl font-medium text-gray-900">
-                  {dashboard.totals.pdti_total > 0 ? Math.round((dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) * 100) : 0}%
-                </p>
-                <p className="text-xs text-gray-400 mb-1">{dashboard.totals.pdti_on_time} de {dashboard.totals.pdti_total} projetos no prazo</p>
-              </div>
-              <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  style={{ width: `${dashboard.totals.pdti_total > 0 ? Math.round((dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) * 100) : 0}%` }}
-                  className={`h-full rounded-full transition-all ${dashboard.totals.pdti_total > 0 && (dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) >= 0.8 ? 'bg-teal-500' : 'bg-red-400'}`}
+            {/* ETAPA 3.1 — Precisa de atenção */}
+            <Section title="Precisa de atenção">
+              <div className="grid grid-cols-5 gap-3">
+                <Alert
+                  label="Atrasados" value={dashboard.totals.overdue}
+                  sub="farol vermelho ou vencido" icon={AlertTriangle}
+                  tone="bg-red-50 text-red-600"
+                  onClick={() => navigate('/projetos?farol=VERMELHO')}
                 />
-                <div className="absolute top-0 h-full" style={{ left: '80%' }}>
-                  <div className="w-px h-full bg-gray-400 opacity-50" />
-                </div>
+                <Alert
+                  label="Sem status" value={dashboard.totals.no_recent_status}
+                  sub="sem update há +7 dias" icon={Clock}
+                  tone="bg-amber-50 text-amber-600"
+                  onClick={() => navigate('/projetos?filtro=sem_status')}
+                />
+                <Alert
+                  label="Sem go-live" value={dashboard.totals.no_go_live}
+                  sub="sem previsão" icon={CalendarX}
+                  tone="bg-amber-50 text-amber-600"
+                  onClick={() => navigate('/projetos?filtro=sem_golive')}
+                />
+                <Alert
+                  label={`Entregues em ${currentMonth}`} value={dashboard.totals.delivered_this_month}
+                  sub="concluídos no mês" icon={CheckCircle2}
+                  tone="bg-teal-50 text-teal-600"
+                  onClick={() => navigate('/projetos/arquivados?filtro=entregues_mes')}
+                />
+                <Alert
+                  label={`Cancelados em ${currentMonth}`} value={dashboard.totals.cancelled_this_month}
+                  sub="cancelados no mês" icon={AlertTriangle}
+                  tone="bg-red-50 text-red-600"
+                  onClick={() => navigate('/projetos/cancelados?filtro=cancelados_mes')}
+                />
               </div>
-              <div className="flex justify-end mt-0.5">
-                <span className="text-xs text-gray-400" style={{ marginRight: '18%' }}>80%</span>
-              </div>
-            </div>
+            </Section>
 
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3 mt-8">Análise da carteira de projetos</p>
-
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-white border border-gray-100 rounded-xl p-4">
-                <p className="text-xs font-medium text-gray-500 mb-3">Distribuição por nível estratégico</p>
-                {(() => {
-                  const levels = [
-                    { key: 'A', label: 'A — Estratégico', bg: '#EEEDFE', text: '#26215C', bar: '#534AB7' },
-                    { key: 'B', label: 'B — Performance', bg: '#E6F1FB', text: '#042C53', bar: '#185FA5' },
-                    { key: 'C', label: 'C — Compliance', bg: '#FAEEDA', text: '#412402', bar: '#EF9F27' },
-                    { key: 'D', label: 'D — Inovação', bg: '#E1F5EE', text: '#04342C', bar: '#1D9E75' },
-                    { key: 'null', label: 'Não definido', bg: '#F1EFE8', text: '#444441', bar: '#B4B2A9' },
-                  ]
-                  const total = Object.values(dashboard.by_level).reduce((a, b) => a + b, 0)
-                  return (
-                    <div className="flex flex-col gap-2">
-                      {levels.map(l => {
-                        const count = dashboard.by_level[l.key] || 0
-                        const pct = total > 0 ? Math.round((count / total) * 100) : 0
-                        return (
-                          <div key={l.key} className="flex items-center gap-2">
-                            <span style={{ background: l.bg, color: l.text }} className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0" title={l.label}>
-                              {l.label.split(' — ')[0]}
-                            </span>
-                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                              <div style={{ width: `${pct}%`, background: l.bar }} className="h-full rounded-full transition-all" />
-                            </div>
-                            <span className="text-xs font-medium text-gray-700 min-w-[16px] text-right">{count}</span>
-                          </div>
-                        )
-                      })}
-                      <p className="text-xs text-gray-400 mt-1">{total} projetos ativos no total</p>
-                    </div>
-                  )
-                })()}
+            {/* ETAPA 3.2 — Visão geral */}
+            <Section title="Visão geral">
+              <div className="grid grid-cols-4 gap-3">
+                <Metric label="Projetos ativos" value={dashboard.totals.active} onClick={() => navigate('/projetos')} />
+                <Metric label="Finalizados" value={dashboard.totals.archived} onClick={() => navigate('/projetos/arquivados')} />
+                <Metric label="Backlog" value={dashboard.totals.backlog} onClick={() => navigate('/projetos/backlog')} />
+                <Metric label="Em execução" value={dashboard.totals.in_execution} sub="dev · testes · validação" onClick={() => {
+                  sessionStorage.setItem('projectFilters', JSON.stringify({
+                    search: '', traffic_light: [], phases: ['DESENVOLVIMENTO', 'TESTES', 'VALIDACAO_SOLICITANTE'],
+                    areas: [], levels: [], filtro: '', responsible_ids: [], requester_ids: [],
+                  }))
+                  navigate('/projetos')
+                }} />
+                <Metric label="Go-live" value={dashboard.totals.go_live} onClick={() => navigate('/projetos/go-live')} />
+                <Metric label="Suporte pós go-live" value={dashboard.totals.support ?? dashboard.totals.go_live} sub="projetos em suporte" onClick={() => navigate('/projetos/go-live')} />
+                <Metric label="Conclusão média" value={`${dashboard.totals.avg_completion}%`} />
+                <Metric label="Funcionários sem projetos" value={dashboard.totals.users_without_projects} sub="sem vínculo ativo" onClick={() => noProjectsRef.current?.scrollIntoView({ behavior: 'smooth' })} />
               </div>
-              <div className="bg-white border border-gray-100 rounded-xl p-4">
-                <p className="text-xs font-medium text-gray-500 mb-3">
-                  Tempo médio de entrega
-                  {dashboard.avg_delivery_global && (
-                    <span className="text-gray-400 font-normal"> · média geral: {dashboard.avg_delivery_global} dias</span>
-                  )}
-                </p>
-                {Object.keys(dashboard.avg_delivery_by_unit).length === 0 ? (
-                  <p className="text-xs text-gray-400 text-center py-4">Nenhum projeto entregue ainda.</p>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {Object.entries(dashboard.avg_delivery_by_unit).sort(([, a], [, b]) => a - b).map(([unit, days]) => (
-                      <div key={unit} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
-                        <span className="text-xs text-gray-700">{unit}</span>
-                        <span className="text-xs font-medium text-gray-900">{days} dias</span>
+            </Section>
+
+            {/* ETAPA 3.3 — Distribuição */}
+            <Section title="Distribuição">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white border border-gray-100 rounded-xl p-4">
+                  <p className="text-xs font-medium text-gray-500 mb-3">Por farol</p>
+                  <div className="flex flex-col gap-2.5">
+                    {[['VERDE', 'No prazo'], ['AMARELO', 'Atenção'], ['VERMELHO', 'Atrasado']].map(([key, label]) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <FarolIcon value={key} />
+                        <span className="flex-1 text-xs text-gray-700">{label}</span>
+                        <span className="text-xs font-medium text-gray-900">{dashboard.by_farol[key] || 0}</span>
                       </div>
                     ))}
                   </div>
-                )}
+                </div>
+                <div className="bg-white border border-gray-100 rounded-xl p-4">
+                  <p className="text-xs font-medium text-gray-500 mb-3">Por unidade de negócio</p>
+                  <div className="flex flex-col gap-1.5">
+                    {Object.entries(dashboard.by_unit).filter(([, v]) => v > 0).map(([unit, count]) => (
+                      <div key={unit} className="flex justify-between text-xs">
+                        <span className="text-gray-700">{unit}</span>
+                        <span className="font-medium text-gray-900">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="bg-white border border-gray-100 rounded-xl p-4">
+                  <p className="text-xs font-medium text-gray-500 mb-3">Por fase</p>
+                  <div className="flex flex-col gap-1.5">
+                    {Object.entries(PHASE_LABELS).map(([key, label]) => (
+                      <div key={key} className="flex justify-between text-xs">
+                        <span className="text-gray-500">{label}</span>
+                        <span className="font-medium text-gray-900">{dashboard.by_phase[key] || 0}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            </Section>
 
-            <div className="bg-white border border-gray-100 rounded-xl p-4 mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-medium text-gray-500">Linha do tempo - go-lives nos próximos 6 meses</p>
-                <span className="text-xs text-gray-400">{Object.values(dashboard.go_live_timeline).reduce((a, b) => a + b, 0)} projetos com go-live definido</span>
+            {/* ETAPA 3.4 — Indicadores (PDTI) */}
+            <Section title="Indicadores">
+              <div className="bg-white border border-gray-100 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2.5">
+                  <p className="text-xs font-medium text-gray-500">Indicador PDTI - Projetos no prazo</p>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                    dashboard.totals.pdti_total > 0 && (dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) >= 0.8
+                      ? 'bg-teal-50 text-teal-800' : 'bg-red-50 text-red-600'
+                  }`}>Meta: 80%</span>
+                </div>
+                <div className="flex items-baseline gap-2 mb-3">
+                  <span className="text-2xl font-medium text-gray-900">
+                    {dashboard.totals.pdti_total > 0 ? Math.round((dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) * 100) : 0}%
+                  </span>
+                  <span className="text-xs text-gray-400">{dashboard.totals.pdti_on_time} de {dashboard.totals.pdti_total} projetos no prazo</span>
+                </div>
+                <div className="relative">
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      style={{ width: `${dashboard.totals.pdti_total > 0 ? Math.round((dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) * 100) : 0}%` }}
+                      className={`h-full rounded-full transition-all ${dashboard.totals.pdti_total > 0 && (dashboard.totals.pdti_on_time / dashboard.totals.pdti_total) >= 0.8 ? 'bg-teal-400' : 'bg-red-400'}`}
+                    />
+                  </div>
+                  <div className="absolute -top-1 w-px h-3.5 bg-gray-400" style={{ left: '80%' }} />
+                  <span className="absolute top-4 -translate-x-1/2 text-[11px] text-gray-400" style={{ left: '80%' }}>meta 80%</span>
+                </div>
+                <div className="h-4" />
               </div>
-              <GoLiveChart data={dashboard.go_live_timeline} />
-            </div>
+            </Section>
+
+            {/* ETAPA 3.5 — Análise da carteira */}
+            <Section title="Análise da carteira de projetos">
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="bg-white border border-gray-100 rounded-xl p-4">
+                  <p className="text-xs font-medium text-gray-500 mb-3">Distribuição por nível estratégico</p>
+                  {(() => {
+                    const levels = [
+                      { key: 'A', label: 'A — Estratégico', bg: '#EEEDFE', text: '#26215C', bar: '#534AB7' },
+                      { key: 'B', label: 'B — Performance', bg: '#E6F1FB', text: '#042C53', bar: '#185FA5' },
+                      { key: 'C', label: 'C — Compliance', bg: '#FAEEDA', text: '#412402', bar: '#EF9F27' },
+                      { key: 'D', label: 'D — Inovação', bg: '#E1F5EE', text: '#04342C', bar: '#1D9E75' },
+                      { key: 'null', label: 'Não definido', bg: '#F1EFE8', text: '#444441', bar: '#B4B2A9' },
+                    ]
+                    const total = Object.values(dashboard.by_level).reduce((a, b) => a + b, 0)
+                    return (
+                      <div className="flex flex-col gap-2">
+                        {levels.map(l => {
+                          const count = dashboard.by_level[l.key] || 0
+                          const pct = total > 0 ? Math.round((count / total) * 100) : 0
+                          return (
+                            <div key={l.key} className="flex items-center gap-2">
+                              <span style={{ background: l.bg, color: l.text }} className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0" title={l.label}>
+                                {l.label.split(' — ')[0]}
+                              </span>
+                              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div style={{ width: `${pct}%`, background: l.bar }} className="h-full rounded-full transition-all" />
+                              </div>
+                              <span className="text-xs font-medium text-gray-700 min-w-[16px] text-right">{count}</span>
+                            </div>
+                          )
+                        })}
+                        <p className="text-xs text-gray-400 mt-1">{total} projetos ativos no total</p>
+                      </div>
+                    )
+                  })()}
+                </div>
+                <div className="bg-white border border-gray-100 rounded-xl p-4">
+                  <p className="text-xs font-medium text-gray-500 mb-3">
+                    Tempo médio de entrega
+                    {dashboard.avg_delivery_global && (
+                      <span className="text-gray-400 font-normal"> · média geral: {dashboard.avg_delivery_global} dias</span>
+                    )}
+                  </p>
+                  {Object.keys(dashboard.avg_delivery_by_unit).length === 0 ? (
+                    <p className="text-xs text-gray-400 text-center py-4">Nenhum projeto entregue ainda.</p>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {Object.entries(dashboard.avg_delivery_by_unit).sort(([, a], [, b]) => a - b).map(([unit, days]) => (
+                        <div key={unit} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
+                          <span className="text-xs text-gray-700">{unit}</span>
+                          <span className="text-xs font-medium text-gray-900">{days} dias</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-100 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs font-medium text-gray-500">Linha do tempo - go-lives nos próximos 6 meses</p>
+                  <span className="text-xs text-gray-400">{Object.values(dashboard.go_live_timeline).reduce((a, b) => a + b, 0)} projetos com go-live definido</span>
+                </div>
+                <GoLiveChart data={dashboard.go_live_timeline} />
+              </div>
+            </Section>
+
+            {/* ───────── ABAIXO: FASE 4 (intacto) ───────── */}
 
             <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Funcionários por unidade de negócio</p>
 
