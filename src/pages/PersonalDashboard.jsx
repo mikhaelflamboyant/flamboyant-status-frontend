@@ -27,14 +27,17 @@ const STATUS_TAG_STYLES = {
   vermelho: { bg: '#FCEBEB', text: '#791F1F', label: 'Pendente' },
 }
 
-function MetricCard({ label, value, color, textColor, onClick }) {
+function MetricCard({ label, value, color, textColor, icon: Icon, onClick }) {
   return (
     <div
       className={`bg-white border border-gray-100 rounded-xl p-4 ${onClick ? 'cursor-pointer hover:border-gray-300 hover:shadow-sm transition-all' : ''}`}
       style={color ? { background: color, borderColor: 'transparent' } : {}}
       onClick={onClick}
     >
-      <p className="text-xs mb-1" style={{ color: textColor || '#6B7280' }}>{label}</p>
+      <div className="flex items-center gap-1.5 mb-1">
+        {Icon && <Icon size={13} style={{ color: textColor }} className="shrink-0" />}
+        <p className="text-xs" style={{ color: textColor || '#6B7280' }}>{label}</p>
+      </div>
       <p className="text-2xl font-medium" style={{ color: textColor || '#111827' }}>{value}</p>
     </div>
   )
@@ -342,6 +345,7 @@ export default function PersonalDashboard() {
             value={counts.statusReportsPending ?? 0}
             color={counts.statusReportsPending > 0 ? '#FCEBEB' : undefined}
             textColor={counts.statusReportsPending > 0 ? '#791F1F' : undefined}
+            icon={counts.statusReportsPending > 0 ? AlertTriangle : undefined}
             onClick={() => navigate('/painel/pessoal/status-reports')}
           />
           <MetricCard
@@ -359,6 +363,7 @@ export default function PersonalDashboard() {
             value={counts.goLive ?? 0}
             color={counts.goLive > 0 ? '#FAEEDA' : undefined}
             textColor={counts.goLive > 0 ? '#633806' : undefined}
+            icon={counts.goLive > 0 ? Clock : undefined}
             onClick={() => navigate('/painel/pessoal/go-live')}
           />
         </div>
