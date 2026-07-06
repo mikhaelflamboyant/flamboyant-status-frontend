@@ -158,12 +158,20 @@ export default function PersonalDashboard() {
   const statusReports = (data?.statusReports || []).filter(p =>
     tab === 'pendentes' ? !p.launched_this_week : p.launched_this_week
   )
+  const byEndDate = (a, b) => {
+    const da = a.end_date ? new Date(a.end_date).getTime() : Infinity
+    const db = b.end_date ? new Date(b.end_date).getTime() : Infinity
+    return da - db
+  }
+
   const scopeItems = (data?.scopeItems || [])
     .filter(i => i?.project)
     .filter(i => tab === 'pendentes' ? !i.completion_date : !!i.completion_date)
+    .sort(byEndDate)
   const tasks = (data?.tasks || [])
     .filter(t => t?.project)
     .filter(t => tab === 'pendentes' ? !t.completed : t.completed)
+    .sort(byEndDate)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -355,19 +363,30 @@ export default function PersonalDashboard() {
               </p>
             ) : (
               <div className="flex flex-col gap-1.5">
-                {scopeItems.map(i => (
-                  <div
-                    key={i.id}
-                    onClick={() => i.project?.id && navigate(`/projetos/${i.project.id}`)}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-800 truncate">{i.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{i.project?.title}</p>
+                {scopeItems.map(i => {
+                  const u = tab === 'pendentes' ? getUrgency(i.end_date) : null
+                  const st = u ? URGENCY_STYLES[u.tone] : null
+                  return (
+                    <div
+                      key={i.id}
+                      onClick={() => i.project?.id && navigate(`/projetos/${i.project.id}`)}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-800 truncate">{i.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{i.project?.title}</p>
+                      </div>
+                      {u && u.status !== 'futuro' ? (
+                        <span className="text-xs shrink-0 ml-3 inline-flex items-center gap-1 font-medium" style={{ color: st.text }}>
+                          <ShapeIcon shape={st.icon} size={12} />
+                          {u.label}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400 shrink-0 ml-3">Conclusão em {formatDate(i.end_date)}</span>
+                      )}
                     </div>
-                    <span className="text-xs text-gray-400 shrink-0 ml-3">Conclusão em {formatDate(i.end_date)}</span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
@@ -388,19 +407,30 @@ export default function PersonalDashboard() {
               </p>
             ) : (
               <div className="flex flex-col gap-1.5">
-                {tasks.map(t => (
-                  <div
-                    key={t.id}
-                    onClick={() => t.project?.id && navigate(`/projetos/${t.project.id}`)}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs truncate ${t.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{t.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{t.project?.title}</p>
+                {tasks.map(t => {
+                  const u = tab === 'pendentes' ? getUrgency(t.end_date) : null
+                  const st = u ? URGENCY_STYLES[u.tone] : null
+                  return (
+                    <div
+                      key={t.id}
+                      onClick={() => t.project?.id && navigate(`/projetos/${t.project.id}`)}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs truncate ${t.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{t.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{t.project?.title}</p>
+                      </div>
+                      {u && u.status !== 'futuro' ? (
+                        <span className="text-xs shrink-0 ml-3 inline-flex items-center gap-1 font-medium" style={{ color: st.text }}>
+                          <ShapeIcon shape={st.icon} size={12} />
+                          {u.label}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400 shrink-0 ml-3">Conclusão em {formatDate(t.end_date)}</span>
+                      )}
                     </div>
-                    <span className="text-xs text-gray-400 shrink-0 ml-3">Conclusão em {formatDate(t.end_date)}</span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
