@@ -92,32 +92,37 @@ function Section({ title, right, children }) {
 }
 
 function GoLiveChart({ data }) {
-  const months = []
-  const today = new Date()
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(today.getFullYear(), today.getMonth() + i, 1)
-    const key = d.toISOString().slice(0, 7)
-    const label = d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
-    months.push({ key, label, count: data[key] || 0 })
-  }
+  const now = new Date()
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1)
+    return {
+      label: d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
+      count: data[d.toISOString().slice(0, 7)] || 0,
+    }
+  })
   const max = Math.max(...months.map(m => m.count), 3)
   return (
-    <div className="flex items-end gap-3 h-32">
-      {months.map(m => {
-        const pct = m.count > 0 ? Math.max((m.count / max) * 100, 8) : 0
-        const isPeak = m.count >= 3
-        return (
-          <div key={m.key} className="flex-1 flex flex-col items-center gap-1">
-            {m.count > 0 && (
-              <span className={`text-xs font-medium ${isPeak ? 'text-red-500' : 'text-gray-600'}`}>{m.count}</span>
-            )}
-            <div className="w-full flex items-end" style={{ height: '80px' }}>
-              <div style={{ width: '100%', height: `${pct}%`, background: isPeak ? '#E24B4A' : '#534AB7', borderRadius: '4px 4px 0 0', minHeight: m.count > 0 ? '6px' : '0', transition: 'height 0.3s ease' }} />
+    <div>
+      <div className="flex items-end gap-3 h-28 border-b border-gray-200">
+        {months.map(m => {
+          const peak = m.count >= 3
+          const pct = m.count > 0 ? Math.max((m.count / max) * 100, 8) : 0
+          return (
+            <div key={m.label} className="flex-1 flex flex-col items-center justify-end h-full gap-1">
+              <span className={`text-xs font-medium ${peak ? 'text-red-500' : m.count ? 'text-gray-500' : 'text-gray-300'}`}>{m.count}</span>
+              <div
+                className={`w-full rounded-t ${m.count ? (peak ? 'bg-red-500' : 'bg-primary-600') : 'bg-gray-100'}`}
+                style={{ height: `${pct}%`, minHeight: m.count ? 6 : 2 }}
+              />
             </div>
-            <span className="text-xs text-gray-400 text-center">{m.label}</span>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
+      <div className="flex gap-3 mt-1.5">
+        {months.map(m => (
+          <span key={m.label} className="flex-1 text-center text-xs text-gray-400">{m.label}</span>
+        ))}
+      </div>
     </div>
   )
 }
