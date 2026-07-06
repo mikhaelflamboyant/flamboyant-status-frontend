@@ -35,6 +35,14 @@ const FAROL_COLORS = {
   VERMELHO: { bg: '#FCEBEB', text: '#791F1F', dot: '#E24B4A', label: 'atraso' },
 }
 
+const LEVELS = [
+  { key: 'A', label: 'Estratégico', badge: 'bg-primary-50 text-primary-900', bar: '#534AB7' },
+  { key: 'B', label: 'Performance', badge: 'bg-blue-50 text-blue-900', bar: '#185FA5' },
+  { key: 'C', label: 'Compliance', badge: 'bg-amber-50 text-amber-900', bar: '#EF9F27' },
+  { key: 'D', label: 'Inovação', badge: 'bg-teal-50 text-teal-900', bar: '#1D9E75' },
+  { key: 'null', label: 'Não definido', badge: 'bg-gray-100 text-gray-500', bar: '#B4B2A9' },
+]
+
 function FarolIcon({ value, size = 14 }) {
   const color = FAROL_COLORS[value]?.dot || '#888'
   return <div style={{ width: size * 0.6, height: size * 0.6, borderRadius: '50%', background: color, flexShrink: 0 }} />
@@ -421,6 +429,82 @@ function ApprovalsTab() {
   )
 }
 
+function NivelEstrategico({ byLevel, projects }) {
+  const [view, setView] = useState('dist')
+  const [filter, setFilter] = useState('')
+  const total = Object.values(byLevel).reduce((a, b) => a + b, 0)
+  const filtered = projects.filter((p) => !filter || (p.level || 'null') === filter)
+
+  return (
+    <div className="bg-white border border-gray-100 rounded-xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-medium text-gray-500">Distribuição por nível estratégico</p>
+        <div className="flex gap-0.5 bg-gray-100 p-0.5 rounded-lg">
+          {[['dist', 'Distribuição'], ['list', 'Lista']].map(([k, lbl]) => (
+            <button
+              key={k}
+              onClick={() => setView(k)}
+              className={`text-xs font-medium px-2.5 py-1 rounded-md transition-colors ${view === k ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+            >
+              {lbl}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-60">
+        {view === 'dist' ? (
+          <div className="flex flex-col justify-center h-full gap-2.5">
+            {LEVELS.map((l) => {
+              const count = byLevel[l.key] || 0
+              const pct = total ? Math.round((count / total) * 100) : 0
+              return (
+                <div key={l.key} className="flex items-center gap-2">
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full w-8 text-center shrink-0 ${l.badge}`}>{l.key === 'null' ? '—' : l.key}</span>
+                  <span className="text-xs text-gray-700 w-24 shrink-0">{l.label}</span>
+                  <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: l.bar }} />
+                  </div>
+                  <span className="text-xs font-medium text-gray-900 w-5 text-right">{count}</span>
+                </div>
+              )
+            })}
+            <p className="text-xs text-gray-400 mt-0.5">{total} projetos ativos no total</p>
+          </div>
+        ) : (
+          <div className="flex flex-col h-full">
+            <div className="flex flex-wrap gap-1 mb-2">
+              {[{ key: '', label: 'Todos' }, ...LEVELS.map((l) => ({ key: l.key, label: l.key === 'null' ? 'Não def.' : l.key }))].map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setFilter(f.key)}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full border transition-colors ${filter === f.key ? 'border-primary-600 bg-primary-50 text-primary-800' : 'border-gray-200 bg-white text-gray-500'}`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-0.5 pr-1">
+              {filtered.map((p) => {
+                const l = LEVELS.find((x) => x.key === (p.level || 'null'))
+                return (
+                  <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-50 cursor-pointer">
+                    <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full w-6 text-center shrink-0 ${l.badge}`}>{p.level || '—'}</span>
+                    <FarolIcon value={p.traffic_light} size={12} />
+                    <span className="text-xs text-gray-700 flex-1 min-w-0 truncate">{p.title}</span>
+                    <span className="text-xs text-gray-400 shrink-0">{p.unit}</span>
+                  </div>
+                )
+              })}
+              {filtered.length === 0 && <p className="text-xs text-gray-400 text-center py-4">Nenhum projeto neste nível.</p>}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function Management() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -479,6 +563,8 @@ export default function Management() {
   )
 
   const currentMonth = new Date().toLocaleString('pt-BR', { month: 'long' })
+
+  const strategicProjects = (activeProjectsList || []).map(p => ({ ...p, unit: p.area }))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -651,39 +737,10 @@ export default function Management() {
             {/* ETAPA 3.5 — Análise da carteira */}
             <Section title="Análise da carteira de projetos">
               <div className="grid grid-cols-2 gap-3 mb-3">
-                <div className="bg-white border border-gray-100 rounded-xl p-4">
-                  <p className="text-xs font-medium text-gray-500 mb-3">Distribuição por nível estratégico</p>
-                  {(() => {
-                    const levels = [
-                      { key: 'A', label: 'A — Estratégico', bg: '#EEEDFE', text: '#26215C', bar: '#534AB7' },
-                      { key: 'B', label: 'B — Performance', bg: '#E6F1FB', text: '#042C53', bar: '#185FA5' },
-                      { key: 'C', label: 'C — Compliance', bg: '#FAEEDA', text: '#412402', bar: '#EF9F27' },
-                      { key: 'D', label: 'D — Inovação', bg: '#E1F5EE', text: '#04342C', bar: '#1D9E75' },
-                      { key: 'null', label: 'Não definido', bg: '#F1EFE8', text: '#444441', bar: '#B4B2A9' },
-                    ]
-                    const total = Object.values(dashboard.by_level).reduce((a, b) => a + b, 0)
-                    return (
-                      <div className="flex flex-col gap-2">
-                        {levels.map(l => {
-                          const count = dashboard.by_level[l.key] || 0
-                          const pct = total > 0 ? Math.round((count / total) * 100) : 0
-                          return (
-                            <div key={l.key} className="flex items-center gap-2">
-                              <span style={{ background: l.bg, color: l.text }} className="text-xs font-medium px-2 py-0.5 rounded-full shrink-0" title={l.label}>
-                                {l.label.split(' — ')[0]}
-                              </span>
-                              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div style={{ width: `${pct}%`, background: l.bar }} className="h-full rounded-full transition-all" />
-                              </div>
-                              <span className="text-xs font-medium text-gray-700 min-w-[16px] text-right">{count}</span>
-                            </div>
-                          )
-                        })}
-                        <p className="text-xs text-gray-400 mt-1">{total} projetos ativos no total</p>
-                      </div>
-                    )
-                  })()}
-                </div>
+                <NivelEstrategico
+                  byLevel={dashboard.by_level}
+                  projects={strategicProjects}
+                />
                 <div className="bg-white border border-gray-100 rounded-xl p-4">
                   <p className="text-xs font-medium text-gray-500 mb-3">
                     Tempo médio de entrega
