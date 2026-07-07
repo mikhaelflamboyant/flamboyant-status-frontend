@@ -396,7 +396,12 @@ export default function PersonalDashboard() {
 
           <div className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-gray-500">Projetos com go-live próximo</p>
+              <p className="text-xs font-medium text-gray-500">
+                Projetos com go-live próximo
+                {counts.goLive > 0 && (
+                  <span className="text-gray-400 font-normal ml-1.5">{Math.min(goLive.length, 3)} de {counts.goLive}</span>
+                )}
+              </p>
               {counts.goLive > 0 && (
                 <button
                   onClick={() => navigate('/painel/pessoal/go-live')}
@@ -441,7 +446,15 @@ export default function PersonalDashboard() {
 
           <div className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-gray-500">Status reports da semana</p>
+              <p className="text-xs font-medium text-gray-500">
+                Status reports da semana
+                {(() => {
+                  const total = tab === 'pendentes' ? counts.statusReportsPending : counts.statusReportsCompleted
+                  return total > 0 && (
+                    <span className="text-gray-400 font-normal ml-1.5">{statusReports.length} de {total}</span>
+                  )
+                })()}
+              </p>
               <button
                 onClick={() => navigate('/painel/pessoal/status-reports')}
                 className="text-xs text-primary-600 hover:text-primary-800 transition-colors font-medium"
@@ -477,7 +490,12 @@ export default function PersonalDashboard() {
 
           <div className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-gray-500">Atividades do cronograma · esta semana</p>
+              <p className="text-xs font-medium text-gray-500">
+                Atividades do cronograma · esta semana
+                {counts.scopeItems > 0 && (
+                  <span className="text-gray-400 font-normal ml-1.5">{Math.min(scopeItems.length, 3)} de {counts.scopeItems}</span>
+                )}
+              </p>
               <button
                 onClick={() => navigate('/painel/pessoal/atividades')}
                 className="text-xs text-primary-600 hover:text-primary-800 transition-colors font-medium"
@@ -521,7 +539,12 @@ export default function PersonalDashboard() {
 
           <div className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-gray-500">Tarefas · esta semana</p>
+              <p className="text-xs font-medium text-gray-500">
+                Tarefas · esta semana
+                {counts.tasks > 0 && (
+                  <span className="text-gray-400 font-normal ml-1.5">{Math.min(tasks.length, 3)} de {counts.tasks}</span>
+                )}
+              </p>
               <button
                 onClick={() => navigate('/painel/pessoal/tarefas')}
                 className="text-xs text-primary-600 hover:text-primary-800 transition-colors font-medium"
@@ -565,7 +588,12 @@ export default function PersonalDashboard() {
 
           <div className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-gray-500">Atividade recente · últimos 7 dias</p>
+              <p className="text-xs font-medium text-gray-500">
+                Atividade recente · últimos 7 dias
+                {counts.feed > 0 && (
+                  <span className="text-gray-400 font-normal ml-1.5">{Math.min(feed.length, 3)} de {counts.feed}</span>
+                )}
+              </p>
               <button
                 onClick={() => navigate('/painel/pessoal/feed')}
                 className="text-xs text-primary-600 hover:text-primary-800 transition-colors font-medium"
