@@ -583,7 +583,7 @@ function ResponsaveisTable({ responsaveis, onProjectClick }) {
 
   const loadColor = (n) => (n >= 7 ? 'bg-red-400' : n >= 4 ? 'bg-amber-400' : 'bg-teal-400')
   const th = 'text-[11px] font-semibold text-gray-400 uppercase tracking-wide'
-  const cols = 'grid-cols-[2fr_1.4fr_1.4fr_1.2fr_1.6fr_24px]'
+  const cols = 'grid-cols-[2fr_1.4fr_1.2fr_1.4fr_1.6fr_24px]'
 
   return (
     <div>
@@ -609,11 +609,11 @@ function ResponsaveisTable({ responsaveis, onProjectClick }) {
       <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
         <div className={`grid ${cols} gap-3 px-4 py-2.5 border-b border-gray-100 bg-gray-50`}>
           <span className={th}>Responsável</span>
-          <span className={th}>Complexidade</span>
           <span className={th}>Área</span>
           <button onClick={() => setSortDesc((s) => !s)} className={`${th} inline-flex items-center gap-1 text-left`}>
             Carga {sortDesc ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
           </button>
+          <span className={th}>Complexidade</span>
           <span className={th}>Distribuição de farol</span>
           <span />
         </div>
@@ -631,6 +631,13 @@ function ResponsaveisTable({ responsaveis, onProjectClick }) {
                   <div className="w-7 h-7 rounded-full bg-primary-50 text-primary-800 flex items-center justify-center text-xs font-medium shrink-0">{initials(person.name)}</div>
                   <p className="text-xs font-medium text-gray-700 truncate">{person.name}</p>
                 </div>
+                <span className="text-xs text-gray-500">{person.area}</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 max-w-[70px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${loadColor(person.projects_count)}`} style={{ width: `${(person.projects_count / maxLoad) * 100}%` }} />
+                  </div>
+                  <span className="text-xs font-medium text-gray-900 tabular-nums">{person.projects_count}</span>
+                </div>
                 <div className="flex items-center gap-2.5">
                   {(() => {
                     const dist = complexityDist(person.projects)
@@ -643,13 +650,6 @@ function ResponsaveisTable({ responsaveis, onProjectClick }) {
                       </span>
                     ))
                   })()}
-                </div>
-                <span className="text-xs text-gray-500">{person.area}</span>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 max-w-[70px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${loadColor(person.projects_count)}`} style={{ width: `${(person.projects_count / maxLoad) * 100}%` }} />
-                  </div>
-                  <span className="text-xs font-medium text-gray-900 tabular-nums">{person.projects_count}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   {person.projects_count === 0 ? (
