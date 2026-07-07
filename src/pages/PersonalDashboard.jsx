@@ -768,7 +768,7 @@ export default function PersonalDashboard() {
                     ) : (
                       <div className="flex items-center gap-2 py-0.5">
                         <CheckCircle2 size={13} className="text-teal-400 shrink-0" />
-                        <span className="text-xs text-gray-400">{s.title} — {s.emptyText}</span>
+                        <span className="text-xs text-gray-400">{s.title} - {s.emptyText}</span>
                       </div>
                     )}
                   </div>
