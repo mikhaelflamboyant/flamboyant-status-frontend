@@ -16,15 +16,15 @@ function getGoLiveColor(goLiveDate) {
 }
 
 const GO_LIVE_STYLES = {
-  'vermelho':       { dot: '#E24B4A', bg: '#FCEBEB', text: '#791F1F', label: 'Vencido' },
-  'amarelo-escuro': { dot: '#EF9F27', bg: '#FAEEDA', text: '#633806', label: 'Próximo' },
-  'amarelo-claro':  { dot: '#EF9F27', bg: '#FAEEDA', text: '#633806', label: 'Em breve' },
+  'vermelho':       { dot: '#E24B4A', bg: '#FCEBEB', text: '#791F1F', label: 'Vencido', icon: 'triangle' },
+  'amarelo-escuro': { dot: '#EF9F27', bg: '#FAEEDA', text: '#633806', label: 'Próximo', icon: 'clock' },
+  'amarelo-claro':  { dot: '#EF9F27', bg: '#FAEEDA', text: '#633806', label: 'Em breve', icon: 'clock' },
 }
 
 const STATUS_TAG_STYLES = {
-  verde:    { bg: '#E1F5EE', text: '#085041', label: 'Em dia' },
-  amarelo:  { bg: '#FAEEDA', text: '#633806', label: 'Atenção' },
-  vermelho: { bg: '#FCEBEB', text: '#791F1F', label: 'Pendente' },
+  verde:    { bg: '#E1F5EE', text: '#085041', label: 'Em dia', icon: 'check' },
+  amarelo:  { bg: '#FAEEDA', text: '#633806', label: 'Atenção', icon: 'clock' },
+  vermelho: { bg: '#FCEBEB', text: '#791F1F', label: 'Pendente', icon: 'triangle' },
 }
 
 function MetricCard({ label, value, color, textColor, icon: Icon, onClick }) {
@@ -83,10 +83,11 @@ const URGENCY_STYLES = {
   neutro:   { text: '#9CA3AF', icon: null },
 }
 
-function ShapeIcon({ shape, size = 13, className = '' }) {
-  if (shape === 'check') return <CheckCircle2 size={size} className={`text-teal-500 shrink-0 ${className}`} />
-  if (shape === 'clock') return <Clock size={size} className={`text-amber-500 shrink-0 ${className}`} />
-  if (shape === 'triangle') return <AlertTriangle size={size} className={`text-red-500 shrink-0 ${className}`} />
+function ShapeIcon({ shape, size = 13, className = '', color }) {
+  const style = color ? { color } : undefined
+  if (shape === 'check') return <CheckCircle2 size={size} style={style} className={`shrink-0 ${!color ? 'text-teal-500' : ''} ${className}`} />
+  if (shape === 'clock') return <Clock size={size} style={style} className={`shrink-0 ${!color ? 'text-amber-500' : ''} ${className}`} />
+  if (shape === 'triangle') return <AlertTriangle size={size} style={style} className={`shrink-0 ${!color ? 'text-red-500' : ''} ${className}`} />
   return null
 }
 
@@ -424,7 +425,8 @@ export default function PersonalDashboard() {
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         {style && (
-                          <span style={{ fontSize: '11px', fontWeight: 500, background: style.bg, color: style.text, padding: '2px 8px', borderRadius: '20px' }}>
+                          <span className="inline-flex items-center gap-1" style={{ fontSize: '11px', fontWeight: 500, background: style.bg, color: style.text, padding: '2px 8px', borderRadius: '20px' }}>
+                            <ShapeIcon shape={style.icon} size={11} color={style.text} />
                             {style.label}
                           </span>
                         )}
@@ -462,7 +464,8 @@ export default function PersonalDashboard() {
                       className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                     >
                       <span className="text-xs text-gray-800 truncate flex-1">{p.project_title}</span>
-                      <span style={{ fontSize: '11px', fontWeight: 500, background: style.bg, color: style.text, padding: '2px 8px', borderRadius: '20px', flexShrink: 0 }}>
+                      <span className="inline-flex items-center gap-1" style={{ fontSize: '11px', fontWeight: 500, background: style.bg, color: style.text, padding: '2px 8px', borderRadius: '20px', flexShrink: 0 }}>
+                        <ShapeIcon shape={style.icon} size={11} color={style.text} />
                         {style.label}
                       </span>
                     </div>
