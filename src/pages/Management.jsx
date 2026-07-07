@@ -557,6 +557,18 @@ function ProjectDropdown({ label, count, pill, list, open, onToggle, showFarol, 
   )
 }
 
+const COMPLEXITY_COLORS = {
+  Alta: '#E24B4A',
+  'Média': '#EF9F27',
+  Baixa: '#1D9E75',
+}
+
+const complexityDist = (projects) =>
+  projects.reduce((acc, p) => {
+    if (p.complexity) acc[p.complexity] = (acc[p.complexity] || 0) + 1
+    return acc
+  }, {})
+
 function ResponsaveisTable({ responsaveis, onProjectClick }) {
   const [q, setQ] = useState('')
   const [sortDesc, setSortDesc] = useState(true)
@@ -571,7 +583,7 @@ function ResponsaveisTable({ responsaveis, onProjectClick }) {
 
   const loadColor = (n) => (n >= 7 ? 'bg-red-400' : n >= 4 ? 'bg-amber-400' : 'bg-teal-400')
   const th = 'text-[11px] font-semibold text-gray-400 uppercase tracking-wide'
-  const cols = 'grid-cols-[2fr_1.2fr_1.4fr_1.2fr_1.6fr_24px]'
+  const cols = 'grid-cols-[2fr_1.4fr_1.4fr_1.2fr_1.6fr_24px]'
 
   return (
     <div>
@@ -597,7 +609,7 @@ function ResponsaveisTable({ responsaveis, onProjectClick }) {
       <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
         <div className={`grid ${cols} gap-3 px-4 py-2.5 border-b border-gray-100 bg-gray-50`}>
           <span className={th}>Responsável</span>
-          <span className={th}>Cargo</span>
+          <span className={th}>Complexidade</span>
           <span className={th}>Área</span>
           <button onClick={() => setSortDesc((s) => !s)} className={`${th} inline-flex items-center gap-1 text-left`}>
             Carga {sortDesc ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
@@ -619,7 +631,19 @@ function ResponsaveisTable({ responsaveis, onProjectClick }) {
                   <div className="w-7 h-7 rounded-full bg-primary-50 text-primary-800 flex items-center justify-center text-xs font-medium shrink-0">{initials(person.name)}</div>
                   <p className="text-xs font-medium text-gray-700 truncate">{person.name}</p>
                 </div>
-                <span className="text-xs text-gray-500">{person.role}</span>
+                <div className="flex items-center gap-2.5">
+                  {(() => {
+                    const dist = complexityDist(person.projects)
+                    const keys = ['Alta', 'Média', 'Baixa'].filter(k => dist[k])
+                    if (keys.length === 0) return <span className="text-gray-300 text-xs">—</span>
+                    return keys.map(k => (
+                      <span key={k} className="inline-flex items-center gap-1 text-xs text-gray-600">
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: COMPLEXITY_COLORS[k], display: 'inline-block', flexShrink: 0 }} />
+                        {dist[k]}
+                      </span>
+                    ))
+                  })()}
+                </div>
                 <span className="text-xs text-gray-500">{person.area}</span>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 max-w-[70px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
