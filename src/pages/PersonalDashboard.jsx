@@ -646,7 +646,7 @@ export default function PersonalDashboard() {
                       {actionTotalCount} item(ns) · {actionOverdueCount} vencido(s)
                     </span>
                     {filteredActionItems.length > 5 && (
-                      <span className="text-xs text-red-400">role para ver todos</span>
+                      <span className="text-xs text-red-400">Projetos</span>
                     )}
                   </div>
                   {filteredActionItems.length === 0 ? (
