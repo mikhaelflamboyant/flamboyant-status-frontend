@@ -104,6 +104,51 @@ function getCurrentWeekRangeLabel() {
   return `${dow(start)} ${fmt(start)} – ${dow(end)} ${fmt(end)}`
 }
 
+function getCurrentWeekBounds() {
+  const now = new Date()
+  const day = now.getDay()
+  const diffToSaturday = day === 6 ? 0 : -(day + 1)
+  const start = new Date(now)
+  start.setDate(now.getDate() + diffToSaturday)
+  start.setHours(0, 0, 0, 0)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  end.setHours(0, 0, 0, 0)
+  return { start, end }
+}
+
+function classifyByDate(dateStr) {
+  if (!dateStr) return null
+  const date = new Date(dateStr)
+  date.setHours(0, 0, 0, 0)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const { end: weekEnd } = getCurrentWeekBounds()
+  if (date < today) return 'vencido'
+  if (date <= weekEnd) return 'vencendo'
+  return null
+}
+
+function classifyStatusReport(p) {
+  if (p.launched_this_week) return null
+
+  const { start: weekStart } = getCurrentWeekBounds()
+  const lastWeekStart = new Date(weekStart)
+  lastWeekStart.setDate(weekStart.getDate() - 7)
+
+  const last = p.last_status_at ? new Date(p.last_status_at) : null
+  const missedLastWeekToo = !last || last < lastWeekStart
+
+  if (missedLastWeekToo) return 'vencido'
+
+  const day = new Date().getDay()
+  if (day === 4 || day === 5) return 'vencendo'
+
+  return null
+}
+
+const ACTION_TYPE_LABELS = { golive: 'Go-live vencido', status: 'Status report pendente', scope: 'Atividade', tasks: 'Tarefa' }
+
 const PHASE_OPTIONS = [
   { key: 'RECEBIDA', label: 'Recebida' },
   { key: 'ENTREVISTA_SOLICITANTE', label: 'Entrevista' },
@@ -179,8 +224,6 @@ function DashboardSkeleton() {
   )
 }
 
-/* ---------- Componente ---------- */
-
 export default function PersonalDashboard() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
@@ -189,6 +232,8 @@ export default function PersonalDashboard() {
   const [filterProject, setFilterProject] = useState('')
   const [filterPhase, setFilterPhase] = useState('')
   const [projects, setProjects] = useState([])
+  const [actionType, setActionType] = useState('todos')
+  const [actionUrgency, setActionUrgency] = useState('todas')
 
   const buildQuery = () => {
     const params = new URLSearchParams()
@@ -238,75 +283,91 @@ export default function PersonalDashboard() {
   const actionItems = (() => {
     const items = []
 
-    goLive.forEach(p => {
+    ;(data?.goLiveAll || []).forEach(p => {
+      const urgency = classifyByDate(p.go_live)
+      if (!urgency) return
       const u = getUrgency(p.go_live)
-      if (u.status === 'vencido') {
-        items.push({
-          key: `golive-${p.id}`,
-          title: p.title,
-          subtitle: 'Go-live vencido',
-          label: u.label,
-          tone: u.tone,
-          sortDate: p.go_live,
-          onClick: () => navigate('/painel/pessoal/go-live'),
-        })
-      }
+      items.push({
+        key: `golive-${p.id}`,
+        type: 'golive',
+        title: p.title,
+        subtitle: 'Go-live vencido',
+        label: u.label,
+        tone: urgency === 'vencido' ? 'vermelho' : 'ambar',
+        urgency,
+        sortDate: p.go_live,
+        onClick: () => navigate('/painel/pessoal/go-live'),
+      })
     })
 
-    ;(data?.statusReports || []).forEach(p => {
-      if (p.tag === 'vermelho' && !p.launched_this_week) {
-        items.push({
-          key: `status-${p.project_id}`,
-          title: p.project_title,
-          subtitle: 'Status report pendente',
-          label: '',
-          tone: 'vermelho',
-          sortDate: null,
-          onClick: () => navigate('/painel/pessoal/status-reports'),
-        })
-      }
+    ;(data?.statusReportsAll || []).forEach(p => {
+      const urgency = classifyStatusReport(p)
+      if (!urgency) return
+      items.push({
+        key: `status-${p.project_id}`,
+        type: 'status',
+        title: p.project_title,
+        subtitle: 'Status report pendente',
+        label: 'pendente',
+        tone: urgency === 'vencido' ? 'vermelho' : 'ambar',
+        urgency,
+        sortDate: null,
+        onClick: () => navigate('/painel/pessoal/status-reports'),
+      })
     })
 
-    ;(data?.scopeItems || [])
+    ;(data?.scopeItemsAll || [])
       .filter(i => i?.project && !i.completion_date)
       .forEach(i => {
+        const urgency = classifyByDate(i.end_date)
+        if (!urgency) return
         const u = getUrgency(i.end_date)
-        if (u.status === 'vencido') {
-          items.push({
-            key: `scope-${i.id}`,
-            title: i.title,
-            subtitle: `Atividade atrasada · ${i.project?.title}`,
-            label: u.label,
-            tone: u.tone,
-            sortDate: i.end_date,
-            onClick: () => navigate('/painel/pessoal/atividades'),
-          })
-        }
+        items.push({
+          key: `scope-${i.id}`,
+          type: 'scope',
+          title: i.title,
+          subtitle: `Atividade · ${i.project?.title}`,
+          label: u.label,
+          tone: urgency === 'vencido' ? 'vermelho' : 'ambar',
+          urgency,
+          sortDate: i.end_date,
+          onClick: () => navigate('/painel/pessoal/atividades'),
+        })
       })
 
-    ;(data?.tasks || [])
+    ;(data?.tasksAll || [])
       .filter(t => t?.project && !t.completed)
       .forEach(t => {
+        const urgency = classifyByDate(t.end_date)
+        if (!urgency) return
         const u = getUrgency(t.end_date)
-        if (u.status === 'vencido') {
-          items.push({
-            key: `task-${t.id}`,
-            title: t.title,
-            subtitle: `Tarefa atrasada · ${t.project?.title}`,
-            label: u.label,
-            tone: u.tone,
-            sortDate: t.end_date,
-            onClick: () => navigate('/painel/pessoal/tarefas'),
-          })
-        }
+        items.push({
+          key: `task-${t.id}`,
+          type: 'tasks',
+          title: t.title,
+          subtitle: `Tarefa · ${t.project?.title}`,
+          label: u.label,
+          tone: urgency === 'vencido' ? 'vermelho' : 'ambar',
+          urgency,
+          sortDate: t.end_date,
+          onClick: () => navigate('/painel/pessoal/tarefas'),
+        })
       })
 
     return items.sort((a, b) => {
+      if (a.urgency !== b.urgency) return a.urgency === 'vencido' ? -1 : 1
       const da = a.sortDate ? new Date(a.sortDate).getTime() : Infinity
       const db = b.sortDate ? new Date(b.sortDate).getTime() : Infinity
       return da - db
     })
   })()
+
+  const actionTotalCount = actionItems.length
+  const actionOverdueCount = actionItems.filter(i => i.urgency === 'vencido').length
+
+  const filteredActionItems = actionItems
+    .filter(i => actionType === 'todos' || i.type === actionType)
+    .filter(i => actionUrgency === 'todas' || i.urgency === (actionUrgency === 'vencidas' ? 'vencido' : 'vencendo'))
 
   const sections = [
     {
@@ -540,7 +601,38 @@ export default function PersonalDashboard() {
         ) : (
           <>
             <div className="mb-4">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Precisa de ação hoje</p>
+              <div className="flex items-center justify-between mb-2 flex-wrap gap-y-1.5">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Precisa de ação hoje</p>
+                {actionItems.length > 0 && (
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {[
+                      ['todos', 'Todos'], ['scope', 'Atividades'], ['golive', 'Go-live'],
+                      ['tasks', 'Tarefas'], ['status', 'Status report'],
+                    ].map(([key, label]) => (
+                      <button
+                        key={key}
+                        onClick={() => setActionType(key)}
+                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${actionType === key ? 'border-primary-600 bg-primary-50 text-primary-800 font-medium' : 'border-gray-200 bg-white text-gray-500'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                    <span className="w-px h-4 bg-gray-200 mx-1" />
+                    {[
+                      ['todas', 'Todas'], ['vencidas', 'Vencidas'], ['vencendo', 'Vencendo'],
+                    ].map(([key, label]) => (
+                      <button
+                        key={key}
+                        onClick={() => setActionUrgency(key)}
+                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${actionUrgency === key ? 'border-primary-600 bg-primary-50 text-primary-800 font-medium' : 'border-gray-200 bg-white text-gray-500'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {actionItems.length === 0 ? (
                 <div className="border border-teal-100 rounded-xl bg-teal-50 px-4 py-2.5 flex items-center gap-2">
                   <CheckCircle2 size={14} className="text-teal-500 shrink-0" />
@@ -548,40 +640,47 @@ export default function PersonalDashboard() {
                 </div>
               ) : (
                 <div className="border border-red-100 rounded-xl overflow-hidden">
-                  <div className="bg-red-50 px-4 py-2.5 flex items-center gap-2 border-b border-red-100">
-                    <AlertTriangle size={14} className="text-red-500 shrink-0" />
-                    <span className="text-xs font-medium text-red-800">
-                      {actionItems.length} {actionItems.length === 1 ? 'item precisa' : 'itens precisam'} de ação
+                  <div className="bg-red-50 px-4 py-2.5 flex items-center justify-between gap-2 border-b border-red-100">
+                    <span className="inline-flex items-center gap-2 text-xs font-medium text-red-800">
+                      <AlertTriangle size={14} className="text-red-500 shrink-0" />
+                      {actionTotalCount} item(ns) · {actionOverdueCount} vencido(s)
                     </span>
+                    {filteredActionItems.length > 5 && (
+                      <span className="text-xs text-red-400">role para ver todos</span>
+                    )}
                   </div>
-                  <div className="bg-white flex flex-col">
-                    {actionItems.map(item => {
-                      const st = URGENCY_STYLES[item.tone] || URGENCY_STYLES.neutro
-                      return (
-                        <div
-                          key={item.key}
-                          onClick={item.onClick}
-                          className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
-                        >
-                          <div className="flex items-start gap-2.5 min-w-0">
-                            <span className="mt-0.5">
-                              <ShapeIcon shape={st.icon || 'triangle'} size={14} />
-                            </span>
-                            <div className="min-w-0">
-                              <p className="text-xs font-medium text-gray-800 truncate">{item.title}</p>
-                              <p className="text-xs text-gray-400 truncate">{item.subtitle}</p>
+                  {filteredActionItems.length === 0 ? (
+                    <p className="text-xs text-gray-400 text-center py-6 bg-white">Nenhum item neste filtro.</p>
+                  ) : (
+                    <div className="bg-white flex flex-col overflow-y-auto" style={{ maxHeight: '290px' }}>
+                      {filteredActionItems.map(item => {
+                        const st = URGENCY_STYLES[item.tone] || URGENCY_STYLES.neutro
+                        return (
+                          <div
+                            key={item.key}
+                            onClick={item.onClick}
+                            className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
+                          >
+                            <div className="flex items-start gap-2.5 min-w-0">
+                              <span className="mt-0.5">
+                                <ShapeIcon shape={st.icon || 'triangle'} size={14} />
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium text-gray-800 truncate">{item.title}</p>
+                                <p className="text-xs text-gray-400 truncate">{item.subtitle}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {item.label && (
+                                <span className="text-xs font-medium" style={{ color: st.text }}>{item.label}</span>
+                              )}
+                              <span className="text-gray-300 text-xs">→</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {item.label && (
-                              <span className="text-xs font-medium" style={{ color: st.text }}>{item.label}</span>
-                            )}
-                            <span className="text-gray-300 text-xs">→</span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
