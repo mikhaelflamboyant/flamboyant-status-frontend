@@ -581,7 +581,13 @@ function ResponsaveisTable({ responsaveis, onProjectClick }) {
     .filter((p) => !semProjetos || p.projects_count === 0)
     .sort((a, b) => (sortDesc ? b.projects_count - a.projects_count : a.projects_count - b.projects_count))
 
-  const loadColor = (n) => (n >= 7 ? 'bg-red-400' : n >= 4 ? 'bg-amber-400' : 'bg-teal-400')
+  const loadColor = (count, dist) => {
+    const alta = dist['Alta'] || 0
+    const media = dist['Média'] || 0
+    if (count > 5 || alta > 3) return 'bg-red-400'
+    if (count === 5 && alta === 3 && media === 2) return 'bg-amber-400'
+    return 'bg-teal-400'
+  }
   const th = 'text-[11px] font-semibold text-gray-400 uppercase tracking-wide'
   const cols = 'grid-cols-[2fr_1.4fr_1.2fr_1.4fr_1.6fr_24px]'
 
@@ -620,6 +626,7 @@ function ResponsaveisTable({ responsaveis, onProjectClick }) {
 
         {rows.map((person) => {
           const d = farolDist(person.projects)
+          const dist = complexityDist(person.projects)
           const open = expanded === person.id
           return (
             <div key={person.id} className="border-b border-gray-50 last:border-0">
@@ -634,13 +641,12 @@ function ResponsaveisTable({ responsaveis, onProjectClick }) {
                 <span className="text-xs text-gray-500">{person.area}</span>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 max-w-[70px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${loadColor(person.projects_count)}`} style={{ width: `${(person.projects_count / maxLoad) * 100}%` }} />
+                    <div className={`h-full rounded-full ${loadColor(person.projects_count, dist)}`} style={{ width: `${(person.projects_count / maxLoad) * 100}%` }} />
                   </div>
                   <span className="text-xs font-medium text-gray-900 tabular-nums">{person.projects_count}</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   {(() => {
-                    const dist = complexityDist(person.projects)
                     const keys = ['Alta', 'Média', 'Baixa'].filter(k => dist[k])
                     if (keys.length === 0) return <span className="text-gray-300 text-xs">—</span>
                     return keys.map(k => (
