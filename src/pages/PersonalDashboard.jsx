@@ -189,7 +189,6 @@ export default function PersonalDashboard() {
   const [filterProject, setFilterProject] = useState('')
   const [filterPhase, setFilterPhase] = useState('')
   const [projects, setProjects] = useState([])
-  const [forceSkeleton, setForceSkeleton] = useState(false)
 
   const buildQuery = () => {
     const params = new URLSearchParams()
@@ -212,7 +211,7 @@ export default function PersonalDashboard() {
       .catch(() => {})
   }, [])
 
-  const showSkeleton = loading || forceSkeleton
+  const showSkeleton = loading
 
   const counts = data?.counts || {}
   const goLive = data?.goLive || []
@@ -498,20 +497,9 @@ export default function PersonalDashboard() {
       <Navbar />
       <div className="max-w-6xl mx-auto px-6 py-6">
 
-        <div className="flex items-baseline justify-between gap-2 mb-4 flex-wrap">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <h1 className="text-base font-medium text-gray-900">Painel pessoal</h1>
-            <span className="text-xs text-gray-400">Semana: {getCurrentWeekRangeLabel()}</span>
-          </div>
-          <label className="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={forceSkeleton}
-              onChange={e => setForceSkeleton(e.target.checked)}
-              className="w-3 h-3 accent-primary-600"
-            />
-            ver carregamento
-          </label>
+        <div className="flex items-baseline gap-2 mb-4 flex-wrap">
+          <h1 className="text-base font-medium text-gray-900">Painel pessoal</h1>
+          <span className="text-xs text-gray-400">Semana: {getCurrentWeekRangeLabel()}</span>
         </div>
 
         <div className="flex items-center gap-2 mb-4 flex-wrap">
