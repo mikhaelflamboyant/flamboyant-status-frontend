@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import api from '../services/api'
-import { CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
+import { CheckCircle2, Clock, AlertTriangle, Check, Layers, CheckSquare } from 'lucide-react'
+import { scopeService } from '../services/scope.service'
+import { tasksService } from '../services/tasks.service'
 
 function getGoLiveColor(goLiveDate) {
   if (!goLiveDate) return null
@@ -79,6 +81,122 @@ const URGENCY_STYLES = {
   vermelho: { text: '#791F1F', icon: 'triangle' },
   ambar:    { text: '#633806', icon: 'clock' },
   neutro:   { text: '#9CA3AF', icon: null },
+}
+
+const rdToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d }
+const todoDiffDays = (date) => Math.round((new Date(new Date(date).toDateString()) - rdToday()) / 86400000)
+
+function todoUrgency(date) {
+  if (!date) return { tone: 'neutro', label: 'sem prazo', rank: 3 }
+  const d = todoDiffDays(date)
+  if (d < 0) return { tone: 'vermelho', label: d === -1 ? 'venceu ontem' : `venceu há ${Math.abs(d)} dias`, rank: 0 }
+  if (d === 0) return { tone: 'ambar', label: 'vence hoje', rank: 1 }
+  if (d === 1) return { tone: 'neutro', label: 'vence amanhã', rank: 2 }
+  return { tone: 'neutro', label: 'vence ' + new Date(date).toLocaleDateString('pt-BR', { timeZone: 'UTC', day: '2-digit', month: '2-digit' }), rank: 2 }
+}
+
+const TODO_TONE = { vermelho: 'text-red-600', ambar: 'text-amber-600', neutro: 'text-gray-400' }
+
+function TodoCheckbox({ checked, onChange, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      disabled={disabled}
+      className={`w-[18px] h-[18px] shrink-0 rounded-[5px] border-[1.5px] flex items-center justify-center transition-colors disabled:opacity-50 ${
+        checked ? 'bg-teal-400 border-teal-400' : 'bg-white border-gray-300 hover:border-primary-400'
+      }`}
+    >
+      {checked && (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
+function TodoRow({ item, onToggle, saving }) {
+  const u = item.done ? null : todoUrgency(item.end_date)
+  return (
+    <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+      <TodoCheckbox checked={item.done} disabled={saving} onChange={() => onToggle(item)} />
+      <span className={`flex-1 min-w-0 text-sm truncate ${item.done ? 'text-gray-300 line-through' : 'text-gray-700'}`}>
+        {item.title}
+      </span>
+      {item.done ? (
+        <span className="inline-flex items-center gap-1 text-[11px] text-teal-600 shrink-0">
+          <Check size={12} /> concluída
+        </span>
+      ) : (
+        <span className={`inline-flex items-center gap-1 text-xs shrink-0 ${u.tone === 'neutro' ? 'font-normal' : 'font-medium'} ${TODO_TONE[u.tone]}`}>
+          {u.tone === 'vermelho' && <AlertTriangle size={12} />}
+          {u.tone === 'ambar' && <Clock size={12} />}
+          {u.label}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function TodoSection({ icon: SectionIcon, title, items, emptyText, onToggle, savingId }) {
+  const pending = items.filter(i => !i.done).length
+  const doneCount = items.length - pending
+
+  const groups = []
+  const map = {}
+  items.forEach(i => {
+    const pid = i.project?.id ?? 'sem'
+    if (!map[pid]) { map[pid] = { project: i.project, items: [] }; groups.push(map[pid]) }
+    map[pid].items.push(i)
+  })
+  groups.forEach(g => g.items.sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1
+    if (a.done) return 0
+    const ua = todoUrgency(a.end_date), ub = todoUrgency(b.end_date)
+    if (ua.rank !== ub.rank) return ua.rank - ub.rank
+    return new Date(a.end_date) - new Date(b.end_date)
+  }))
+
+  return (
+    <div className="bg-white border border-gray-100 rounded-xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <SectionIcon size={16} className="text-primary-600" />
+          <h2 className="text-sm font-medium text-gray-900">{title}</h2>
+        </div>
+        <span className="text-xs text-gray-400">
+          {pending} pendente{pending !== 1 ? 's' : ''}{doneCount > 0 ? ` · ${doneCount} concluída${doneCount !== 1 ? 's' : ''}` : ''}
+        </span>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="flex items-center gap-2 bg-teal-50 text-teal-800 text-xs font-medium px-3 py-2.5 rounded-lg">
+          <Check size={14} className="text-teal-600" /> {emptyText}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-[18px]">
+          {groups.map(g => {
+            const gp = g.items.filter(i => !i.done).length
+            return (
+              <div key={g.project?.id ?? 'sem'}>
+                <div className="flex items-center gap-2 px-2.5 pb-1.5 mb-0.5 border-b border-gray-100">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary-400 shrink-0" />
+                  <span className="flex-1 min-w-0 text-xs font-semibold text-gray-900 truncate">{g.project?.title || 'Sem projeto'}</span>
+                  <span className="text-[11px] text-gray-300">{gp} pendente{gp !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="flex flex-col gap-px pt-1">
+                  {g.items.map(i => (
+                    <TodoRow key={`${i.type}-${i.id}`} item={i} onToggle={onToggle} saving={savingId === `${i.type}-${i.id}`} />
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function ShapeIcon({ shape, size = 13, className = '', color }) {
@@ -234,6 +352,9 @@ export default function PersonalDashboard() {
   const [projects, setProjects] = useState([])
   const [actionType, setActionType] = useState('todos')
   const [actionUrgency, setActionUrgency] = useState('todas')
+  const [doneMap, setDoneMap] = useState({})
+  const [savingId, setSavingId] = useState(null)
+  const [todoToast, setTodoToast] = useState('')
 
   const buildQuery = () => {
     const params = new URLSearchParams()
@@ -368,6 +489,42 @@ export default function PersonalDashboard() {
   const filteredActionItems = actionItems
     .filter(i => actionType === 'todos' || i.type === actionType)
     .filter(i => actionUrgency === 'todas' || i.urgency === (actionUrgency === 'vencidas' ? 'vencido' : 'vencendo'))
+
+  const toggleTodo = async (item) => {
+    if (item.done) return
+    const key = `${item.type}-${item.id}`
+    setDoneMap(prev => ({ ...prev, [key]: true }))
+    setSavingId(key)
+    try {
+      if (item.type === 'task') {
+        await tasksService.complete(item.project.id, item.id)
+      } else {
+        await scopeService.update(item.project.id, item.id, {
+          completion_date: new Date().toISOString().split('T')[0],
+          completion_pct: 100,
+        })
+      }
+      setTodoToast(`"${item.title}" concluída — atualizada no projeto.`)
+      clearTimeout(window.__pdToast)
+      window.__pdToast = setTimeout(() => setTodoToast(''), 3000)
+    } catch (err) {
+      console.error(err)
+      setDoneMap(prev => { const n = { ...prev }; delete n[key]; return n })
+      setTodoToast('Não foi possível concluir. Tente novamente.')
+      clearTimeout(window.__pdToast)
+      window.__pdToast = setTimeout(() => setTodoToast(''), 3000)
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  const scopeTodo = (tab === 'pendentes' ? (data?.scopeItemsAll || []) : (data?.scopeItemsDoneWeek || []))
+    .filter(i => i?.project)
+    .map(i => ({ ...i, type: 'scope', done: tab === 'concluidos' ? true : !!doneMap[`scope-${i.id}`] }))
+
+  const tasksTodo = (tab === 'pendentes' ? (data?.tasksAll || []) : (data?.tasksDoneWeek || []))
+    .filter(t => t?.project)
+    .map(t => ({ ...t, type: 'task', done: tab === 'concluidos' ? true : !!doneMap[`task-${t.id}`] }))
 
   const sections = [
     {
@@ -550,12 +707,18 @@ export default function PersonalDashboard() {
     },
   ]
 
-  const sortedSections = [...sections].sort((a, b) => (a.hasItems === b.hasItems ? 0 : a.hasItems ? -1 : 1))
-  const allEmpty = actionItems.length === 0 && sections.every(s => !s.hasItems)
+  const visibleSections = sections.filter(s => !['scope', 'tasks'].includes(s.key))
+  const sortedSections = [...visibleSections].sort((a, b) => (a.hasItems === b.hasItems ? 0 : a.hasItems ? -1 : 1))
+  const allEmpty = actionItems.length === 0 && visibleSections.every(s => !s.hasItems)
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      {todoToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-xs px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2">
+          <Check size={14} className="text-teal-300" /> {todoToast}
+        </div>
+      )}
       <div className="max-w-6xl mx-auto px-6 py-6">
 
         <div className="flex items-baseline gap-2 mb-4 flex-wrap">
@@ -683,6 +846,25 @@ export default function PersonalDashboard() {
                   )}
                 </div>
               )}
+            </div>
+
+            <div className="flex flex-col gap-3 mb-4">
+              <TodoSection
+                icon={Layers}
+                title="Atividades do cronograma · esta semana"
+                items={scopeTodo}
+                emptyText={tab === 'pendentes' ? 'Nenhuma atividade pendente nesta semana.' : 'Nenhuma atividade concluída nesta semana.'}
+                onToggle={toggleTodo}
+                savingId={savingId}
+              />
+              <TodoSection
+                icon={CheckSquare}
+                title="Tarefas · esta semana"
+                items={tasksTodo}
+                emptyText={tab === 'pendentes' ? 'Nenhuma tarefa pendente nesta semana.' : 'Nenhuma tarefa concluída nesta semana.'}
+                onToggle={toggleTodo}
+                savingId={savingId}
+              />
             </div>
 
             <div className="grid grid-cols-4 gap-3 mb-4">
