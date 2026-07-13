@@ -17,6 +17,7 @@ import { tasksService } from '../services/tasks.service'
 import { scopeService } from '../services/scope.service'
 import { LEVEL_CONFIG } from '../utils/pdfStyles'
 import { LinkifiedText } from '../components/ui/LinkifiedText'
+import { Plus, X, ChevronDown } from 'lucide-react'
 
 const STAGES = [
   { key: 'PLANEJAMENTO', label: '1. Planejamento' },
@@ -284,7 +285,8 @@ export default function ProjectDetail() {
   const [editTaskForm, setEditTaskForm] = useState({})
   const [scopeItems, setScopeItems] = useState([])
   const [showScopeForm, setShowScopeForm] = useState(false)
-  const [scopeForm, setScopeForm] = useState({ title: '', description: '', stage: '', start_date: '', end_date: '', completion_pct: 0, completion_date: '' })
+  const [scopeDrafts, setScopeDrafts] = useState([])
+  const [collapsedDrafts, setCollapsedDrafts] = useState({})
   const [scopeLoading, setScopeLoading] = useState(false)
   const [expandedScope, setExpandedScope] = useState({})
   const [editingScopeItem, setEditingScopeItem] = useState(null)
@@ -486,20 +488,61 @@ export default function ProjectDetail() {
     }
   }
 
-  const handleCreateScopeItem = async () => {
-    if (!scopeForm.title) return
-    if (!scopeForm.stage) {
-      alert('Selecione uma etapa para a atividade.')
+  let _draftSeq = useRef(1)
+  const mkDraft = () => ({ _key: _draftSeq.current++, title: '', description: '', stage: '', start_date: '', end_date: '' })
+
+  const openScopeForm = () => {
+    const first = mkDraft()
+    setScopeDrafts([first])
+    setCollapsedDrafts({})
+    setShowScopeForm(true)
+  }
+
+  const closeScopeForm = () => {
+    setShowScopeForm(false)
+    setScopeDrafts([])
+    setCollapsedDrafts({})
+  }
+
+  const updateDraft = (key, patch) =>
+    setScopeDrafts(list => list.map(d => (d._key === key ? { ...d, ...patch } : d)))
+
+  const removeDraft = (key) =>
+    setScopeDrafts(list => list.filter(d => d._key !== key))
+
+  const addDraft = () => {
+    const n = mkDraft()
+    setScopeDrafts(list => [...list, n])
+  }
+
+  const handleSaveScopeDrafts = async () => {
+    const preenchidas = scopeDrafts.filter(d => d.title.trim())
+    if (preenchidas.length === 0) return
+
+    const invalido = preenchidas.find(d => !d.stage)
+    if (invalido) {
+      const pos = scopeDrafts.findIndex(d => d._key === invalido._key) + 1
+      setCollapsedDrafts(prev => ({ ...prev, [invalido._key]: false }))
+      showError(null, `Selecione a etapa da atividade ${pos} antes de salvar.`)
       return
     }
+
     setScopeLoading(true)
     try {
-      await scopeService.create(id, scopeForm)
-      setScopeForm({ title: '', description: '', phase: '', start_date: '', end_date: '', completion_pct: 0 })
-      setShowScopeForm(false)
+      for (const d of preenchidas) {
+        await scopeService.create(id, {
+          title: d.title,
+          description: d.description,
+          stage: d.stage,
+          start_date: d.start_date,
+          end_date: d.end_date,
+          completion_pct: 0,
+        })
+      }
+      closeScopeForm()
       fetchProject()
     } catch (err) {
-      showError(err, 'Erro ao criar a atividade.')
+      showError(err, 'Erro ao criar as atividades.')
     } finally {
       setScopeLoading(false)
     }
@@ -1792,7 +1835,7 @@ export default function ProjectDetail() {
                   </button>
                 )}
                 {canEdit && (
-                  <button onClick={() => setShowScopeForm(!showScopeForm)}
+                  <button onClick={() => (showScopeForm ? closeScopeForm() : openScopeForm())}
                     className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors">
                     + Nova atividade
                   </button>
@@ -1813,58 +1856,126 @@ export default function ProjectDetail() {
             </div>
 
             {showScopeForm && (
-              <div className="border border-gray-100 rounded-xl p-4 mb-5 bg-gray-50 flex flex-col gap-3">
-                <p className="text-xs font-medium text-gray-600">Nova atividade</p>
-                <input
-                  placeholder="Título da atividade *"
-                  value={scopeForm.title}
-                  onChange={e => setScopeForm({ ...scopeForm, title: e.target.value })}
-                  className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                />
-                <textarea
-                  placeholder="Descrição da atividade (opcional)"
-                  value={scopeForm.description}
-                  onChange={e => setScopeForm({ ...scopeForm, description: e.target.value })}
-                  rows={2}
-                  className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
-                />
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xs text-gray-400">Etapa *</p>
-                    <select
-                      value={scopeForm.stage || ''}
-                      onChange={e => setScopeForm({ ...scopeForm, stage: e.target.value })}
-                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                    >
-                      <option value="">Selecionar</option>
-                      {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                    </select>
+              <div className="mb-5 flex flex-col gap-2.5">
+                {scopeDrafts.map((d, i) => {
+                  const collapsed = collapsedDrafts[d._key]
+                  const stageLabel = STAGES.find(s => s.key === d.stage)?.label || 'Sem etapa'
+
+                  if (collapsed) {
+                    return (
+                      <div key={d._key} className="border border-gray-100 rounded-xl bg-white">
+                        <div
+                          onClick={() => setCollapsedDrafts(p => ({ ...p, [d._key]: false }))}
+                          className="flex items-center gap-2.5 px-3.5 py-3 cursor-pointer"
+                        >
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${d.stage ? 'bg-primary-600' : 'bg-gray-300'}`} />
+                          <span className={`flex-1 min-w-0 text-sm font-medium truncate ${d.title.trim() ? 'text-gray-900' : 'text-gray-300'}`}>
+                            {d.title.trim() || `Atividade ${i + 1}`}
+                          </span>
+                          <span className="text-xs text-gray-400 shrink-0">{stageLabel}</span>
+                          <button
+                            onClick={e => { e.stopPropagation(); removeDraft(d._key) }}
+                            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors"
+                            title="Remover"
+                          >
+                            <X size={14} className="text-gray-500" />
+                          </button>
+                          <ChevronDown size={16} className="text-gray-300" />
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div key={d._key} className="border border-gray-100 rounded-xl p-4 bg-gray-50 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium text-gray-600">Atividade {i + 1}</p>
+                        <div className="flex items-center gap-1">
+                          {scopeDrafts.length > 1 && (
+                            <button
+                              onClick={() => setCollapsedDrafts(p => ({ ...p, [d._key]: true }))}
+                              className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors"
+                              title="Recolher"
+                            >
+                              <ChevronDown size={16} className="text-gray-400 rotate-180" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => removeDraft(d._key)}
+                            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors"
+                            title="Remover"
+                          >
+                            <X size={14} className="text-gray-500" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <input
+                        placeholder="Título da atividade *"
+                        value={d.title}
+                        onChange={e => updateDraft(d._key, { title: e.target.value })}
+                        className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                      />
+                      <textarea
+                        placeholder="Descrição da atividade (opcional)"
+                        value={d.description}
+                        onChange={e => updateDraft(d._key, { description: e.target.value })}
+                        rows={2}
+                        className="px-3 py-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 resize-none bg-white"
+                      />
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs text-gray-400">Etapa *</p>
+                          <select
+                            value={d.stage || ''}
+                            onChange={e => updateDraft(d._key, { stage: e.target.value })}
+                            className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                          >
+                            <option value="">Selecionar</option>
+                            {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+                          </select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs text-gray-400">Data de início</p>
+                          <input type="date" value={d.start_date}
+                            onChange={e => updateDraft(d._key, { start_date: e.target.value })}
+                            className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs text-gray-400">Data de fim</p>
+                          <input type="date" value={d.end_date}
+                            min={d.start_date || undefined}
+                            onChange={e => updateDraft(d._key, { end_date: e.target.value })}
+                            className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                <button
+                  onClick={addDraft}
+                  className="w-full flex items-center justify-center gap-1.5 h-9 border border-dashed border-gray-300 rounded-lg text-primary-600 text-xs font-medium hover:bg-gray-50 transition-colors"
+                >
+                  <Plus size={14} /> Adicionar atividade
+                </button>
+
+                <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                  <span className="text-xs text-gray-400">
+                    {scopeDrafts.filter(d => d.title.trim()).length} atividade{scopeDrafts.filter(d => d.title.trim()).length !== 1 ? 's' : ''} para salvar
+                  </span>
+                  <div className="flex gap-2">
+                    <button onClick={closeScopeForm}
+                      className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      Cancelar
+                    </button>
+                    <button onClick={handleSaveScopeDrafts} disabled={scopeLoading || scopeDrafts.filter(d => d.title.trim()).length === 0}
+                      className="text-xs bg-primary-600 text-white px-4 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50 transition-colors font-medium">
+                      {scopeLoading ? 'Salvando...' : 'Salvar todas'}
+                    </button>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xs text-gray-400">Data de início</p>
-                    <input type="date" value={scopeForm.start_date}
-                      onChange={e => setScopeForm({ ...scopeForm, start_date: e.target.value })}
-                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xs text-gray-400">Data de fim</p>
-                    <input type="date" value={scopeForm.end_date}
-                      min={scopeForm.start_date || undefined}
-                      onChange={e => setScopeForm({ ...scopeForm, end_date: e.target.value })}
-                      className="h-8 px-3 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={handleCreateScopeItem} disabled={scopeLoading}
-                    className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 disabled:opacity-50">
-                    {scopeLoading ? 'Salvando...' : 'Salvar'}
-                  </button>
-                  <button onClick={() => setShowScopeForm(false)}
-                    className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5">
-                    Cancelar
-                  </button>
                 </div>
               </div>
             )}
