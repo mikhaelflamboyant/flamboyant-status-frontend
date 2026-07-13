@@ -116,14 +116,29 @@ function TodoCheckbox({ checked, onChange, disabled }) {
   )
 }
 
+const TODO_STAGE_LABEL = {
+  PLANEJAMENTO: 'Planejamento',
+  EXECUCAO: 'Em execução',
+  GO_LIVE: 'Go-live',
+  SUPORTE: 'Suporte pós go-live',
+}
+
 function TodoRow({ item, onToggle, saving }) {
   const u = item.done ? null : todoUrgency(item.end_date)
   return (
     <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-gray-50 transition-colors">
       <TodoCheckbox checked={item.done} disabled={saving} onChange={() => onToggle(item)} />
-      <span className={`flex-1 min-w-0 text-sm truncate ${item.done ? 'text-gray-300 line-through' : 'text-gray-700'}`}>
-        {item.title}
-      </span>
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm truncate ${item.done ? 'text-gray-300 line-through' : 'text-gray-700'}`}>
+          {item.title}
+        </p>
+        {item.type === 'scope' && item.stage && (
+          <p className="text-xs text-gray-400 truncate">{TODO_STAGE_LABEL[item.stage] || item.stage}</p>
+        )}
+        {item.type === 'task' && item.scope_item?.title && (
+          <p className="text-xs text-gray-400 truncate">Atividade: {item.scope_item.title}</p>
+        )}
+      </div>
       {item.done ? (
         <span className="inline-flex items-center gap-1 text-[11px] text-teal-600 shrink-0">
           <Check size={12} /> concluída
@@ -437,44 +452,6 @@ export default function PersonalDashboard() {
       })
     })
 
-    ;(data?.scopeItemsAll || [])
-      .filter(i => i?.project && !i.completion_date)
-      .forEach(i => {
-        const urgency = classifyByDate(i.end_date)
-        if (!urgency) return
-        const u = getUrgency(i.end_date)
-        items.push({
-          key: `scope-${i.id}`,
-          type: 'scope',
-          title: i.title,
-          subtitle: `Atividade · ${i.project?.title}`,
-          label: u.label,
-          tone: urgency === 'vencido' ? 'vermelho' : 'ambar',
-          urgency,
-          sortDate: i.end_date,
-          onClick: () => navigate('/painel/pessoal/atividades'),
-        })
-      })
-
-    ;(data?.tasksAll || [])
-      .filter(t => t?.project && !t.completed)
-      .forEach(t => {
-        const urgency = classifyByDate(t.end_date)
-        if (!urgency) return
-        const u = getUrgency(t.end_date)
-        items.push({
-          key: `task-${t.id}`,
-          type: 'tasks',
-          title: t.title,
-          subtitle: `Tarefa · ${t.project?.title}`,
-          label: u.label,
-          tone: urgency === 'vencido' ? 'vermelho' : 'ambar',
-          urgency,
-          sortDate: t.end_date,
-          onClick: () => navigate('/painel/pessoal/tarefas'),
-        })
-      })
-
     return items.sort((a, b) => {
       if (a.urgency !== b.urgency) return a.urgency === 'vencido' ? -1 : 1
       const da = a.sortDate ? new Date(a.sortDate).getTime() : Infinity
@@ -769,8 +746,7 @@ export default function PersonalDashboard() {
                 {actionItems.length > 0 && (
                   <div className="flex items-center gap-1 flex-wrap">
                     {[
-                      ['todos', 'Todos'], ['scope', 'Atividades'], ['golive', 'Go-live'],
-                      ['tasks', 'Tarefas'], ['status', 'Status report'],
+                      ['todos', 'Todos'], ['golive', 'Go-live'], ['status', 'Status report'],
                     ].map(([key, label]) => (
                       <button
                         key={key}
