@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { PDFRenderer } from '../../utils/pdfRenderer'
 import { BUSINESS_UNITS } from '../../utils/pdfStyles'
 import api from '../../services/api'
+import { matchesProjectFilters } from '../../utils/projectFilter'
 
 const SEPARATOR_IMAGES = {
   'Shopping': '/sep_shopping.png',
@@ -10,7 +11,7 @@ const SEPARATOR_IMAGES = {
   'Agropecuária': '/sep_agropecuaria.png',
 }
 
-export function PDFExportGeral({ allProjects }) {
+export function PDFExportGeral({ allProjects, filters }) {
   const [showModal, setShowModal] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
   const [generating, setGenerating] = useState(false)
@@ -39,19 +40,27 @@ export function PDFExportGeral({ allProjects }) {
   }, {})
 
   const handleOpen = async () => {
+    const wantsSuporte = filters?.phases?.includes('SUPORTE')
+    const wantsEntregue = filters?.phases?.includes('ENTREGUE')
+
+    let extra = []
     try {
-      const [goLiveRes, archivedRes] = await Promise.all([
-        api.get('/projects/go-live'),
-        api.get('/projects/archived'),
-      ])
-      const extra = [...goLiveRes.data, ...archivedRes.data]
-      setGoLiveProjects(extra)
-      const allIds = [...allProjects, ...extra].map(p => p.id)
-      setSelectedIds(allIds)
+      const reqs = []
+      if (wantsSuporte) reqs.push(api.get('/projects/go-live'))
+      if (wantsEntregue) reqs.push(api.get('/projects/archived'))
+      if (reqs.length > 0) {
+        const results = await Promise.all(reqs)
+        extra = results
+          .flatMap(r => r.data)
+          .filter(p => matchesProjectFilters(p, filters))
+      }
     } catch (err) {
       console.error(err)
-      setSelectedIds(allProjects.map(p => p.id))
+      extra = []
     }
+
+    setGoLiveProjects(extra)
+    setSelectedIds([...allProjects, ...extra].map(p => p.id))
     setShowModal(true)
   }
 

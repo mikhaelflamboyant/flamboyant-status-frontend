@@ -5,6 +5,7 @@ import {
   formatCurrency, getPersonName
 } from '../../utils/pdfStyles'
 import api from '../../services/api'
+import { matchesProjectFilters } from '../../utils/projectFilter'
 
 function hexToRgb(hex) {
   return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]
@@ -33,7 +34,7 @@ function getTotalBudget(costs, field) {
   return total > 0 ? total : null
 }
 
-export function PDFExportResumido({ allProjects }) {
+export function PDFExportResumido({ allProjects, filters }) {
   const [showModal, setShowModal] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
   const [generating, setGenerating] = useState(false)
@@ -61,18 +62,27 @@ export function PDFExportResumido({ allProjects }) {
   }, {})
 
   const handleOpen = async () => {
+    const wantsSuporte = filters?.phases?.includes('SUPORTE')
+    const wantsEntregue = filters?.phases?.includes('ENTREGUE')
+
+    let extra = []
     try {
-      const [goLiveRes, archivedRes] = await Promise.all([
-        api.get('/projects/go-live'),
-        api.get('/projects/archived'),
-      ])
-      const extra = [...goLiveRes.data, ...archivedRes.data]
-      setGoLiveProjects(extra)
-      const allIds = [...allProjects, ...extra].map(p => p.id)
-      setSelectedIds(allIds)
-    } catch {
-      setSelectedIds(allProjects.map(p => p.id))
+      const reqs = []
+      if (wantsSuporte) reqs.push(api.get('/projects/go-live'))
+      if (wantsEntregue) reqs.push(api.get('/projects/archived'))
+      if (reqs.length > 0) {
+        const results = await Promise.all(reqs)
+        extra = results
+          .flatMap(r => r.data)
+          .filter(p => matchesProjectFilters(p, filters))
+      }
+    } catch (err) {
+      console.error(err)
+      extra = []
     }
+
+    setGoLiveProjects(extra)
+    setSelectedIds([...allProjects, ...extra].map(p => p.id))
     setShowModal(true)
   }
 

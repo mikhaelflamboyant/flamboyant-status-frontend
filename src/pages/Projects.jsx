@@ -63,8 +63,8 @@ export default function Projects() {
             )}
             {isTI && (
               <>
-                <PDFExportGeral allProjects={allFilteredProjects} />
-                <PDFExportResumido allProjects={allFilteredProjects} />
+                <PDFExportGeral allProjects={allFilteredProjects} filters={filters} />
+                <PDFExportResumido allProjects={allFilteredProjects} filters={filters} />
               </>
             )}
             {canCreateProject() && (
