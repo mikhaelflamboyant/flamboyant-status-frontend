@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import api from '../services/api'
-import { CheckCircle2, Clock, AlertTriangle, Check, Layers, CheckSquare } from 'lucide-react'
+import { CheckCircle2, Clock, AlertTriangle, Check, Layers, CheckSquare, ChevronDown } from 'lucide-react'
 import { scopeService } from '../services/scope.service'
 import { tasksService } from '../services/tasks.service'
 
@@ -155,6 +155,7 @@ function TodoRow({ item, onToggle, saving }) {
 }
 
 function TodoSection({ icon: SectionIcon, title, items, emptyText, onToggle, savingId }) {
+  const [collapsed, setCollapsed] = useState({})
   const pending = items.filter(i => !i.done).length
   const doneCount = items.length - pending
 
@@ -192,19 +193,28 @@ function TodoSection({ icon: SectionIcon, title, items, emptyText, onToggle, sav
       ) : (
         <div className="flex flex-col gap-[18px]">
           {groups.map(g => {
+            const pid = g.project?.id ?? 'sem'
             const gp = g.items.filter(i => !i.done).length
+            const isCollapsed = collapsed[pid]
             return (
-              <div key={g.project?.id ?? 'sem'}>
-                <div className="flex items-center gap-2 px-2.5 pb-1.5 mb-0.5 border-b border-gray-100">
+              <div key={pid}>
+                <button
+                  type="button"
+                  onClick={() => setCollapsed(prev => ({ ...prev, [pid]: !prev[pid] }))}
+                  className="w-full flex items-center gap-2 px-2.5 pb-1.5 mb-0.5 border-b border-gray-100 text-left"
+                >
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-400 shrink-0" />
                   <span className="flex-1 min-w-0 text-xs font-semibold text-gray-900 truncate">{g.project?.title || 'Sem projeto'}</span>
                   <span className="text-[11px] text-gray-300">{gp} pendente{gp !== 1 ? 's' : ''}</span>
-                </div>
-                <div className="flex flex-col gap-px pt-1">
-                  {g.items.map(i => (
-                    <TodoRow key={`${i.type}-${i.id}`} item={i} onToggle={onToggle} saving={savingId === `${i.type}-${i.id}`} />
-                  ))}
-                </div>
+                  <ChevronDown size={13} className={`text-gray-300 shrink-0 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                </button>
+                {!isCollapsed && (
+                  <div className="flex flex-col gap-px pt-1">
+                    {g.items.map(i => (
+                      <TodoRow key={`${i.type}-${i.id}`} item={i} onToggle={onToggle} saving={savingId === `${i.type}-${i.id}`} />
+                    ))}
+                  </div>
+                )}
               </div>
             )
           })}
@@ -495,13 +505,21 @@ export default function PersonalDashboard() {
     }
   }
 
+  const matchesUrgencyFilter = (dateStr, done) => {
+    if (actionUrgency === 'todas' || done) return true
+    const u = classifyByDate(dateStr)
+    return actionUrgency === 'vencidas' ? u === 'vencido' : u === 'vencendo'
+  }
+
   const scopeTodo = (tab === 'pendentes' ? (data?.scopeItemsAll || []) : (data?.scopeItemsDoneWeek || []))
     .filter(i => i?.project)
     .map(i => ({ ...i, type: 'scope', done: tab === 'concluidos' ? true : !!doneMap[`scope-${i.id}`] }))
+    .filter(i => matchesUrgencyFilter(i.end_date, i.done))
 
   const tasksTodo = (tab === 'pendentes' ? (data?.tasksAll || []) : (data?.tasksDoneWeek || []))
     .filter(t => t?.project)
     .map(t => ({ ...t, type: 'task', done: tab === 'concluidos' ? true : !!doneMap[`task-${t.id}`] }))
+    .filter(t => matchesUrgencyFilter(t.end_date, t.done))
 
   const sections = [
     {
