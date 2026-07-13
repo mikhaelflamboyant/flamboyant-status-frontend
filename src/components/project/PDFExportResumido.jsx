@@ -175,8 +175,12 @@ export function PDFExportResumido({ allProjects, filters }) {
         const actual = getTotalBudget(project.costs, 'budget_actual')
         const pct = project.completion_pct || 0
 
-        const gestorLines = doc.splitTextToSize(gestores || '—', cols[1].w - 4)
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'bold')
         const titleLines = doc.splitTextToSize(project.title || '', cols[0].w - 6)
+        doc.setFontSize(8.5)
+        doc.setFont('helvetica', 'normal')
+        const gestorLines = doc.splitTextToSize(gestores || '—', cols[1].w - 4)
         const rowLines = Math.max(titleLines.length, gestorLines.length)
         const rowH = Math.max(12, rowLines * 4.8 + 6)
 
@@ -267,7 +271,6 @@ export function PDFExportResumido({ allProjects, filters }) {
         doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, W - mR, fy + 5, { align: 'right' })
       }
 
-      // --- GERAÇÃO ---
       let isFirstPage = true
 
       const unitKeys = Object.keys(projectsByUnit).filter(unit =>
@@ -304,8 +307,12 @@ export function PDFExportResumido({ allProjects, filters }) {
           const cols = getCols()
           const solicitantes = project.requesters?.filter(r => r.type === 'SOLICITANTE') || []
           const gestores = solicitantes.map(r => getPersonName(r)).join(', ')
-          const gestorLines = doc.splitTextToSize(gestores || '—', cols[1].w - 4)
+          doc.setFontSize(9)
+          doc.setFont('helvetica', 'bold')
           const titleLines = doc.splitTextToSize(project.title || '', cols[0].w - 6)
+          doc.setFontSize(8.5)
+          doc.setFont('helvetica', 'normal')
+          const gestorLines = doc.splitTextToSize(gestores || '—', cols[1].w - 4)
           const rowH = Math.max(12, Math.max(titleLines.length, gestorLines.length) * 4.8 + 6)
 
           if (y + rowH > H - 16) {
