@@ -1628,7 +1628,14 @@ export default function ProjectDetail() {
                   {taskTab === 'pendentes' ? 'Nenhuma tarefa pendente.' : 'Nenhuma tarefa concluída.'}
                 </p>
               ) : (
-                tasks.filter(t => taskTab === 'pendentes' ? !t.completed : t.completed).map(task => (
+                tasks
+                  .filter(t => taskTab === 'pendentes' ? !t.completed : t.completed)
+                  .sort((a, b) => {
+                    const da = a.end_date ? new Date(a.end_date).getTime() : Infinity
+                    const db = b.end_date ? new Date(b.end_date).getTime() : Infinity
+                    return da - db
+                  })
+                  .map(task => (
                   <div key={task.id} className={`border rounded-xl p-4 ${task.completed ? 'border-teal-100 bg-teal-50/30' : 'border-gray-100 bg-white'}`}>
                     {editingTaskId === task.id ? (
                       <div className="flex flex-col gap-2">
