@@ -232,6 +232,7 @@ export function Navbar() {
                 ANALISTA_MASTER: 'Analista Master',
                 ANALISTA_TESTADOR: 'Analista Testador',
                 ANALISTA: 'Analista',
+                 ESTAGIARIO: 'Estagiário(a)',
               }[user?.role] || user?.role}
             </p>
           </div>

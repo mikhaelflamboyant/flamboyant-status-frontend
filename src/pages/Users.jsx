@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import api from '../services/api'
 import { contactsService } from '../services/contacts.service'
 
-const ROLES = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR', 'SUPERVISOR', 'ANALISTA']
+const ROLES = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR', 'SUPERVISOR', 'ANALISTA', 'ESTAGIARIO']
 
 const ROLE_LABELS = {
   ANALISTA_MASTER:   'Analista Master',
@@ -15,6 +15,7 @@ const ROLE_LABELS = {
   COORDENADOR:       'Coordenador',
   SUPERVISOR:        'Supervisor',
   ANALISTA:          'Analista',
+  ESTAGIARIO:        'Estagiário(a)',
 }
 
 const ROLE_BADGE = {
@@ -26,6 +27,7 @@ const ROLE_BADGE = {
   COORDENADOR:       'bg-blue-50 text-blue-800',
   SUPERVISOR:        'bg-teal-50 text-teal-800',
   ANALISTA:          'bg-gray-100 text-gray-600',
+  ESTAGIARIO:        'bg-slate-100 text-slate-600',
 }
 
 const CAN_APPROVE = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR']
