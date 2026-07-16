@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+// import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { authService } from '../services/auth.service'
@@ -7,12 +7,14 @@ import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  // const [email, setEmail] = useState('')
+  // const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  // const [showLdapForm, setShowLdapForm] = useState(false)
   const [ldapEmail, setLdapEmail] = useState('')
   const [ldapPassword, setLdapPassword] = useState('')
+  // const [ldapLoading, setLdapLoading] = useState(false)
 
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -47,20 +49,20 @@ export default function Login() {
     }
   }
 
-  const handleLocalLogin = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      const response = await authService.login({ email, password })
-      login(response.data.user, response.data.token)
-      navigate('/projetos')
-    } catch (err) {
-      setError(err.response?.data?.error || 'E-mail ou senha incorretos.')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // const handleLocalLogin = async (e) => {
+  //   e.preventDefault()
+  //   setError('')
+  //   setLoading(true)
+  //   try {
+  //     const response = await authService.login({ email, password })
+  //     login(response.data.user, response.data.token)
+  //     navigate('/projetos')
+  //   } catch (err) {
+  //     setError(err.response?.data?.error || 'E-mail ou senha incorretos.')
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -109,6 +111,7 @@ export default function Login() {
             </Button>
           </form>
 
+          {/* Login local - desativado temporariamente   
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-100" />
@@ -139,7 +142,9 @@ export default function Login() {
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
+          */}
 
+          {/* Links desativados temporariamente
           <div className="mt-5 pt-5 border-t border-gray-50 flex flex-col gap-2 text-center">
             <Link to="/esqueci-senha" className="text-xs text-primary-600 hover:text-primary-800 transition-colors">
               Esqueci minha senha
@@ -148,6 +153,7 @@ export default function Login() {
               Ainda não tem conta? <span className="text-primary-600">Cadastre-se</span>
             </Link>
           </div>
+          */}
         </div>
 
       </div>
