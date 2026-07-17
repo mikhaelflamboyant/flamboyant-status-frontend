@@ -125,6 +125,7 @@ export function Navbar() {
           {(user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) &&
             navLink('/painel/pessoal', 'Painel pessoal')}
           {(user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) &&
+            user?.role !== 'ESTAGIARIO' &&
             navLink('/projetos/backlog', 'Backlog')}
           {navLink('/projetos', 'Projetos ativos')}
           {navLink('/projetos/go-live', 'Suporte pós go-live')}

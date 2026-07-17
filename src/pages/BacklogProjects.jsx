@@ -133,7 +133,9 @@ export default function BacklogProjects() {
   const [pageSize, setPageSize] = useState(() => parseInt(sessionStorage.getItem('backlogPageSize') || '10'))
 
   const canAssignOthers = ['GERENTE', 'COORDENADOR', 'ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
+    && user?.area === 'Tecnologia da Informação'
   const canApprove = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
+    && user?.area === 'Tecnologia da Informação'
 
   const [showExportModal, setShowExportModal] = useState(false)
 
@@ -575,7 +577,7 @@ export default function BacklogProjects() {
                   </div>
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  {assigningId !== project.id && (
+                  {assigningId !== project.id && canAssignOthers && (
                     <>
                       <button
                         onClick={() => {
@@ -593,7 +595,7 @@ export default function BacklogProjects() {
                         }}
                         className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors font-medium"
                       >
-                        {canAssignOthers ? 'Atribuir responsável' : 'Vincular-me'}
+                        Atribuir responsável
                       </button>
                       {canApprove && (
                         <button
