@@ -143,7 +143,7 @@ function App() {
         <Route path="*" element={<Navigate to="/projetos" replace />} />
 
         <Route path="/api" element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'SUPERINTENDENTE', 'DIRETOR', 'GERENTE', 'COORDENADOR', 'SUPERVISOR', 'ANALISTA']}>
             <ApiDocs />
           </ProtectedRoute>
         } />

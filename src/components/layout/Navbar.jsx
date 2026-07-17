@@ -134,7 +134,7 @@ export function Navbar() {
             (user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)) &&
             navLink('/projetos/cancelados', 'Projetos cancelados')}
           {['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) && navLink('/usuarios', 'Usuários')}
-          {user?.area === 'Tecnologia da Informação' && navLink('/api', 'API')}
+          {user?.area === 'Tecnologia da Informação' && user?.role !== 'ESTAGIARIO' && navLink('/api', 'API')}
         </div>
       </div>
 
