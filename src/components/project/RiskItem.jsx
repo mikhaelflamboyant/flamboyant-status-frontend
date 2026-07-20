@@ -73,9 +73,9 @@ export function RiskItem({ risk, canEdit, onUpdate, onDelete }) {
           </div>
         )}
       </div>
-      <p className="text-xs text-red-700 mt-1 ml-4">{risk.description}</p>
+      <p className="text-xs text-red-700 mt-1 ml-4 whitespace-pre-wrap">{risk.description}</p>
       <div className="mt-2 ml-4 px-2 py-1.5 bg-teal-50 rounded-lg">
-        <p className="text-xs text-teal-700"><span className="font-medium">Mitigação:</span> {risk.mitigation}</p>
+        <p className="text-xs text-teal-700 whitespace-pre-wrap"><span className="font-medium">Mitigação:</span> {risk.mitigation}</p>
       </div>
     </div>
   )
