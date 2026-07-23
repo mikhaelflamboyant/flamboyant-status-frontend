@@ -6,4 +6,6 @@ export const statusService = {
   create: (projectId, data) => api.post(`/projects/${projectId}/status`, data),
   update: (projectId, id, data) => api.patch(`/projects/${projectId}/status/${id}`, data),
   delete: (projectId, id) => api.delete(`/projects/${projectId}/status/${id}`),
+  approve: (projectId, id) => api.post(`/projects/${projectId}/status/${id}/approve`),
+  reject: (projectId, id) => api.post(`/projects/${projectId}/status/${id}/reject`),
 }

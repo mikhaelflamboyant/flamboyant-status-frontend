@@ -415,6 +415,25 @@ export default function ProjectDetail() {
     }
   }
 
+  const handleApproveRequirement = async () => {
+    try {
+      await requirementsService.approve(id)
+      fetchProject()
+    } catch (err) {
+      showError(err, 'Erro ao aprovar os requisitos.')
+    }
+  }
+
+  const handleRejectRequirement = async () => {
+    if (!confirm('Rejeitar esta alteração dos requisitos? A ação não pode ser desfeita.')) return
+    try {
+      await requirementsService.reject(id)
+      fetchProject()
+    } catch (err) {
+      showError(err, 'Erro ao rejeitar os requisitos.')
+    }
+  }
+
   const handleDelete = async () => {
     if (!confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) return
     try {
@@ -467,6 +486,25 @@ export default function ProjectDetail() {
       fetchProject()
     } catch (err) {
       showError(err, 'Erro ao excluir a tarefa.')
+    }
+  }
+
+  const handleApproveTask = async (taskId) => {
+    try {
+      await tasksService.approve(id, taskId)
+      fetchProject()
+    } catch (err) {
+      showError(err, 'Erro ao aprovar a tarefa.')
+    }
+  }
+
+  const handleRejectTask = async (taskId) => {
+    if (!confirm('Rejeitar esta tarefa? A ação não pode ser desfeita.')) return
+    try {
+      await tasksService.reject(id, taskId)
+      fetchProject()
+    } catch (err) {
+      showError(err, 'Erro ao rejeitar a tarefa.')
     }
   }
 
@@ -1514,6 +1552,7 @@ export default function ProjectDetail() {
                 key={update.id}
                 update={update}
                 canEdit={canEdit}
+                canApprove={canApproveScope}
                 onAddRisk={handleAddRisk}
                 onUpdateRisk={handleUpdateRisk}
                 onDeleteRisk={handleDeleteRisk}
@@ -1524,6 +1563,14 @@ export default function ProjectDetail() {
                 }}
                 onDeleteStatus={async (statusId) => {
                   await statusService.delete(id, statusId)
+                  fetchProject()
+                }}
+                onApproveStatus={async (statusId) => {
+                  await statusService.approve(id, statusId)
+                  fetchProject()
+                }}
+                onRejectStatus={async (statusId) => {
+                  await statusService.reject(id, statusId)
                   fetchProject()
                 }}
               />
@@ -1770,6 +1817,25 @@ export default function ProjectDetail() {
                             </button>
                           )}
                         </div>
+                        {task.status === 'AGUARDANDO_APROVACAO' && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
+                              Pendente de aprovação
+                            </span>
+                            {canApproveScope && (
+                              <>
+                                <button onClick={() => handleApproveTask(task.id)}
+                                  className="text-xs bg-teal-600 text-white px-2.5 py-1 rounded-lg hover:bg-teal-800 transition-colors">
+                                  Aprovar
+                                </button>
+                                <button onClick={() => handleRejectTask(task.id)}
+                                  className="text-xs bg-red-400 text-white px-2.5 py-1 rounded-lg hover:bg-red-600 transition-colors">
+                                  Rejeitar
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2248,23 +2314,44 @@ export default function ProjectDetail() {
                   </button>
                 </div>
               </div>
-              {canEdit && !editingReq && reqTab === 'conteudo' && (
-                <>
-                  {requirement ? (
-                    <button onClick={() => setEditingReq(true)} className="hover:opacity-70 transition-opacity" title="Editar requisitos">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                    </button>
-                  ) : (
-                    <button onClick={() => setEditingReq(true)}
-                      className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors font-medium">
-                      + Adicionar
-                    </button>
-                  )}
-                </>
-              )}
+              <div className="flex items-center gap-2">
+                {requirement?.status === 'AGUARDANDO_APROVACAO' && (
+                  <>
+                    <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
+                      Pendente de aprovação
+                    </span>
+                    {canApproveScope && (
+                      <>
+                        <button onClick={handleApproveRequirement}
+                          className="text-xs bg-teal-600 text-white px-2.5 py-1 rounded-lg hover:bg-teal-800 transition-colors">
+                          Aprovar
+                        </button>
+                        <button onClick={handleRejectRequirement}
+                          className="text-xs bg-red-400 text-white px-2.5 py-1 rounded-lg hover:bg-red-600 transition-colors">
+                          Rejeitar
+                        </button>
+                      </>
+                    )}
+                  </>
+                )}
+                {canEdit && !editingReq && reqTab === 'conteudo' && (
+                  <>
+                    {requirement ? (
+                      <button onClick={() => setEditingReq(true)} className="hover:opacity-70 transition-opacity" title="Editar requisitos">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#534AB7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                      </button>
+                    ) : (
+                      <button onClick={() => setEditingReq(true)}
+                        className="text-xs bg-primary-600 text-white px-3 py-1.5 rounded-lg hover:bg-primary-800 transition-colors font-medium">
+                        + Adicionar
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
             {reqTab === 'conteudo' && (

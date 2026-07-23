@@ -17,7 +17,8 @@ const EditIcon = () => (
   </svg>
 )
 
-export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk, onUpdateStatus, onDeleteStatus, canEdit, onDuplicate }) {
+export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk, onUpdateStatus, onDeleteStatus, canEdit, onDuplicate, canApprove, onApproveStatus, onRejectStatus }) {
+  const [approving, setApproving] = useState(false)
   const [showRiskForm, setShowRiskForm] = useState(false)
   const [riskForm, setRiskForm] = useState({ title: '', description: '', mitigation: '' })
   const [loading, setLoading] = useState(false)
@@ -72,15 +73,55 @@ export function StatusUpdateCard({ update, onAddRisk, onUpdateRisk, onDeleteRisk
     }
   }
 
+  const handleApprove = async () => {
+    setApproving(true)
+    try {
+      await onApproveStatus(update.id)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setApproving(false)
+    }
+  }
+
+  const handleReject = async () => {
+    if (!confirm('Rejeitar este status report? A ação não pode ser desfeita.')) return
+    setApproving(true)
+    try {
+      await onRejectStatus(update.id)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setApproving(false)
+    }
+  }
+
   return (
     <div className="bg-white border border-gray-100 rounded-xl p-5">
 
       <div className="flex items-center justify-between mb-4">
         <span className="text-xs text-gray-400">{date}</span>
         <div className="flex items-center gap-2">
+          {update.status === 'AGUARDANDO_APROVACAO' && (
+            <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
+              Pendente de aprovação
+            </span>
+          )}
           <span className="text-xs font-medium text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full">
             {update.reported_by_name || update.author?.name}
           </span>
+          {canApprove && update.status === 'AGUARDANDO_APROVACAO' && (
+            <div className="flex items-center gap-1.5">
+              <button onClick={handleApprove} disabled={approving}
+                className="text-xs bg-teal-600 text-white px-2.5 py-1 rounded-lg hover:bg-teal-800 disabled:opacity-50 transition-colors">
+                Aprovar
+              </button>
+              <button onClick={handleReject} disabled={approving}
+                className="text-xs bg-red-400 text-white px-2.5 py-1 rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors">
+                Rejeitar
+              </button>
+            </div>
+          )}
           {canEdit && !editing && (
             <>
               {onDuplicate && (

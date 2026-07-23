@@ -6,4 +6,6 @@ export const tasksService = {
   update: (projectId, taskId, data) => api.patch(`/projects/${projectId}/tasks/${taskId}`, data),
   complete: (projectId, taskId) => api.patch(`/projects/${projectId}/tasks/${taskId}/complete`),
   delete: (projectId, taskId) => api.delete(`/projects/${projectId}/tasks/${taskId}`),
+  approve: (projectId, taskId) => api.post(`/projects/${projectId}/tasks/${taskId}/approve`),
+  reject: (projectId, taskId) => api.post(`/projects/${projectId}/tasks/${taskId}/reject`),
 }

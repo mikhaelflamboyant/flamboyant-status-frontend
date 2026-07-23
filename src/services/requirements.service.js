@@ -4,4 +4,6 @@ export const requirementsService = {
   get: (projectId) => api.get(`/projects/${projectId}/requirements`),
   create: (projectId, data) => api.post(`/projects/${projectId}/requirements`, data),
   update: (projectId, data) => api.patch(`/projects/${projectId}/requirements`, data),
+  approve: (projectId) => api.post(`/projects/${projectId}/requirements/approve`),
+  reject: (projectId) => api.post(`/projects/${projectId}/requirements/reject`),
 }
