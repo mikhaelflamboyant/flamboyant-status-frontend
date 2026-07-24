@@ -231,7 +231,7 @@ export function Navbar() {
                 COORDENADOR: 'Coordenador',
                 SUPERVISOR: 'Supervisor',
                 ANALISTA_MASTER: 'Analista Master',
-                ANALISTA_TESTADOR: 'Analista Testador',
+                ANALISTA_TESTADOR: 'Analista Tester',
                 ANALISTA: 'Analista',
                  ESTAGIARIO: 'Estagiário(a)',
               }[user?.role] || user?.role}

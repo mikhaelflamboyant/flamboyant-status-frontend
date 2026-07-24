@@ -174,7 +174,7 @@ export function ProjectFilters({ filters, onChange, hidePhase, extraOptions }) {
   const [users, setUsers] = useState([])
   const [requesters, setRequesters] = useState([])
 
-  const canSeeAllAreas = ['SUPERINTENDENTE', 'ANALISTA_MASTER'].includes(user?.role)
+  const canSeeAllAreas = isTIManager(user) || user?.role === 'SUPERINTENDENTE'
   const isManagerLevel = ['GERENTE', 'COORDENADOR'].includes(user?.role)
 
   useEffect(() => {

@@ -8,7 +8,7 @@ const ROLES = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'SUPERINTENDENTE', 'DIRET
 
 const ROLE_LABELS = {
   ANALISTA_MASTER:   'Analista Master',
-  ANALISTA_TESTADOR: 'Analista Testador',
+  ANALISTA_TESTADOR: 'Analista Tester',
   SUPERINTENDENTE:   'Superintendente',
   DIRETOR:           'Diretor',
   GERENTE:           'Gerente',

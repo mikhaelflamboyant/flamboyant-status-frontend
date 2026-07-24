@@ -45,7 +45,7 @@ export default function ApiDocs() {
   const [copied, setCopied] = useState(false)
   const [tokenTab, setTokenTab] = useState('ativos')
   const [allTokens, setAllTokens] = useState([])
-  const canSeeHistory = user?.area === 'Tecnologia da Informação' && ['ANALISTA_MASTER', 'GERENTE', 'COORDENADOR'].includes(user?.role)
+  const canSeeHistory = isTIManager(user)
 
   useEffect(() => {
     fetchTokens()
@@ -319,7 +319,7 @@ export default function ApiDocs() {
               <div className="flex flex-col gap-3">
                 {[
                   { role: 'Analista Master', color: 'bg-amber-50 text-amber-800', desc: 'Acesso total ao sistema. Vê todos os projetos de todas as áreas. Pode criar, editar e excluir qualquer projeto e tudo dentro deles. Gerencia usuários e tokens de API.' },
-                  { role: 'Analista Testador', color: 'bg-orange-50 text-orange-800', desc: 'Acesso total ao sistema. Mesmas permissões do Analista Master. Perfil destinado a testes e validações do sistema.' },
+                  { role: 'Analista Tester', color: 'bg-orange-50 text-orange-800', desc: 'Acesso total ao sistema. Mesmas permissões do Analista Master. Perfil destinado a testes e validações do sistema.' },
                   { role: 'Superintendente', color: 'bg-violet-100 text-violet-800', desc: 'Vê projetos das áreas que coordena. Não acessa abas de API ou Usuários.' },
                   { role: 'Diretor', color: 'bg-purple-100 text-purple-800', desc: 'Vê projetos da sua área corporativa. Não acessa abas de API ou Usuários.' },
                   { role: 'Gerente', color: 'bg-primary-50 text-primary-800', desc: 'Gerentes de TI veem todos os projetos de todas as áreas e acessam as abas de Usuários e API. Gerentes de outras áreas veem apenas projetos da sua área.' },
@@ -340,15 +340,15 @@ export default function ApiDocs() {
                 {[
                   { label: 'Acesso geral', desc: 'Apenas usuários da área de Tecnologia da Informação podem criar, editar e excluir projetos e tudo dentro deles: tarefas, status reports, requisitos, farol, % de conclusão, fase, etc.' },
                   { label: 'Criar projeto', desc: 'Apenas usuários da área de Tecnologia da Informação podem criar projetos.' },
-                  { label: 'Editar projeto', desc: 'Apenas solicitantes e responsáveis vinculados ao projeto podem editar. Analista Master e Analista Testador podem editar qualquer projeto.' },
-                  { label: 'Excluir projeto', desc: 'Apenas solicitantes e responsáveis vinculados ao projeto podem excluir. Analista Master e Analista Testador podem excluir qualquer projeto.' },
+                  { label: 'Editar projeto', desc: 'Apenas solicitantes e responsáveis vinculados ao projeto podem editar. Analista Master e Analista Tester podem editar qualquer projeto.' },
+                  { label: 'Excluir projeto', desc: 'Apenas solicitantes e responsáveis vinculados ao projeto podem excluir. Analista Master e Analista Tester podem excluir qualquer projeto.' },
                   { label: 'Abas API e Usuários', desc: 'Visíveis apenas para usuários da área de Tecnologia da Informação.' },
-                  { label: 'Gestão de usuários', desc: 'Apenas Analista Master, Analista Testador, Gerente e Coordenador de TI podem visualizar, adicionar e excluir usuários.' },
+                  { label: 'Gestão de usuários', desc: 'Apenas Analista Master, Analista Tester, Gerente e Coordenador de TI podem visualizar, adicionar e excluir usuários.' },
                   { label: 'Farol automático', desc: 'Quando a data de go-live passa sem o projeto ser entregue, o farol muda automaticamente para vermelho.' },
                   { label: 'Fases e cronograma', desc: 'A mudança de fase exige cronograma aprovado por um gestor com todas as 4 etapas preenchidas (Planejamento, Execução, Go-live, Suporte). Desenvolvimento, Testes e Validação exigem Planejamento concluído; Entregue exige Execução concluída; Suporte exige Go-live concluído. Atividades só podem ser marcadas como concluídas após aprovação do gestor.' },
                   { label: 'Níveis de projeto', desc: 'Projetos podem ser classificados por nível estratégico: A - Estratégico, B - Performance, C - Compliance, D - Inovação. A classificação é opcional e visível no painel de gestão.' },
                   { label: 'Ciclo de vida', desc: 'Projetos marcados como "Entregue" são movidos para a aba Projetos em go-live e permanecem ativos. Após 30 dias em go-live, o projeto é automaticamente movido para a fase Suporte pós go-live e arquivado em Projetos finalizados.' },
-                  { label: 'Backlog', desc: 'Projetos criados via FreshService entram no Backlog com status de solicitação pendente. Gerente, Coordenador, Analista Master e Analista Testador podem aprovar ou rejeitar a solicitação. Após aprovação, o projeto aguarda atribuição de um responsável. Ao vincular um responsável, o projeto entra em Projetos ativos na fase Recebida.' }
+                  { label: 'Backlog', desc: 'Projetos criados via FreshService entram no Backlog com status de solicitação pendente. Gerente, Coordenador, Analista Master e Analista Tester podem aprovar ou rejeitar a solicitação. Após aprovação, o projeto aguarda atribuição de um responsável. Ao vincular um responsável, o projeto entra em Projetos ativos na fase Recebida.' }
                 ].map(r => (
                   <div key={r.label} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
                     <span className="text-xs font-medium text-gray-700 w-40 shrink-0">{r.label}</span>
@@ -364,7 +364,7 @@ export default function ApiDocs() {
                 {[
                   { perfil: 'Analista', eventos: 'Vinculado a um projeto, projeto próximo do go-live, projeto atrasado, novo status report (apenas dos projetos vinculados).' },
                   { perfil: 'Gerente e Coordenador', eventos: 'Usuário pendente de aprovação, novo projeto na área, projeto próximo do go-live, projeto atrasado, novo status report (apenas da sua área).' },
-                  { perfil: 'Analista Master, Analista Testador e Superintendente', eventos: 'Usuário pendente de aprovação, novo projeto criado, projeto próximo do go-live, projeto atrasado, novo status report (todas as áreas).' },
+                  { perfil: 'Analista Master, Analista Tester e Superintendente', eventos: 'Usuário pendente de aprovação, novo projeto criado, projeto próximo do go-live, projeto atrasado, novo status report (todas as áreas).' },
                 ].map(n => (
                   <div key={n.perfil} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
                     <span className="text-xs font-medium text-gray-700 w-48 shrink-0">{n.perfil}</span>
@@ -378,7 +378,7 @@ export default function ApiDocs() {
               <p className="text-xs text-gray-500 leading-relaxed mb-3">As tarefas ficam dentro do detalhe de cada projeto e são visíveis apenas para usuários da Tecnologia da Informação.</p>
               <div className="flex flex-col gap-2">
                 {[
-                  { label: 'Criar e editar', desc: 'Apenas usuários de TI podem gerenciar tarefas. Analista Master, Analista Testador, Gerente e Coordenador de TI podem gerenciar tarefas de qualquer projeto. Analistas de TI só podem gerenciar tarefas de projetos vinculados.' },
+                  { label: 'Criar e editar', desc: 'Apenas usuários de TI podem gerenciar tarefas. Analista Master, Analista Tester, Gerente e Coordenador de TI podem gerenciar tarefas de qualquer projeto. Analistas de TI só podem gerenciar tarefas de projetos vinculados.' },
                   { label: 'Concluir tarefa', desc: 'Apenas quem criou a tarefa pode marcá-la como concluída.' },
                   { label: 'Fase vinculada', desc: 'A fase da tarefa é definida automaticamente com base na fase atual do projeto no momento da criação.' },
                 ].map(t => (
@@ -409,7 +409,7 @@ export default function ApiDocs() {
               <div className="flex flex-col gap-2">
                 {[
                   { label: 'Windows AD (LDAP)', desc: 'Login com conta corporativa do Windows AD (@grupoflamboyant.com.br). Usuários do grupo "projetos" no AD podem entrar diretamente na plataforma.' },
-                  { label: 'FreshService', desc: 'Chamados criados no FreshService chegam automaticamente via webhook como solicitações no Backlog. Gerente, Coordenador, Analista Master e Analista Testador podem aprovar ou rejeitar. Após aprovação e atribuição de responsável, o projeto entra na esteira ativa.' },
+                  { label: 'FreshService', desc: 'Chamados criados no FreshService chegam automaticamente via webhook como solicitações no Backlog. Gerente, Coordenador, Analista Master e Analista Tester podem aprovar ou rejeitar. Após aprovação e atribuição de responsável, o projeto entra na esteira ativa.' },
                   { label: 'Azure AD (SSO)', desc: 'Login com conta Microsoft (@flamboyant.com.br). Configurado no Entra ID com SSL/HTTPS ativo.' },
                   { label: 'API pública', desc: 'Endpoints de leitura disponíveis para sistemas externos (Power BI, scripts, etc.) mediante token de acesso gerado nesta página.' },
                 ].map(i => (

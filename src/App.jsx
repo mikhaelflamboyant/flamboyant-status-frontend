@@ -149,7 +149,7 @@ function App() {
         } />
 
         <Route path="/freshservice" element={
-          <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'COORDENADOR', 'GERENTE', 'SUPERINTENDENTE']}>
+          <ProtectedRoute allowedRoles={['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'COORDENADOR', 'GERENTE', 'SUPERINTENDENTE']}>
             <FreshServiceRequests />
           </ProtectedRoute>
         } />

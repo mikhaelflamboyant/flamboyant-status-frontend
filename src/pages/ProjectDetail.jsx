@@ -18,6 +18,7 @@ import { scopeService } from '../services/scope.service'
 import { LEVEL_CONFIG } from '../utils/pdfStyles'
 import { LinkifiedText } from '../components/ui/LinkifiedText'
 import { Plus, X, ChevronDown } from 'lucide-react'
+import { isTIManager } from '../utils/permissions'
 
 const STAGES = [
   { key: 'PLANEJAMENTO', label: '1. Planejamento' },
@@ -350,11 +351,11 @@ export default function ProjectDetail() {
   const isResponsible = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'RESPONSAVEL') || false
   const isRequester = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'SOLICITANTE') || false
   const isFromTI = user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
-  const canEdit = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
+  const canEdit = isTIManager(user) || isResponsible || isRequester
   const isCancelled = project?.current_phase === 'CANCELADO'
   const canRestore = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) &&
   (user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role))
-  const canDelete = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) || isResponsible || isRequester
+  const canDelete = isTIManager(user) || isResponsible || isRequester
   const canApproveScope = isFromTI && ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
   const canManageTasks = isFromTI && (
     ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) ||
