@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Navbar } from '../components/layout/Navbar'
 import { apitokenService } from '../services/apitoken.service'
 import { useAuth } from '../hooks/useAuth'
+import { isTIManager } from '../utils/permissions'
 
 const BASE_URL = 'https://statusreport.flamboyant.com.br:4443/api'
 

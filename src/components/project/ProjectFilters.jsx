@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import api from '../../services/api'
 import { useAuth } from '../../hooks/useAuth'
+import { isTIManager } from '../../utils/permissions'
 
 const AREAS = [
   'Administração Pessoal',
