@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { managementService } from '../services/management.service'
+import ProfilePermissionCards from './Management/ProfilePermissionCards'
 import { scopeService } from '../services/scope.service'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -801,6 +802,16 @@ export default function Management() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('permissoes')}
+            className={`text-xs px-4 py-2 rounded-lg font-medium transition-colors border ${
+              activeTab === 'permissoes'
+                ? 'bg-primary-600 text-white border-primary-600'
+                : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+            }`}
+          >
+            Permissões
+          </button>
         </div>
 
         {activeTab === 'analise' && (
@@ -1025,6 +1036,8 @@ export default function Management() {
         )}
 
         {activeTab === 'aprovacoes' && <ApprovalsTab />}
+
+        {activeTab === 'permissoes' && <ProfilePermissionCards />}
 
       </div>
     </div>
