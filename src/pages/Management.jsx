@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import { managementService } from '../services/management.service'
 import ProfilePermissionCards from './Management/ProfilePermissionCards'
+import RecentActionsTab from './Management/recentActions/RecentActionsTab'
 import { scopeService } from '../services/scope.service'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -810,9 +811,19 @@ export default function Management() {
                 : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
             }`}
           >
-            Permissões
-          </button>
-        </div>
+                Permissões
+              </button>
+              <button
+                onClick={() => setActiveTab('acoes')}
+                className={`text-xs px-4 py-2 rounded-lg font-medium transition-colors border ${
+                  activeTab === 'acoes'
+                    ? 'bg-primary-600 text-white border-primary-600'
+                    : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                Últimas ações
+              </button>
+            </div>
 
         {activeTab === 'analise' && (
           <>
@@ -1038,6 +1049,7 @@ export default function Management() {
         {activeTab === 'aprovacoes' && <ApprovalsTab />}
 
         {activeTab === 'permissoes' && <ProfilePermissionCards />}
+        {activeTab === 'acoes' && <RecentActionsTab />}
 
       </div>
     </div>
