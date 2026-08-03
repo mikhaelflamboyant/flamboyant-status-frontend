@@ -47,7 +47,9 @@ export function ActionSentence({ action }) {
     <span className="text-sm leading-snug text-gray-700">
       <span className="font-semibold text-gray-800">{action.user.name}</span>{' '}
       {sentence}{' '}
-      <span className="font-medium text-primary-700">{action.project_name || 'projeto removido'}</span>
+      <span className="font-medium text-primary-700">
+        {action.project_name || (action.project_id ? 'projeto sem nome' : 'projeto removido')}
+      </span>
     </span>
   )
 }

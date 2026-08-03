@@ -41,7 +41,9 @@ export default function RecentActionsTable({ actions }) {
                     </div>
                   </td>
                   <td className="border-b border-gray-100 px-3.5 py-2.5">
-                    <span className="font-medium text-primary-700">{action.project_name || 'projeto removido'}</span>
+                    <span className="font-medium text-primary-700">
+                      {action.project_name || (action.project_id ? 'projeto sem nome' : 'projeto removido')}
+                    </span>
                   </td>
                   <td className="border-b border-gray-100 px-3.5 py-2.5 text-xs whitespace-nowrap text-gray-400">
                     {formatRelativeTime(action.created_at)}
