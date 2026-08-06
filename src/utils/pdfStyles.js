@@ -87,7 +87,7 @@ export const LEVEL_OPTIONS = [
   { value: 'D', label: 'D - Inovação e transformação digital', description: 'Iniciativas que promovem inovação, automação e modernização tecnológica.' },
 ]
 
-export const BUSINESS_UNITS = ['Corporativo', 'Shopping', 'Urbanismo', 'Agropecuária', 'Instituto', 'Sem unidade']
+export const BUSINESS_UNITS = ['Corporativo', 'Shopping', 'Urbanismo', 'Agropecuária', 'Instituto', 'Family Office', 'Sem unidade']
 
 export function formatDate(date) {
   if (!date) return 'Sem previsão'

@@ -203,6 +203,7 @@ export default function NewProject() {
                   <option value="Urbanismo">Urbanismo</option>
                   <option value="Agropecuária">Agropecuária</option>
                   <option value="Instituto">Instituto</option>
+                  <option value="Family Office">Family Office</option>
                 </select>
               </div>
             </div>

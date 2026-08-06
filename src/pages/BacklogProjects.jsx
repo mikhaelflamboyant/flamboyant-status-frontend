@@ -28,7 +28,7 @@ const LEVEL_OPTIONS = [
   { key: 'D', label: 'D - Inovação e transformação digital' },
 ]
 
-const BUSINESS_UNITS = ['Corporativo', 'Shopping', 'Urbanismo', 'Agropecuária', 'Instituto']
+const BUSINESS_UNITS = ['Corporativo', 'Shopping', 'Urbanismo', 'Agropecuária', 'Instituto', 'Family Office']
 
 function MultiDropdown({ label, options, selected, onChange }) {
   const [open, setOpen] = useState(false)
