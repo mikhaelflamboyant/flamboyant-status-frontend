@@ -967,7 +967,7 @@ export default function ProjectDetail() {
                                 <span className="text-teal-600 font-medium">{item.pending_title}</span>
                               </div>
                             )}
-                            {item.pending_start_date && formatDate(item.pending_start_date) !== formatDate(item.start_date) && (
+                            {item.pending_action === 'EDITAR' && formatDate(item.pending_start_date) !== formatDate(item.start_date) && (
                               <div className="flex items-center gap-2">
                                 <span className="text-gray-400">Início:</span>
                                 <span className="line-through text-red-400">{formatDate(item.start_date)}</span>
@@ -975,7 +975,7 @@ export default function ProjectDetail() {
                                 <span className="text-teal-600 font-medium">{formatDate(item.pending_start_date)}</span>
                               </div>
                             )}
-                            {item.pending_end_date && formatDate(item.pending_end_date) !== formatDate(item.end_date) && (
+                            {item.pending_action === 'EDITAR' && formatDate(item.pending_end_date) !== formatDate(item.end_date) && (
                               <div className="flex items-center gap-2">
                                 <span className="text-gray-400">Fim:</span>
                                 <span className="line-through text-red-400">{formatDate(item.end_date)}</span>
