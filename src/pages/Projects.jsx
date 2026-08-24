@@ -1,4 +1,6 @@
 import { PDFExportGeral } from '../components/project/PDFExportGeral'
+import { PriorityDragList, PriorityHint } from '../components/project/PriorityDragList'
+import { projectsService } from '../services/projects.service'
 import { PDFExportResumido } from '../components/project/PDFExportResumido'
 import { useState, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -10,13 +12,23 @@ import { useProjects } from '../hooks/useProjects'
 import { useAuth } from '../hooks/useAuth'
 
 export default function Projects() {
-  const { projects, allFilteredProjects, loading, error, filters, setFilters, metrics, totalProjects, page, setPage, totalPages, refetch, pageSize, setPageSize } = useProjects()
+  const { projects, allFilteredProjects, loading, error, filters, setFilters, metrics, totalProjects, page, setPage, totalPages, refetch, pageSize, setPageSize, canReorder, setProjects } = useProjects()
   const navigate = useNavigate()
   const { user, canCreateProject } = useAuth()
   const [view, setView] = useState(() => localStorage.getItem('projectsView') || 'list')
   const [showGoLiveBanner, setShowGoLiveBanner] = useState(true)
 
   const isTI = user?.area === 'Tecnologia da Informação'
+
+  const isMineOnly = canReorder && filters.responsible_ids?.[0] === user?.id
+
+  const handleOrderChange = (nextList) => {
+    setProjects(prev => {
+      const posMap = new Map(nextList.map((p, i) => [p.id, i]))
+      return prev.map(p => posMap.has(p.id) ? { ...p, my_position: posMap.get(p.id) } : p)
+    })
+    projectsService.updatePriorities(nextList.map(p => p.id)).catch(console.error)
+  }
 
   const goLiveCritical = useMemo(() => {
     const today = new Date()
@@ -193,17 +205,27 @@ export default function Projects() {
           </div>
         )}
 
+        {isMineOnly && !loading && <PriorityHint userName={user?.name} />}
+
         {!loading && !error && projects.length > 0 && (
           <>
             {view === 'kanban' && isTI ? (
               <ProjectKanban projects={allFilteredProjects} onProjectUpdate={refetch} />
             ) : (
               <>
-                <div className="flex flex-col gap-2.5">
-                  {projects.map(project => (
-                    <ProjectCard key={project.id} project={project} page={page} />
-                  ))}
-                </div>
+                {isMineOnly ? (
+                  <PriorityDragList
+                    projects={projects}
+                    page={page}
+                    onOrderChange={handleOrderChange}
+                  />
+                ) : (
+                  <div className="flex flex-col gap-2.5">
+                    {projects.map(project => (
+                      <ProjectCard key={project.id} project={project} page={page} />
+                    ))}
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between mt-4">
                   <div className="flex items-center gap-3">

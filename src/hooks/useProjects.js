@@ -118,12 +118,29 @@ export function useProjects() {
     })
   }, [projects, filters])
 
-  const totalPages = Math.ceil(filteredProjects.length / pageSize)
+  const orderedProjects = useMemo(() => {
+    const hasAnyPriority = filteredProjects.some(p => p.my_position !== null && p.my_position !== undefined)
+    if (!hasAnyPriority) return filteredProjects
+
+    return [...filteredProjects].sort((a, b) => {
+      const pa = a.my_position ?? null
+      const pb = b.my_position ?? null
+      if (pa === null && pb === null) return 0
+      if (pa === null) return 1
+      if (pb === null) return -1
+      return pa - pb
+    })
+  }, [filteredProjects])
+
+  const canReorder = filters.responsible_ids?.length === 1
+
+  const effectivePageSize = canReorder ? Math.max(orderedProjects.length, 1) : pageSize
+  const totalPages = Math.ceil(orderedProjects.length / effectivePageSize)
 
   const paginatedProjects = useMemo(() => {
-    const start = (page - 1) * pageSize
-    return filteredProjects.slice(start, start + pageSize)
-  }, [filteredProjects, page, pageSize])
+    const start = (page - 1) * effectivePageSize
+    return orderedProjects.slice(start, start + effectivePageSize)
+  }, [orderedProjects, page, effectivePageSize])
 
   const metrics = useMemo(() => {
     const base = filteredProjects
@@ -137,8 +154,8 @@ export function useProjects() {
 
   return {
     projects: paginatedProjects,
-    allFilteredProjects: filteredProjects,
-    totalProjects: filteredProjects.length,
+    allFilteredProjects: orderedProjects,
+    totalProjects: orderedProjects.length,
     loading,
     error,
     filters,
@@ -149,6 +166,9 @@ export function useProjects() {
     setPage,
     totalPages,
     pageSize,
+    pageSize,
     setPageSize,
+    canReorder,
+    setProjects,
   }
 }

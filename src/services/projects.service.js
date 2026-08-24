@@ -18,4 +18,5 @@ export const projectsService = {
   approveFreshservice: (id, data) => api.patch(`/projects/${id}/approve-freshservice`, data),
   rejectFreshservice: (id) => api.delete(`/projects/${id}/reject-freshservice`),
   duplicate: (id, data) => api.post(`/projects/${id}/duplicate`, data),
+  updatePriorities: (project_ids) => api.patch('/projects/priorities', { project_ids }),
 }
