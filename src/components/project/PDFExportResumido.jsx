@@ -61,21 +61,27 @@ export function PDFExportResumido({ allProjects, filters }) {
     return acc
   }, {})
 
-  const handleOpen = async () => {
-    const wantsSuporte = filters?.phases?.includes('SUPORTE')
+    const handleOpen = async () => {
     const wantsEntregue = filters?.phases?.includes('ENTREGUE')
+
+    const now = new Date()
+    const weekStart = new Date(now)
+    weekStart.setDate(now.getDate() - ((now.getDay() + 1) % 7))
+    weekStart.setHours(0, 0, 0, 0)
 
     let extra = []
     try {
-      const reqs = []
-      if (wantsSuporte) reqs.push(api.get('/projects/go-live'))
+      const reqs = [api.get('/projects/go-live')]
       if (wantsEntregue) reqs.push(api.get('/projects/archived'))
-      if (reqs.length > 0) {
-        const results = await Promise.all(reqs)
-        extra = results
-          .flatMap(r => r.data)
-          .filter(p => matchesProjectFilters(p, filters))
-      }
+
+      const results = await Promise.all(reqs)
+      const all = results.flatMap(r => r.data)
+
+      extra = all.filter(p => {
+        if (!matchesProjectFilters(p, filters, { ignorePhase: true })) return false
+        if (p.current_phase !== 'SUPORTE') return true
+        return p.delivered_at && new Date(p.delivered_at) >= weekStart
+      })
     } catch (err) {
       console.error(err)
       extra = []
