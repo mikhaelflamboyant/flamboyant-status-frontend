@@ -2207,7 +2207,7 @@ export default function ProjectDetail() {
                                                   onChange={e => setEditScopeForm({
                                                     ...editScopeForm,
                                                     completion_date: e.target.value,
-                                                    completion_pct: e.target.value ? 100 : editScopeForm.completion_pct
+                                                    completion_pct: e.target.value ? 100 : 0
                                                   })}
                                                   className="h-8 px-2 text-xs border border-gray-200 rounded-lg outline-none focus:border-primary-600 bg-white"
                                                 />
