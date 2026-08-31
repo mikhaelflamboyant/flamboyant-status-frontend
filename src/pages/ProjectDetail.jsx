@@ -1395,7 +1395,7 @@ export default function ProjectDetail() {
           )}
 
           {(
-            ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) ||
+            (['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) && isFromTI) ||
             (isFromTI && isResponsible)
           ) && (
             <ControlPanel
