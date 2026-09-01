@@ -16,6 +16,7 @@ const AREAS = [
   'Controladoria',
   'Engenharia',
   'Financeiro',
+  'Governança e Risco',
   'Incorporação',
   'Instituto',
   'Inovação',

@@ -21,6 +21,7 @@ const AREAS = [
   'Experiência Urbanismo',
   'Family Office',
   'Financeiro',
+  'Governança e Risco',
   'Helicenter',
   'In Concert',
   'Incorporação',
