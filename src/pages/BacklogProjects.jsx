@@ -11,7 +11,7 @@ const AREAS = [
   'Administração Pessoal','Administrativo Urbanismo','Agropecuária','Almoxarifado','Apoio',
   'Arquitetura','Assuntos Regulatórios','Atendimento','Brigada','Comercial','Compras',
   'Conservação','Contabilidade','Controladoria','Engenharia','Estacionamento',
-  'Experiência Urbanismo','Family Office','Financeiro','Helicenter','In Concert',
+  'Experiência Urbanismo','Family Office','Financeiro', 'Governança e Risco', 'Helicenter','In Concert',
   'Incorporação','Inovação','Instituto Flamboyant','Jurídico','Legalização','Manutenção',
   'Marketing Corporativo','Marketing Institucional','Marketing Urbanismo','Operações',
   'Pessoas e Cultura','Planejamento e Projetos','Planejamento Financeiro',
