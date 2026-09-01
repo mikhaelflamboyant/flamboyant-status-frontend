@@ -351,11 +351,11 @@ export default function ProjectDetail() {
   const isResponsible = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'RESPONSAVEL') || false
   const isRequester = project?.requesters?.some(r => r.user_id === user?.id && r.type === 'SOLICITANTE') || false
   const isFromTI = user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role)
-  const canEdit = isTIManager(user) || isResponsible || isRequester
+  const canEdit = isFromTI && (isTIManager(user) || isResponsible || isRequester)
   const isCancelled = project?.current_phase === 'CANCELADO'
   const canRestore = ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role) &&
   (user?.area === 'Tecnologia da Informação' || ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role))
-  const canDelete = isTIManager(user) || isResponsible || isRequester
+  const canDelete = isFromTI && (isTIManager(user) || isResponsible || isRequester)
   const canApproveScope = isFromTI && ['ANALISTA_MASTER', 'ANALISTA_TESTADOR', 'GERENTE', 'COORDENADOR'].includes(user?.role)
   const canManageTasks = isFromTI && (
     ['ANALISTA_MASTER', 'ANALISTA_TESTADOR'].includes(user?.role) ||
