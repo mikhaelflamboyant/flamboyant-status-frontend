@@ -1848,8 +1848,8 @@ export default function ProjectDetail() {
 
         {isFromTI && (
           <div className="bg-white border border-gray-100 rounded-xl p-6 mb-4">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-y-3">
+              <div className="flex items-center gap-4 shrink-0">
                 <h2 className="text-sm font-medium text-gray-900">Cronograma</h2>
                 {scopeItems.length > 0 && (() => {
                   const allApproved = scopeItems.every(s => s.status === 'APROVADO')
@@ -1861,7 +1861,7 @@ export default function ProjectDetail() {
                   return <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">Rascunho</span>
                 })()}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Ordenar</span>
                 {[
                   { key: 'data', label: 'Data fim' },
@@ -1894,7 +1894,7 @@ export default function ProjectDetail() {
                   )
                 })}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 {canApproveScope && scopeItems.some(s => s.status === 'AGUARDANDO_APROVACAO' || s.pending_action) && (
                   <button
                     onClick={() => { setShowPendingModal(true); setSelectedPendingIds([]) }}
